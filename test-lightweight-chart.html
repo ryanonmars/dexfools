@@ -13,53 +13,72 @@
       background: #000;
     }
     body {
-      overflow: hidden;
+      overflow: auto;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
+      align-items: flex-start;
+      justify-content: flex-start;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px 40px 40px 20px; /* top, right, bottom, left */
+      gap: 20px;
+      box-sizing: border-box;
     }
     #chart-container {
-      width: 900px;
-      height: 540px;
-      margin: 0 auto;
+      flex: 1;
+      height: calc(100vh - 100px); /* Account for padding */
+      max-width: calc(100vw - 400px); /* Account for panel width + gaps + padding */
+      min-width: 400px;
       position: relative;
       background: #000;
       box-shadow: 0 4px 32px rgba(0,0,0,0.4);
       border-radius: 12px;
     }
     
-    #restart-button {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #26a69a;
-      color: white;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 500;
-      z-index: 1000;
-      transition: background-color 0.2s;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    /* Responsive adjustments for smaller screens */
+    @media (max-width: 1200px) {
+      body {
+        padding: 15px 30px 30px 15px;
+        gap: 15px;
+      }
+      #chart-container {
+        max-width: calc(100vw - 380px);
+        height: calc(100vh - 80px);
+        min-width: 350px;
+      }
     }
     
-    #restart-button:hover {
-      background: #1e8b7f;
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+        align-items: stretch;
+        height: auto;
+        min-height: 100vh;
+        padding: 15px;
+        gap: 15px;
+      }
+      
+      #chart-container {
+        width: 100%;
+        height: 60vh;
+        max-width: none;
+        max-height: none;
+        min-width: auto;
+        border-radius: 8px;
+      }
+      
+      #config-panel {
+        position: relative;
+        width: 100%;
+        max-height: 35vh;
+        border-radius: 8px;
+      }
     }
     
-    #restart-button:disabled {
-      background: #666;
-      cursor: not-allowed;
-    }
     
     #config-panel {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      width: 300px;
+      position: relative;
+      width: 320px;
+      flex-shrink: 0;
       background: #1a1a1a;
       border: 1px solid #333;
       border-radius: 8px;
@@ -67,10 +86,29 @@
       color: #d1d4dc;
       font-family: Arial, sans-serif;
       font-size: 12px;
-      z-index: 1000;
-      max-height: 80vh;
+      max-height: calc(100vh - 100px);
       overflow-y: auto;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      box-sizing: border-box;
+    }
+    
+    /* Adjust panel for smaller screens */
+    @media (max-width: 1200px) {
+      #config-panel {
+        width: 300px;
+        padding: 15px;
+        font-size: 11px;
+        max-height: calc(100vh - 80px);
+      }
+    }
+    
+    @media (max-width: 768px) {
+      #config-panel {
+        width: 100%;
+        max-height: 35vh;
+        padding: 15px;
+        font-size: 11px;
+      }
     }
     
     #config-panel h3 {
@@ -160,8 +198,6 @@
   </style>
 </head>
 <body>
-  <button id="restart-button">Restart Animation</button>
-  
   <div id="config-panel">
     <h3>Chart Configuration</h3>
     
@@ -361,7 +397,6 @@
     }
 
     const mainChartDiv = document.getElementById('main-chart');
-    const restartButton = document.getElementById('restart-button');
     const applyConfigButton = document.getElementById('apply-config');
     
     // Global variables to store chart references
@@ -406,32 +441,132 @@
       document.getElementById('sTime').value = config.markers.userMarkers.sTime;
     }
     
-    // Function to apply config changes
+    // Function to validate time format
+    function validateTimeFormat(timeString) {
+      const timeStr = timeString.toLowerCase().trim();
+      const match = timeStr.match(/^(\d+)([smhd])$/);
+      return match ? true : false;
+    }
+    
+    // Function to validate number input
+    function validateNumber(value, min = null, max = null) {
+      const num = parseFloat(value);
+      if (isNaN(num)) return false;
+      if (min !== null && num < min) return false;
+      if (max !== null && num > max) return false;
+      return true;
+    }
+    
+    // Function to show validation error
+    function showValidationError(fieldId, message) {
+      const field = document.getElementById(fieldId);
+      field.style.borderColor = '#ef5350';
+      field.title = message;
+      
+      // Remove error styling after 3 seconds
+      setTimeout(() => {
+        field.style.borderColor = '#444';
+        field.title = '';
+      }, 3000);
+    }
+    
+    // Function to clear validation errors
+    function clearValidationErrors() {
+      const inputs = document.querySelectorAll('#config-panel input, #config-panel select');
+      inputs.forEach(input => {
+        input.style.borderColor = '#444';
+        input.title = '';
+      });
+    }
+    
+    // Function to apply config changes with validation
     function applyConfigChanges() {
+      clearValidationErrors();
+      let hasErrors = false;
+      
       const config = chartConfig;
       
-      // Market Cap Settings
+      // Market Cap Settings validation
+      if (!validateNumber(document.getElementById('initialMarketCap').value, 1)) {
+        showValidationError('initialMarketCap', 'Initial Market Cap must be a positive number');
+        hasErrors = true;
+      }
+      if (!validateNumber(document.getElementById('finalMarketCap').value, 1)) {
+        showValidationError('finalMarketCap', 'Final Market Cap must be a positive number');
+        hasErrors = true;
+      }
+      if (!validateNumber(document.getElementById('minMarketCap').value, 1)) {
+        showValidationError('minMarketCap', 'Min Market Cap must be a positive number');
+        hasErrors = true;
+      }
+      if (!validateNumber(document.getElementById('rangeMarketCap').value, 1)) {
+        showValidationError('rangeMarketCap', 'Range Market Cap must be a positive number');
+        hasErrors = true;
+      }
+      
+      // Animation Timing validation
+      if (!validateNumber(document.getElementById('totalSeconds').value, 1, 300)) {
+        showValidationError('totalSeconds', 'Duration must be between 1 and 300 seconds');
+        hasErrors = true;
+      }
+      if (!validateNumber(document.getElementById('speedMultiplier').value, 0.1, 10)) {
+        showValidationError('speedMultiplier', 'Speed Multiplier must be between 0.1 and 10');
+        hasErrors = true;
+      }
+      
+      // Randomness Control validation
+      if (!validateNumber(document.getElementById('seed').value, 1)) {
+        showValidationError('seed', 'Seed must be a positive number');
+        hasErrors = true;
+      }
+      
+      // Historical Data validation
+      const preAnimationTime = document.getElementById('preAnimationTime').value;
+      if (preAnimationTime && !validateTimeFormat(preAnimationTime)) {
+        showValidationError('preAnimationTime', 'Time format must be like: 60s, 2h, 10m, 1d (e.g., 10s not "10 second")');
+        hasErrors = true;
+      }
+      
+      // Final Action validation
+      if (!validateNumber(document.getElementById('finalActionMarketCap').value, 1)) {
+        showValidationError('finalActionMarketCap', 'Target Market Cap must be a positive number');
+        hasErrors = true;
+      }
+      
+      // Marker timing validation
+      const totalSeconds = parseInt(document.getElementById('totalSeconds').value);
+      if (!validateNumber(document.getElementById('bTime').value, 0, totalSeconds - 1)) {
+        showValidationError('bTime', `B Time must be between 0 and ${totalSeconds - 1} seconds`);
+        hasErrors = true;
+      }
+      if (!validateNumber(document.getElementById('sTime').value, 0, totalSeconds - 1)) {
+        showValidationError('sTime', `S Time must be between 0 and ${totalSeconds - 1} seconds`);
+        hasErrors = true;
+      }
+      
+      // If there are validation errors, don't apply changes
+      if (hasErrors) {
+        alert('Please fix the validation errors (red borders) before applying changes.');
+        return;
+      }
+      
+      // Apply changes if validation passes
       config.initialMarketCap = parseInt(document.getElementById('initialMarketCap').value);
       config.finalMarketCap = parseInt(document.getElementById('finalMarketCap').value);
       config.minMarketCap = parseInt(document.getElementById('minMarketCap').value);
       config.rangeMarketCap = parseInt(document.getElementById('rangeMarketCap').value);
       
-      // Animation Timing
       config.totalSeconds = parseInt(document.getElementById('totalSeconds').value);
       config.speedMultiplier = parseFloat(document.getElementById('speedMultiplier').value);
       
-      // Randomness Control
       config.seed = parseInt(document.getElementById('seed').value);
       
-      // Historical Data
       config.enableHistoricalData = document.getElementById('enableHistoricalData').checked;
       config.preAnimationTime = document.getElementById('preAnimationTime').value;
       
-      // Final Action
       config.finalAction.type = document.getElementById('finalActionType').value;
       config.finalAction.marketCap = parseInt(document.getElementById('finalActionMarketCap').value);
       
-      // Markers
       config.markers.showFirstCandle = document.getElementById('showFirstCandle').checked;
       config.markers.firstCandleText = document.getElementById('firstCandleText').value;
       config.markers.showFinalCandle = document.getElementById('showFinalCandle').checked;
@@ -497,10 +632,6 @@
       
       console.log('Starting animation restart...');
       
-      // Disable button during animation
-      restartButton.disabled = true;
-      restartButton.textContent = 'Animating...';
-      
       // Configure chart to auto-follow the animation
       configureAutoFollow();
       
@@ -516,18 +647,86 @@
       // Start new animation
       startAnimation(series, volumeSeries, () => {
         console.log('Animation completed');
-        // Animation complete callback
-        restartButton.disabled = false;
-        restartButton.textContent = 'Restart Animation';
       });
     }
     
     // Add event listeners
-    restartButton.addEventListener('click', restartAnimation);
     applyConfigButton.addEventListener('click', applyConfigChanges);
+    
+    // Add real-time validation for time format field
+    document.getElementById('preAnimationTime').addEventListener('input', function(e) {
+      const value = e.target.value;
+      if (value && !validateTimeFormat(value)) {
+        e.target.style.borderColor = '#ef5350';
+        e.target.title = 'Time format must be like: 60s, 2h, 10m, 1d (e.g., 10s not "10 second")';
+      } else {
+        e.target.style.borderColor = '#444';
+        e.target.title = '';
+      }
+    });
+    
+    // Add real-time validation for number fields
+    const numberFields = ['initialMarketCap', 'finalMarketCap', 'minMarketCap', 'rangeMarketCap', 
+                         'totalSeconds', 'speedMultiplier', 'seed', 'finalActionMarketCap', 'bTime', 'sTime'];
+    
+    numberFields.forEach(fieldId => {
+      document.getElementById(fieldId).addEventListener('input', function(e) {
+        const value = e.target.value;
+        const num = parseFloat(value);
+        
+        if (value && (isNaN(num) || num <= 0)) {
+          e.target.style.borderColor = '#ef5350';
+          e.target.title = 'Must be a positive number';
+        } else {
+          e.target.style.borderColor = '#444';
+          e.target.title = '';
+        }
+      });
+    });
+    
+    // Special validation for duration field
+    document.getElementById('totalSeconds').addEventListener('input', function(e) {
+      const value = e.target.value;
+      const num = parseFloat(value);
+      
+      if (value && (isNaN(num) || num < 1 || num > 300)) {
+        e.target.style.borderColor = '#ef5350';
+        e.target.title = 'Duration must be between 1 and 300 seconds';
+      } else {
+        e.target.style.borderColor = '#444';
+        e.target.title = '';
+      }
+    });
+    
+    // Special validation for speed multiplier
+    document.getElementById('speedMultiplier').addEventListener('input', function(e) {
+      const value = e.target.value;
+      const num = parseFloat(value);
+      
+      if (value && (isNaN(num) || num < 0.1 || num > 10)) {
+        e.target.style.borderColor = '#ef5350';
+        e.target.title = 'Speed Multiplier must be between 0.1 and 10';
+      } else {
+        e.target.style.borderColor = '#444';
+        e.target.title = '';
+      }
+    });
     
     // Initialize config form
     populateConfigForm();
+    
+    // Function to update chart size responsively
+    function updateChartSize() {
+      if (chart) {
+        chart.applyOptions({
+          width: mainChartDiv.clientWidth,
+          height: mainChartDiv.clientHeight,
+        });
+      }
+    }
+    
+    // Handle window resize
+    window.addEventListener('resize', updateChartSize);
     
     // Wait for DOM to be ready and ensure dimensions are available
     setTimeout(() => {
