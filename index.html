@@ -304,7 +304,7 @@
       </div>
     </div>
     
-    <button id="apply-config">Apply & Restart</button>
+    <button id="apply-config">Apply & Start Animation</button>
   </div>
   
   <div id="chart-container">
@@ -818,14 +818,47 @@
       // Configure chart to auto-follow the animation
       configureAutoFollow();
       
-      // Start the animation after chart is ready
-      startAnimation(series, volumeSeries, () => {
-        console.log('Initial animation completed');
-      });
+      // Don't start animation automatically - wait for user to click Apply & Restart
+      console.log('Chart ready. Click "Apply & Start Animation" to begin.');
+      
+      // Add a subtle indicator that the chart is ready
+      const readyIndicator = document.createElement('div');
+      readyIndicator.style.cssText = `
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: #26a69a;
+        padding: 20px 40px;
+        border-radius: 8px;
+        font-size: 18px;
+        font-weight: 500;
+        text-align: center;
+        z-index: 1000;
+        border: 2px solid #26a69a;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      `;
+      readyIndicator.innerHTML = `
+        <div>📊 Chart Ready</div>
+        <div style="font-size: 14px; margin-top: 8px; color: #d1d4dc;">
+          Click "Apply & Start Animation" to begin
+        </div>
+      `;
+      mainChartDiv.appendChild(readyIndicator);
+      
+      // Store reference to remove it when animation starts
+      window.readyIndicator = readyIndicator;
     }, 100);
 
     function startAnimation(series, volumeSeries, onComplete) {
       console.log('startAnimation called with onComplete:', !!onComplete);
+      
+      // Remove the ready indicator when animation starts
+      if (window.readyIndicator) {
+        window.readyIndicator.remove();
+        window.readyIndicator = null;
+      }
       
       // Use configuration values
       const config = chartConfig;
