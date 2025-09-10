@@ -255,7 +255,7 @@
     }
     
     .config-item input[type="number"] {
-      width: 60px;
+      width: 50px;
     }
     
     .config-item input[type="text"] {
@@ -263,13 +263,35 @@
     }
     
     .config-item select {
-      width: 80px;
-      padding: 5px;
+      width: 60px;
+      padding: 4px;
       border: 1px solid #555;
       border-radius: 4px;
       background: #333;
       color: #d1d4dc;
-      font-size: 12px;
+      font-size: 11px;
+    }
+    
+    .marker-item {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 10px;
+      padding: 8px;
+      background: #1a1a1a;
+      border-radius: 6px;
+      border: 1px solid #333;
+    }
+    
+    .marker-item .config-item {
+      margin-bottom: 0;
+      flex: 0 0 auto;
+    }
+    
+    .marker-item .config-item label {
+      font-size: 11px;
+      margin-right: 4px;
     }
     
     #apply-config {
@@ -405,22 +427,36 @@
           <div id="dev-markers">
             <div class="marker-item">
               <div class="config-item">
-                <label>Dev Buy 1:</label>
+                <label>Dev 1:</label>
                 <input type="checkbox" id="showFirstCandle" checked>
               </div>
               <div class="config-item">
-                <label>Time (s):</label>
+                <label>Type:</label>
+                <select id="firstCandleType">
+                  <option value="buy">Buy</option>
+                  <option value="sell">Sell</option>
+                </select>
+              </div>
+              <div class="config-item">
+                <label>Time:</label>
                 <input type="number" id="firstCandleTime" value="1">
               </div>
               <button type="button" class="remove-marker" onclick="removeDevMarker(this)" style="display: none;">🗑️</button>
             </div>
             <div class="marker-item">
               <div class="config-item">
-                <label>Dev Sell 1:</label>
+                <label>Dev 2:</label>
                 <input type="checkbox" id="showFinalCandle" checked>
               </div>
               <div class="config-item">
-                <label>Time (s):</label>
+                <label>Type:</label>
+                <select id="finalCandleType">
+                  <option value="buy">Buy</option>
+                  <option value="sell" selected>Sell</option>
+                </select>
+              </div>
+              <div class="config-item">
+                <label>Time:</label>
                 <input type="number" id="finalCandleTime" value="10">
               </div>
               <button type="button" class="remove-marker" onclick="removeDevMarker(this)" style="display: none;">🗑️</button>
@@ -435,22 +471,36 @@
           <div id="user-markers">
             <div class="marker-item">
               <div class="config-item">
-                <label>User Buy 1:</label>
+                <label>User 1:</label>
                 <input type="checkbox" id="showB">
               </div>
               <div class="config-item">
-                <label>Time (s):</label>
+                <label>Type:</label>
+                <select id="bType">
+                  <option value="buy" selected>Buy</option>
+                  <option value="sell">Sell</option>
+                </select>
+              </div>
+              <div class="config-item">
+                <label>Time:</label>
                 <input type="number" id="bTime" value="5">
               </div>
               <button type="button" class="remove-marker" onclick="removeUserMarker(this)" style="display: none;">🗑️</button>
             </div>
             <div class="marker-item">
               <div class="config-item">
-                <label>User Sell 1:</label>
+                <label>User 2:</label>
                 <input type="checkbox" id="showS">
               </div>
               <div class="config-item">
-                <label>Time (s):</label>
+                <label>Type:</label>
+                <select id="sType">
+                  <option value="buy">Buy</option>
+                  <option value="sell" selected>Sell</option>
+                </select>
+              </div>
+              <div class="config-item">
+                <label>Time:</label>
                 <input type="number" id="sTime" value="8">
               </div>
               <button type="button" class="remove-marker" onclick="removeUserMarker(this)" style="display: none;">🗑️</button>
@@ -481,7 +531,7 @@
       markerItem.className = 'marker-item';
       markerItem.innerHTML = `
         <div class="config-item">
-          <label>Dev Marker ${devMarkerCount}:</label>
+          <label>Dev ${devMarkerCount}:</label>
           <input type="checkbox" id="showDevMarker${devMarkerCount}" checked>
         </div>
         <div class="config-item">
@@ -492,7 +542,7 @@
           </select>
         </div>
         <div class="config-item">
-          <label>Time (s):</label>
+          <label>Time:</label>
           <input type="number" id="devMarkerTime${devMarkerCount}" value="30">
         </div>
         <button type="button" class="remove-marker" onclick="removeDevMarker(this)">🗑️</button>
@@ -513,7 +563,7 @@
       markerItem.className = 'marker-item';
       markerItem.innerHTML = `
         <div class="config-item">
-          <label>User Marker ${userMarkerCount}:</label>
+          <label>User ${userMarkerCount}:</label>
           <input type="checkbox" id="showUserMarker${userMarkerCount}" checked>
         </div>
         <div class="config-item">
@@ -524,7 +574,7 @@
           </select>
         </div>
         <div class="config-item">
-          <label>Time (s):</label>
+          <label>Time:</label>
           <input type="number" id="userMarkerTime${userMarkerCount}" value="30">
         </div>
         <button type="button" class="remove-marker" onclick="removeUserMarker(this)">🗑️</button>
@@ -1487,69 +1537,75 @@
             
             console.log(`Bar ${current}: Time=${currentTime}s, MC=${currentBar.close}, Dev Buy target=${config.markers.firstCandleTime}s, Dev Sell target=${config.markers.finalCandleTime}s, B target=${userMarkers.bTime}s, S target=${userMarkers.sTime}s, showB=${userMarkers.showB}, showS=${userMarkers.showS}`);
             
-            // Check for Dev Buy marker at specific time
-            if (config.markers.showFirstCandle && config.markers.firstCandleTime !== undefined && !existingMarkers.some(m => m.text === 'DB')) {
-              if (currentTime === config.markers.firstCandleTime) {
+            // Check for Dev marker 1 at specific time
+            if (config.markers.showFirstCandle && config.markers.firstCandleTime !== undefined) {
+              const dev1Type = document.getElementById('firstCandleType')?.value || 'buy';
+              const dev1Text = `D${dev1Type.toUpperCase().charAt(0)}1`;
+              if (currentTime === config.markers.firstCandleTime && !existingMarkers.some(m => m.text === dev1Text)) {
                 markersToAdd.push({
                   time: currentBar.time,
                   position: 'aboveBar',
-                  color: '#26a69a',
+                  color: dev1Type === 'buy' ? '#26a69a' : '#ef5350',
                   shape: 'circle',
-                  text: 'DB',
+                  text: dev1Text,
                   size: 3,
                   offsetY: -20
                 });
-                console.log(`Dev Buy marker triggered at time: ${currentTime}s (target: ${config.markers.firstCandleTime}s)`);
+                console.log(`Dev ${dev1Type} marker 1 triggered at time: ${currentTime}s (target: ${config.markers.firstCandleTime}s)`);
               }
             }
             
-            // Check for Dev Sell marker at specific time
-            if (config.markers.showFinalCandle && config.markers.finalCandleTime !== undefined && !existingMarkers.some(m => m.text === 'DS')) {
-              if (currentTime === config.markers.finalCandleTime) {
+            // Check for Dev marker 2 at specific time
+            if (config.markers.showFinalCandle && config.markers.finalCandleTime !== undefined) {
+              const dev2Type = document.getElementById('finalCandleType')?.value || 'sell';
+              const dev2Text = `D${dev2Type.toUpperCase().charAt(0)}2`;
+              if (currentTime === config.markers.finalCandleTime && !existingMarkers.some(m => m.text === dev2Text)) {
                 markersToAdd.push({
                   time: currentBar.time,
                   position: 'aboveBar',
-                  color: '#ef5350',
+                  color: dev2Type === 'buy' ? '#26a69a' : '#ef5350',
                   shape: 'circle',
-                  text: 'DS',
+                  text: dev2Text,
                   size: 3,
                   offsetY: -20
                 });
-                console.log(`Dev Sell marker triggered at time: ${currentTime}s (target: ${config.markers.finalCandleTime}s)`);
+                console.log(`Dev ${dev2Type} marker 2 triggered at time: ${currentTime}s (target: ${config.markers.finalCandleTime}s)`);
               }
             }
             
-            // Check for B marker at specific time
+            // Check for User marker 1 at specific time
             if (userMarkers.showB && userMarkers.bTime !== undefined) {
-              const bMarkerText = userMarkers.bText || 'B';
-              if (currentTime === userMarkers.bTime && !existingMarkers.some(m => m.text === bMarkerText)) {
+              const user1Type = document.getElementById('bType')?.value || 'buy';
+              const user1Text = `${user1Type.toUpperCase().charAt(0)}1`;
+              if (currentTime === userMarkers.bTime && !existingMarkers.some(m => m.text === user1Text)) {
                 markersToAdd.push({
                   time: currentBar.time,
                   position: 'aboveBar',
-                  color: '#26a69a',
+                  color: user1Type === 'buy' ? '#26a69a' : '#ef5350',
                   shape: 'circle',
-                  text: bMarkerText,
+                  text: user1Text,
                   size: 3,
                   offsetY: -20
                 });
-                console.log(`B marker triggered at time: ${currentTime}s (target: ${userMarkers.bTime}s), showB: ${userMarkers.showB}`);
+                console.log(`User ${user1Type} marker 1 triggered at time: ${currentTime}s (target: ${userMarkers.bTime}s), showB: ${userMarkers.showB}`);
               }
             }
             
-            // Check for S marker at specific time
+            // Check for User marker 2 at specific time
             if (userMarkers.showS && userMarkers.sTime !== undefined) {
-              const sMarkerText = userMarkers.sText || 'S';
-              if (currentTime === userMarkers.sTime && !existingMarkers.some(m => m.text === sMarkerText)) {
+              const user2Type = document.getElementById('sType')?.value || 'sell';
+              const user2Text = `${user2Type.toUpperCase().charAt(0)}2`;
+              if (currentTime === userMarkers.sTime && !existingMarkers.some(m => m.text === user2Text)) {
                 markersToAdd.push({
                   time: currentBar.time,
                   position: 'aboveBar',
-                  color: '#ef5350',
+                  color: user2Type === 'buy' ? '#26a69a' : '#ef5350',
                   shape: 'circle',
-                  text: sMarkerText,
+                  text: user2Text,
                   size: 3,
                   offsetY: -20
                 });
-                console.log(`S marker triggered at time: ${currentTime}s (target: ${userMarkers.sTime}s), showS: ${userMarkers.showS}`);
+                console.log(`User ${user2Type} marker 2 triggered at time: ${currentTime}s (target: ${userMarkers.sTime}s), showS: ${userMarkers.showS}`);
               }
             }
             
@@ -1621,29 +1677,37 @@
               const allMarkers = [...existingMarkers];
               
               // Add first animated candle marker if enabled and not already present
-              if (config.markers.showFirstCandle && !existingMarkers.some(m => m.text === 'DB')) {
-                allMarkers.push({
-                  time: animatedBars[0].time,
-                  position: 'aboveBar',
-                  color: '#26a69a',
-                  shape: 'circle',
-                  text: 'DB',
-                  size: 3,
-                  offsetY: -20  // Move marker higher above the candle
-                });
+              if (config.markers.showFirstCandle) {
+                const dev1Type = document.getElementById('firstCandleType')?.value || 'buy';
+                const dev1Text = `D${dev1Type.toUpperCase().charAt(0)}1`;
+                if (!existingMarkers.some(m => m.text === dev1Text)) {
+                  allMarkers.push({
+                    time: animatedBars[0].time,
+                    position: 'aboveBar',
+                    color: dev1Type === 'buy' ? '#26a69a' : '#ef5350',
+                    shape: 'circle',
+                    text: dev1Text,
+                    size: 3,
+                    offsetY: -20  // Move marker higher above the candle
+                  });
+                }
               }
               
               // Add final animated candle marker if enabled and not already present
-              if (config.markers.showFinalCandle && !existingMarkers.some(m => m.text === 'DS')) {
-                allMarkers.push({
-                  time: animatedBars[animatedBars.length - 1].time,
-                  position: 'aboveBar',
-                  color: '#ef5350',
-                  shape: 'circle',
-                  text: 'DS',
-                  size: 3,
-                  offsetY: -20  // Move marker higher above the candle
-                });
+              if (config.markers.showFinalCandle) {
+                const dev2Type = document.getElementById('finalCandleType')?.value || 'sell';
+                const dev2Text = `D${dev2Type.toUpperCase().charAt(0)}2`;
+                if (!existingMarkers.some(m => m.text === dev2Text)) {
+                  allMarkers.push({
+                    time: animatedBars[animatedBars.length - 1].time,
+                    position: 'aboveBar',
+                    color: dev2Type === 'buy' ? '#26a69a' : '#ef5350',
+                    shape: 'circle',
+                    text: dev2Text,
+                    size: 3,
+                    offsetY: -20  // Move marker higher above the candle
+                  });
+                }
               }
               
               series.setMarkers(allMarkers);
