@@ -625,6 +625,9 @@
     
     // Function to restart animation
     function restartAnimation() {
+      console.log('🔄 restartAnimation called');
+      console.trace('restartAnimation call stack:'); // This will show us where it's being called from
+      
       if (!chart || !series || !volumeSeries) {
         console.error('Chart or series not available');
         return;
@@ -852,7 +855,8 @@
     }, 100);
 
     function startAnimation(series, volumeSeries, onComplete) {
-      console.log('startAnimation called with onComplete:', !!onComplete);
+      console.log('🚀 startAnimation called with onComplete:', !!onComplete);
+      console.trace('startAnimation call stack:'); // This will show us where it's being called from
       
       // Remove the ready indicator when animation starts
       if (window.readyIndicator) {
