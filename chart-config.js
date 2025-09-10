@@ -9,9 +9,10 @@ const chartConfig = {
   
   // Animation Timing
   totalSeconds: 20,                // How many seconds the animation should run
+  speedMultiplier: 2,              // Animation speed: 1 = real-time, 0.5 = half speed, 2 = double speed
   
   // Trading Range
-  rangeMarketCap: 2000,             // Random trading stays within +/- this range
+  rangeMarketCap: 5000,             // Random trading stays within +/- this range
   
   // Final Action (Dump or Pump)
   finalAction: {
@@ -38,8 +39,8 @@ const chartConfig = {
     // User markers - appear at specific times
     userMarkers: {
       showB: true,                 // Show B marker for user buy
-      showS: true,                 // Show S marker for user sell
-      bTime: 5,                   // Time in seconds where B marker appears
+      showS: false,                 // Show S marker for user sell
+      bTime: 18,                   // Time in seconds where B marker appears
       sTime: 15,                  // Time in seconds where S marker appears
       bText: 'B',                 // Text for B marker
       sText: 'S'                  // Text for S marker
