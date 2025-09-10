@@ -26,63 +26,58 @@
       background: #000;
       box-shadow: 0 4px 32px rgba(0,0,0,0.4);
       border-radius: 12px;
-      display: flex;
-      flex-direction: column;
     }
     #main-chart {
       width: 100%;
-      height: 70%;
-    }
-    #volume-chart {
-      width: 100%;
-      height: 30%;
-      border-top: 1px solid #333;
+      height: 100%;
     }
   </style>
 </head>
 <body>
   <div id="chart-container">
     <div id="main-chart"></div>
-    <div id="volume-chart"></div>
   </div>
   <script>
     // Robust market cap formatter
     function marketCapFormatter(price) {
       if (price >= 1_000_000_000) {
         return (price / 1_000_000_000) % 1 === 0
-          ? (price / 1_000_000_000).toFixed(0) + 'B'
-          : (price / 1_000_000_000).toFixed(2).replace(/0+$/, '').replace(/\.$/, '') + 'B';
-      } else if (price >= 1_000_000) {
-        return (price / 1_000_000) % 1 === 0
-          ? (price / 1_000_000).toFixed(0) + 'M'
-          : (price / 1_000_000).toFixed(2).replace(/0+$/, '').replace(/\.$/, '') + 'M';
-      } else if (price >= 1_000) {
-        return (price / 1_000) % 1 === 0
-          ? (price / 1_000).toFixed(0) + 'K'
-          : (price / 1_000).toFixed(2).replace(/0+$/, '').replace(/\.$/, '') + 'K';
-      } else {
-        return price.toFixed(2).replace(/\.00$/, '');
+          ? `${(price / 1_000_000_000).toFixed(0)}B`
+          : `${(price / 1_000_000_000).toFixed(2).replace(/0+$/, '').replace(/\.$/, '')}B`;
       }
+      if (price >= 1_000_000) {
+        return (price / 1_000_000) % 1 === 0
+          ? `${(price / 1_000_000).toFixed(0)}M`
+          : `${(price / 1_000_000).toFixed(2).replace(/0+$/, '').replace(/\.$/, '')}M`;
+      }
+      if (price >= 1_000) {
+        return (price / 1_000) % 1 === 0
+          ? `${(price / 1_000).toFixed(0)}K`
+          : `${(price / 1_000).toFixed(2).replace(/0+$/, '').replace(/\.$/, '')}K`;
+      }
+      return price.toFixed(0);
     }
 
     // Volume formatter
     function volumeFormatter(volume) {
       if (volume >= 1_000_000) {
-        return (volume / 1_000_000).toFixed(1) + 'M';
-      } else if (volume >= 1_000) {
-        return (volume / 1_000).toFixed(1) + 'K';
-      } else {
-        return volume.toFixed(0);
+        return (volume / 1_000_000) % 1 === 0
+          ? `${(volume / 1_000_000).toFixed(0)}M`
+          : `${(volume / 1_000_000).toFixed(2).replace(/0+$/, '').replace(/\.$/, '')}M`;
       }
+      if (volume >= 1_000) {
+        return (volume / 1_000) % 1 === 0
+          ? `${(volume / 1_000).toFixed(0)}K`
+          : `${(volume / 1_000).toFixed(2).replace(/0+$/, '').replace(/\.$/, '')}K`;
+      }
+      return volume.toFixed(0);
     }
 
-    // Chart setup
     const mainChartDiv = document.getElementById('main-chart');
-    const volumeChartDiv = document.getElementById('volume-chart');
     
     // Wait for DOM to be ready and ensure dimensions are available
     setTimeout(() => {
-      const mainChart = LightweightCharts.createChart(mainChartDiv, {
+      const chart = LightweightCharts.createChart(mainChartDiv, {
         width: mainChartDiv.clientWidth,
         height: mainChartDiv.clientHeight,
         layout: {
@@ -96,31 +91,18 @@
         rightPriceScale: {
           priceFormatter: marketCapFormatter,
         },
-        timeScale: {
-          rightOffset: 20,
-        },
-      });
-
-      const volumeChart = LightweightCharts.createChart(volumeChartDiv, {
-        width: volumeChartDiv.clientWidth,
-        height: volumeChartDiv.clientHeight,
-        layout: {
-          background: { color: '#000' },
-          textColor: '#d1d4dc',
-        },
-        grid: {
-          vertLines: { color: '#222' },
-          horzLines: { color: '#222' },
-        },
-        rightPriceScale: {
-          priceFormatter: volumeFormatter,
+        leftPriceScale: {
+          visible: false,
         },
         timeScale: {
           rightOffset: 20,
+          timeVisible: true,
+          secondsVisible: true,
+          borderVisible: false,
         },
       });
 
-      const series = mainChart.addCandlestickSeries({
+      const series = chart.addCandlestickSeries({
         upColor: '#26a69a',
         downColor: '#ef5350',
         borderVisible: false,
@@ -131,105 +113,154 @@
           minMove: 1,
           formatter: marketCapFormatter,
         },
+        priceScaleId: 'right',
       });
 
-      const volumeSeries = volumeChart.addHistogramSeries({
-        color: '#26a69a',
-        priceFormat: {
-          type: 'volume',
+      // Adjust main price scale to use top 70% of chart
+      chart.priceScale('right').applyOptions({
+        scaleMargins: {
+          top: 0,
+          bottom: 0.3,  // Candlesticks take up top 70% of chart
         },
-        priceScaleId: '',
       });
 
-      // Note: Time scale synchronization removed to prevent null value errors
+      const volumeSeries = chart.addHistogramSeries({
+        color: 'rgba(38, 166, 154, 0.3)', // 30% opacity for up volume
+        priceFormat: {
+          type: 'custom',
+          minMove: 1,
+          formatter: volumeFormatter,
+        },
+        priceScaleId: 'volume',
+      });
 
-      // Start the animation after charts are ready
+      // Add a separate price scale for volume
+      chart.priceScale('volume').applyOptions({
+        scaleMargins: {
+          top: 0.7,  // Volume takes up bottom 30% of chart
+          bottom: 0,
+        },
+        priceFormatter: volumeFormatter,
+      });
+
+      // Start the animation after chart is ready
       startAnimation(series, volumeSeries);
     }, 100);
 
     function startAnimation(series, volumeSeries) {
-      // Generate data with volume
+      // Generate data
       const bars = [];
       const volumeData = [];
-      let base = 1;
-      let time = Math.floor(Date.now() / 1000) - 60 * 60 * 24; // 24 hours ago
-      let lastClose = base;
-      const minCap = 3;
-      const maxCap = 40;
-      const uptrendBars = 8; // Number of initial uptrend bars
-      for (let i = 0; i < 100; i++) {
+      const startTime = Date.now() - 50 * 1000; // 50 seconds ago
+      const basePrice = 10_000; // Start at 10K market cap
+      let lastClose = basePrice;
+
+      // First 8 bars are forced uptrend
+      for (let i = 0; i < 8; i++) {
+        const time = startTime + i * 1000; // 1 second intervals
         const open = lastClose;
-        let close;
-        if (i < uptrendBars) {
-          // Force uptrend: close > open
-          close = open + Math.abs(Math.random() * 0.5 + 0.1); // always up
-        } else {
-          close = open + (Math.random() - 0.5) * 0.5;
-        }
-        // Clamp to min/max cap (in units of 1k, since we scale by 10,000)
-        close = Math.max(minCap, Math.min(maxCap, close));
-        const high = Math.max(open, close);
-        const low = Math.min(open, close);
-        
-        // Generate volume (higher volume for bigger moves)
-        const priceChange = Math.abs(close - open);
-        const baseVolume = 1000 + Math.random() * 2000;
-        const volume = Math.floor(baseVolume + priceChange * 1000);
+        const change = Math.random() * 2000 + 500; // 500-2500 increase
+        const close = open + change;
+        const high = close + Math.random() * 1000;
+        const low = open - Math.random() * 500;
         
         bars.push({
-          time: time,
-          open: Number((open * 10000).toFixed(2)),
-          high: Number((high * 10000).toFixed(2)),
-          low: Number((low * 10000).toFixed(2)),
-          close: Number((close * 10000).toFixed(2)),
+          time: time / 1000,
+          open: open,
+          high: high,
+          low: low,
+          close: close,
         });
-
+        
+        const volume = Math.random() * 2000 + 1000;
         volumeData.push({
-          time: time,
+          time: time / 1000,
           value: volume,
-          color: close >= open ? '#26a69a' : '#ef5350',
+          color: close > open ? 'rgba(38, 166, 154, 0.3)' : 'rgba(239, 83, 80, 0.3)',
         });
         
         lastClose = close;
-        time += 60 * 3; // 3 minutes per bar
       }
-      // Add the huge green candle at the end, jumping to 1M
+
+      // Random trading between 3K and 40K
+      for (let i = 8; i < 49; i++) {
+        const time = startTime + i * 1000; // 1 second intervals
+        const open = lastClose;
+        const change = (Math.random() - 0.5) * 4000; // -2000 to +2000
+        let close = open + change;
+        
+        // Clamp between 3K and 40K
+        close = Math.max(3_000, Math.min(40_000, close));
+        
+        const high = Math.max(open, close) + Math.random() * 1000;
+        const low = Math.min(open, close) - Math.random() * 1000;
+        
+        bars.push({
+          time: time / 1000,
+          open: open,
+          high: high,
+          low: low,
+          close: close,
+        });
+        
+        const volume = Math.random() * 2000 + 1000;
+        volumeData.push({
+          time: time / 1000,
+          value: volume,
+          color: close > open ? 'rgba(38, 166, 154, 0.3)' : 'rgba(239, 83, 80, 0.3)',
+        });
+        
+        lastClose = close;
+      }
+
+      // Final candle (the big one)
+      const finalTime = startTime + 49 * 1000; // 1 second intervals
+      const finalOpen = lastClose;
+      const finalClose = 1_000_000; // 1M market cap
+      const finalHigh = finalClose + Math.random() * 100_000;
+      const finalLow = finalOpen - Math.random() * 10_000;
+      
       bars.push({
-        time: time,
-        open: Number((lastClose * 10000).toFixed(2)),
-        low: Number((lastClose * 10000).toFixed(2)),
-        high: 1_000_000,
-        close: 1_000_000,
+        time: finalTime / 1000,
+        open: finalOpen,
+        high: finalHigh,
+        low: finalLow,
+        close: finalClose,
       });
-
+      
+      const finalVolume = Math.random() * 5000 + 5000;
       volumeData.push({
-        time: time,
-        value: 50000, // High volume for the big move
-        color: '#26a69a',
+        time: finalTime / 1000,
+        value: finalVolume,
+        color: 'rgba(38, 166, 154, 0.3)',
       });
 
-      // Animate the chart (no markers)
       let current = 0;
       const liveBars = [];
       const liveVolume = [];
-      
+
       function animateFinalCandle(liveBars, liveVolume, openValue, targetValue, steps, duration) {
         let step = 0;
+        const stepDuration = duration / steps;
+        const stepSize = (targetValue - openValue) / steps;
+        
         function grow() {
-          step++;
-          const progress = step / steps;
-          const value = openValue + (targetValue - openValue) * progress;
-          // Update the last candle's close and high
-          const animatedBar = {
-            ...liveBars[liveBars.length - 1],
-            close: value,
-            high: value,
-          };
-          const updatedBars = liveBars.slice(0, -1).concat([animatedBar]);
-          series.setData(updatedBars);
-          volumeSeries.setData(liveVolume); // Keep volume chart updated too
           if (step < steps) {
-            setTimeout(grow, duration / steps);
+            const currentValue = openValue + (stepSize * step);
+            const currentHigh = currentValue + Math.random() * 1000;
+            const currentLow = Math.min(openValue, currentValue) - Math.random() * 500;
+            
+            liveBars[liveBars.length - 1] = {
+              ...liveBars[liveBars.length - 1],
+              close: currentValue,
+              high: currentHigh,
+              low: currentLow,
+            };
+            
+            series.setData(liveBars);
+            volumeSeries.setData(liveVolume);
+            step++;
+            setTimeout(grow, stepDuration);
           }
         }
         grow();
@@ -265,4 +296,4 @@
     }
   </script>
 </body>
-</html> 
+</html>
