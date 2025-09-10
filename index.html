@@ -323,19 +323,19 @@
         <h4>Market Cap Settings</h4>
         <div class="config-item">
           <label>Initial MC:</label>
-          <input type="number" id="initialMarketCap" value="16000">
+          <input type="number" id="initialMarketCap" value="10000">
         </div>
         <div class="config-item">
           <label>Final MC:</label>
-          <input type="number" id="finalMarketCap" value="20000">
+          <input type="number" id="finalMarketCap" value="50000">
         </div>
         <div class="config-item">
           <label>Min MC:</label>
-          <input type="number" id="minMarketCap" value="2000">
+          <input type="number" id="minMarketCap" value="5000">
         </div>
         <div class="config-item">
           <label>Range MC:</label>
-          <input type="number" id="rangeMarketCap" value="5000">
+          <input type="number" id="rangeMarketCap" value="2000">
         </div>
       </div>
       
@@ -343,11 +343,11 @@
         <h4>Animation Timing</h4>
         <div class="config-item">
           <label>Duration (s):</label>
-          <input type="number" id="totalSeconds" value="60">
+          <input type="number" id="totalSeconds" value="10">
         </div>
         <div class="config-item">
           <label>Speed Multiplier:</label>
-          <input type="number" id="speedMultiplier" value="2" step="0.1">
+          <input type="number" id="speedMultiplier" value="1" step="0.1">
         </div>
       </div>
       
@@ -367,7 +367,7 @@
         </div>
         <div class="config-item">
           <label>Time:</label>
-          <input type="text" id="preAnimationTime" value="2h" placeholder="e.g., 2h, 60s">
+          <input type="text" id="preAnimationTime" value="1h" placeholder="e.g., 2h, 60s">
         </div>
       </div>
       
@@ -382,7 +382,7 @@
         </div>
         <div class="config-item">
           <label>Target MC:</label>
-          <input type="number" id="finalActionMarketCap" value="1000">
+          <input type="number" id="finalActionMarketCap" value="5000">
         </div>
       </div>
       
@@ -411,7 +411,7 @@
               </div>
               <div class="config-item">
                 <label>Time (s):</label>
-                <input type="number" id="finalCandleTime" value="60">
+                <input type="number" id="finalCandleTime" value="10">
               </div>
               <button type="button" class="remove-marker" onclick="removeDevMarker(this)" style="display: none;">🗑️</button>
             </div>
@@ -426,11 +426,11 @@
             <div class="marker-item">
               <div class="config-item">
                 <label>User Buy 1:</label>
-                <input type="checkbox" id="showB" checked>
+                <input type="checkbox" id="showB">
               </div>
               <div class="config-item">
                 <label>Time (s):</label>
-                <input type="number" id="bTime" value="30">
+                <input type="number" id="bTime" value="5">
               </div>
               <button type="button" class="remove-marker" onclick="removeUserMarker(this)" style="display: none;">🗑️</button>
             </div>
@@ -441,7 +441,7 @@
               </div>
               <div class="config-item">
                 <label>Time (s):</label>
-                <input type="number" id="sTime" value="45">
+                <input type="number" id="sTime" value="8">
               </div>
               <button type="button" class="remove-marker" onclick="removeUserMarker(this)" style="display: none;">🗑️</button>
             </div>
@@ -1269,18 +1269,27 @@
         // Calculate where we should be at this point in the animation
         const targetPrice = config.initialMarketCap + (progressPerBar * (i + 1));
         
-        // Random trading with subtle trend toward target
-        const trendStrength = 0.05; // Very subtle trend (5% of distance to target)
-        const randomStrength = 0.95; // Mostly random variation (95%)
+        // Random trading with balanced trend and variation
+        const progressRatio = (i + 1) / (totalBars - 1); // How far through the animation we are (0-1)
+        const trendStrength = 0.03 + (progressRatio * 0.12); // 3% at start, 15% at end (balanced)
+        const randomStrength = 0.7; // 70% random variation
         
-        // Calculate trend component (very subtle pull toward target)
+        // Calculate trend component (balanced pull toward target)
         const trendComponent = (targetPrice - open) * trendStrength;
         
-        // Calculate random component (full range variation)
+        // Calculate random component (strong for natural variation)
         const randomComponent = (rng.next() - 0.5) * config.rangeMarketCap * randomStrength;
         
-        // Combine trend and random movement
-        let change = trendComponent + randomComponent;
+        // Add moderate random trend direction changes for natural movement
+        const randomDirectionChance = 0.3; // 30% chance of random direction
+        const trendDirection = rng.next() < randomDirectionChance ? (rng.next() - 0.5) * 2 : 1;
+        
+        // Add some momentum and volatility for more realistic price action
+        const volatility = 0.8 + rng.next() * 0.4; // 0.8x to 1.2x volatility multiplier
+        const momentum = rng.next() < 0.25 ? (rng.next() - 0.5) * 0.3 : 0; // 25% chance of momentum
+        
+        // Combine all components with balanced trend influence
+        let change = (trendComponent * trendDirection) + (randomComponent + momentum) * volatility;
         
         // First candle should always be a buy (green)
         if (i === 0) {
@@ -1299,14 +1308,16 @@
           close = config.minMarketCap;
         }
         
-        // Very subtle pull toward target if we're way off track
+        // Balanced correction toward target (more effective but still natural)
         const totalDistance = Math.abs(config.finalMarketCap - config.initialMarketCap);
         const currentProgress = Math.abs(close - config.initialMarketCap) / totalDistance;
         const expectedProgress = (i + 1) / (totalBars - 1);
+        const progressDeviation = Math.abs(currentProgress - expectedProgress);
         
-        // Only apply gentle correction if we're significantly behind/behind the expected progress
-        if (Math.abs(currentProgress - expectedProgress) > 0.3) {
-          const correction = (targetPrice - close) * 0.02; // Very gentle 2% correction
+        // Apply correction when moderately off track
+        if (progressDeviation > 0.4) {
+          const correctionStrength = 0.01 + (progressRatio * 0.03); // 1% at start, 4% at end
+          const correction = (targetPrice - close) * correctionStrength;
           close = close + correction;
         }
         
@@ -1442,7 +1453,7 @@
             // Calculate current time in seconds (each bar is 1 second, starting from 1)
             const currentTime = current + 1;
             
-            console.log(`Bar ${current}: Time=${currentTime}s, MC=${currentBar.close}, Dev Buy target=${config.markers.firstCandleTime}s, Dev Sell target=${config.markers.finalCandleTime}s, B target=${userMarkers.bTime}s, S target=${userMarkers.sTime}s`);
+            console.log(`Bar ${current}: Time=${currentTime}s, MC=${currentBar.close}, Dev Buy target=${config.markers.firstCandleTime}s, Dev Sell target=${config.markers.finalCandleTime}s, B target=${userMarkers.bTime}s, S target=${userMarkers.sTime}s, showB=${userMarkers.showB}, showS=${userMarkers.showS}`);
             
             // Check for Dev Buy marker at specific time
             if (config.markers.showFirstCandle && config.markers.firstCandleTime !== undefined && !existingMarkers.some(m => m.text === 'DB')) {
@@ -1477,34 +1488,36 @@
             }
             
             // Check for B marker at specific time
-            if (userMarkers.showB && userMarkers.bTime !== undefined && !existingMarkers.some(m => m.text === (userMarkers.bText || 'B'))) {
-              if (currentTime === userMarkers.bTime) {
+            if (userMarkers.showB && userMarkers.bTime !== undefined) {
+              const bMarkerText = userMarkers.bText || 'B';
+              if (currentTime === userMarkers.bTime && !existingMarkers.some(m => m.text === bMarkerText)) {
                 markersToAdd.push({
                   time: currentBar.time,
                   position: 'aboveBar',
                   color: '#26a69a',
                   shape: 'circle',
-                  text: userMarkers.bText || 'B',
+                  text: bMarkerText,
                   size: 3,
                   offsetY: -20
                 });
-                console.log(`B marker triggered at time: ${currentTime}s (target: ${userMarkers.bTime}s)`);
+                console.log(`B marker triggered at time: ${currentTime}s (target: ${userMarkers.bTime}s), showB: ${userMarkers.showB}`);
               }
             }
             
             // Check for S marker at specific time
-            if (userMarkers.showS && userMarkers.sTime !== undefined && !existingMarkers.some(m => m.text === (userMarkers.sText || 'S'))) {
-              if (currentTime === userMarkers.sTime) {
+            if (userMarkers.showS && userMarkers.sTime !== undefined) {
+              const sMarkerText = userMarkers.sText || 'S';
+              if (currentTime === userMarkers.sTime && !existingMarkers.some(m => m.text === sMarkerText)) {
                 markersToAdd.push({
                   time: currentBar.time,
                   position: 'aboveBar',
                   color: '#ef5350',
                   shape: 'circle',
-                  text: userMarkers.sText || 'S',
+                  text: sMarkerText,
                   size: 3,
                   offsetY: -20
                 });
-                console.log(`S marker triggered at time: ${currentTime}s (target: ${userMarkers.sTime}s)`);
+                console.log(`S marker triggered at time: ${currentTime}s (target: ${userMarkers.sTime}s), showS: ${userMarkers.showS}`);
               }
             }
             
@@ -1539,7 +1552,7 @@
                 }
                 
                 // Add final action marker if not already present
-                const finalMarkerText = config.markers.finalCandleText || (config.finalAction.type === 'pump' ? 'B' : 'S');
+                const finalMarkerText = config.markers.finalCandleText || (config.finalAction.type === 'pump' ? 'PUMP' : 'DUMP');
                 if (!existingMarkers.some(m => m.text === finalMarkerText)) {
                   allMarkers.push({
                     time: animatedBars[animatedBars.length - 1].time,
