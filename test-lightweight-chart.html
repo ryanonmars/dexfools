@@ -54,6 +54,92 @@
       background: #666;
       cursor: not-allowed;
     }
+    
+    #config-panel {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 300px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 20px;
+      color: #d1d4dc;
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      z-index: 1000;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    
+    #config-panel h3 {
+      margin: 0 0 15px 0;
+      color: #26a69a;
+      font-size: 16px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 10px;
+    }
+    
+    .config-group {
+      margin-bottom: 20px;
+    }
+    
+    .config-group h4 {
+      margin: 0 0 10px 0;
+      color: #fff;
+      font-size: 14px;
+    }
+    
+    .config-item {
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .config-item label {
+      flex: 1;
+      margin-right: 10px;
+    }
+    
+    .config-item input, .config-item select {
+      width: 80px;
+      padding: 4px 6px;
+      background: #2a2a2a;
+      border: 1px solid #444;
+      border-radius: 4px;
+      color: #d1d4dc;
+      font-size: 11px;
+    }
+    
+    .config-item input[type="checkbox"] {
+      width: auto;
+    }
+    
+    .config-item input[type="number"] {
+      width: 60px;
+    }
+    
+    .config-item input[type="text"] {
+      width: 100px;
+    }
+    
+    #apply-config {
+      width: 100%;
+      padding: 8px;
+      background: #26a69a;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+    
+    #apply-config:hover {
+      background: #1e8b7f;
+    }
     #main-chart {
       width: 100%;
       height: 100%;
@@ -75,6 +161,116 @@
 </head>
 <body>
   <button id="restart-button">Restart Animation</button>
+  
+  <div id="config-panel">
+    <h3>Chart Configuration</h3>
+    
+    <div class="config-group">
+      <h4>Market Cap Settings</h4>
+      <div class="config-item">
+        <label>Initial MC:</label>
+        <input type="number" id="initialMarketCap" value="16000">
+      </div>
+      <div class="config-item">
+        <label>Final MC:</label>
+        <input type="number" id="finalMarketCap" value="20000">
+      </div>
+      <div class="config-item">
+        <label>Min MC:</label>
+        <input type="number" id="minMarketCap" value="2000">
+      </div>
+      <div class="config-item">
+        <label>Range MC:</label>
+        <input type="number" id="rangeMarketCap" value="5000">
+      </div>
+    </div>
+    
+    <div class="config-group">
+      <h4>Animation Timing</h4>
+      <div class="config-item">
+        <label>Duration (s):</label>
+        <input type="number" id="totalSeconds" value="60">
+      </div>
+      <div class="config-item">
+        <label>Speed Multiplier:</label>
+        <input type="number" id="speedMultiplier" value="2" step="0.1">
+      </div>
+    </div>
+    
+    <div class="config-group">
+      <h4>Randomness Control</h4>
+      <div class="config-item">
+        <label>Seed:</label>
+        <input type="number" id="seed" value="1">
+      </div>
+    </div>
+    
+    <div class="config-group">
+      <h4>Historical Data</h4>
+      <div class="config-item">
+        <label>Enable:</label>
+        <input type="checkbox" id="enableHistoricalData">
+      </div>
+      <div class="config-item">
+        <label>Time:</label>
+        <input type="text" id="preAnimationTime" value="2h" placeholder="e.g., 2h, 60s">
+      </div>
+    </div>
+    
+    <div class="config-group">
+      <h4>Final Action</h4>
+      <div class="config-item">
+        <label>Type:</label>
+        <select id="finalActionType">
+          <option value="dump">Dump</option>
+          <option value="pump">Pump</option>
+        </select>
+      </div>
+      <div class="config-item">
+        <label>Target MC:</label>
+        <input type="number" id="finalActionMarketCap" value="1000">
+      </div>
+    </div>
+    
+    <div class="config-group">
+      <h4>Markers</h4>
+      <div class="config-item">
+        <label>Show First:</label>
+        <input type="checkbox" id="showFirstCandle" checked>
+      </div>
+      <div class="config-item">
+        <label>First Text:</label>
+        <input type="text" id="firstCandleText" value="DB">
+      </div>
+      <div class="config-item">
+        <label>Show Final:</label>
+        <input type="checkbox" id="showFinalCandle" checked>
+      </div>
+      <div class="config-item">
+        <label>Final Text:</label>
+        <input type="text" id="finalCandleText" value="DS">
+      </div>
+      <div class="config-item">
+        <label>Show B Marker:</label>
+        <input type="checkbox" id="showB" checked>
+      </div>
+      <div class="config-item">
+        <label>B Time (s):</label>
+        <input type="number" id="bTime" value="57">
+      </div>
+      <div class="config-item">
+        <label>Show S Marker:</label>
+        <input type="checkbox" id="showS">
+      </div>
+      <div class="config-item">
+        <label>S Time (s):</label>
+        <input type="number" id="sTime" value="15">
+      </div>
+    </div>
+    
+    <button id="apply-config">Apply & Restart</button>
+  </div>
+  
   <div id="chart-container">
     <div id="main-chart"></div>
   </div>
@@ -166,12 +362,90 @@
 
     const mainChartDiv = document.getElementById('main-chart');
     const restartButton = document.getElementById('restart-button');
+    const applyConfigButton = document.getElementById('apply-config');
     
     // Global variables to store chart references
     let chart = null;
     let series = null;
     let volumeSeries = null;
     let currentAnimation = null;
+    
+    // Function to populate config form with current values
+    function populateConfigForm() {
+      const config = chartConfig;
+      
+      // Market Cap Settings
+      document.getElementById('initialMarketCap').value = config.initialMarketCap;
+      document.getElementById('finalMarketCap').value = config.finalMarketCap;
+      document.getElementById('minMarketCap').value = config.minMarketCap;
+      document.getElementById('rangeMarketCap').value = config.rangeMarketCap;
+      
+      // Animation Timing
+      document.getElementById('totalSeconds').value = config.totalSeconds;
+      document.getElementById('speedMultiplier').value = config.speedMultiplier;
+      
+      // Randomness Control
+      document.getElementById('seed').value = config.seed;
+      
+      // Historical Data
+      document.getElementById('enableHistoricalData').checked = config.enableHistoricalData;
+      document.getElementById('preAnimationTime').value = config.preAnimationTime;
+      
+      // Final Action
+      document.getElementById('finalActionType').value = config.finalAction.type;
+      document.getElementById('finalActionMarketCap').value = config.finalAction.marketCap;
+      
+      // Markers
+      document.getElementById('showFirstCandle').checked = config.markers.showFirstCandle;
+      document.getElementById('firstCandleText').value = config.markers.firstCandleText;
+      document.getElementById('showFinalCandle').checked = config.markers.showFinalCandle;
+      document.getElementById('finalCandleText').value = config.markers.finalCandleText;
+      document.getElementById('showB').checked = config.markers.userMarkers.showB;
+      document.getElementById('bTime').value = config.markers.userMarkers.bTime;
+      document.getElementById('showS').checked = config.markers.userMarkers.showS;
+      document.getElementById('sTime').value = config.markers.userMarkers.sTime;
+    }
+    
+    // Function to apply config changes
+    function applyConfigChanges() {
+      const config = chartConfig;
+      
+      // Market Cap Settings
+      config.initialMarketCap = parseInt(document.getElementById('initialMarketCap').value);
+      config.finalMarketCap = parseInt(document.getElementById('finalMarketCap').value);
+      config.minMarketCap = parseInt(document.getElementById('minMarketCap').value);
+      config.rangeMarketCap = parseInt(document.getElementById('rangeMarketCap').value);
+      
+      // Animation Timing
+      config.totalSeconds = parseInt(document.getElementById('totalSeconds').value);
+      config.speedMultiplier = parseFloat(document.getElementById('speedMultiplier').value);
+      
+      // Randomness Control
+      config.seed = parseInt(document.getElementById('seed').value);
+      
+      // Historical Data
+      config.enableHistoricalData = document.getElementById('enableHistoricalData').checked;
+      config.preAnimationTime = document.getElementById('preAnimationTime').value;
+      
+      // Final Action
+      config.finalAction.type = document.getElementById('finalActionType').value;
+      config.finalAction.marketCap = parseInt(document.getElementById('finalActionMarketCap').value);
+      
+      // Markers
+      config.markers.showFirstCandle = document.getElementById('showFirstCandle').checked;
+      config.markers.firstCandleText = document.getElementById('firstCandleText').value;
+      config.markers.showFinalCandle = document.getElementById('showFinalCandle').checked;
+      config.markers.finalCandleText = document.getElementById('finalCandleText').value;
+      config.markers.userMarkers.showB = document.getElementById('showB').checked;
+      config.markers.userMarkers.bTime = parseInt(document.getElementById('bTime').value);
+      config.markers.userMarkers.showS = document.getElementById('showS').checked;
+      config.markers.userMarkers.sTime = parseInt(document.getElementById('sTime').value);
+      
+      console.log('Configuration updated:', config);
+      
+      // Restart animation with new config
+      restartAnimation();
+    }
     
     // Function to configure chart for auto-following animation
     function configureAutoFollow() {
@@ -248,8 +522,12 @@
       });
     }
     
-    // Add event listener to restart button
+    // Add event listeners
     restartButton.addEventListener('click', restartAnimation);
+    applyConfigButton.addEventListener('click', applyConfigChanges);
+    
+    // Initialize config form
+    populateConfigForm();
     
     // Wait for DOM to be ready and ensure dimensions are available
     setTimeout(() => {
