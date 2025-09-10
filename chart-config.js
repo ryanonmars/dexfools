@@ -8,7 +8,7 @@ const chartConfig = {
   minMarketCap: 2000,                // Minimum market cap (can't go below this)
   
   // Animation Timing
-  totalSeconds: 60,                // How many seconds the animation should run
+  totalSeconds: 20,                // How many seconds the animation should run
   
   // Trading Range
   rangeMarketCap: 2000,             // Random trading stays within +/- this range
@@ -23,7 +23,7 @@ const chartConfig = {
   chartStyle: {
     width: 900,
     height: 540,
-    candleSpeed: 200,              // Milliseconds between candles (0.2 seconds)
+    candleSpeed: 1000,             // Milliseconds between candles (1 second)
     finalCandlePause: 1000,        // Pause before final action (1 second)
     finalCandleDuration: 4000      // Duration of final candle animation (4 seconds)
   },
@@ -33,7 +33,17 @@ const chartConfig = {
     showFirstCandle: true,         // Show marker on first candle
     showFinalCandle: true,         // Show marker on final action candle
     firstCandleText: 'DB',         // Text for first candle marker
-    finalCandleText: 'DS'          // Text for final action marker (DB for Dump Buy, DS for Dump Sell)
+    finalCandleText: 'DS',         // Text for final action marker (DB for Dump Buy, DS for Dump Sell)
+    
+    // User markers - appear at specific times
+    userMarkers: {
+      showB: true,                 // Show B marker for user buy
+      showS: true,                 // Show S marker for user sell
+      bTime: 5,                   // Time in seconds where B marker appears
+      sTime: 15,                  // Time in seconds where S marker appears
+      bText: 'B',                 // Text for B marker
+      sText: 'S'                  // Text for S marker
+    }
   }
 };
 
