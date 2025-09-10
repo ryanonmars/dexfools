@@ -162,6 +162,63 @@
       }
     }
     
+    // Function to find closest candle to target market cap
+    function findClosestCandle(bars, targetMarketCap) {
+      let closestBar = null;
+      let closestDistance = Infinity;
+      
+      for (const bar of bars) {
+        const distance = Math.abs(bar.close - targetMarketCap);
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestBar = bar;
+        }
+      }
+      
+      return closestBar;
+    }
+    
+    // Function to add user markers based on market cap
+    function addUserMarkers(bars) {
+      const config = chartConfig;
+      const userMarkers = config.markers.userMarkers;
+      const markers = [];
+      
+      if (userMarkers.showB && userMarkers.bMarketCap) {
+        const bCandle = findClosestCandle(bars, userMarkers.bMarketCap);
+        if (bCandle) {
+          markers.push({
+            time: bCandle.time,
+            position: 'aboveBar',
+            color: '#26a69a',
+            shape: 'circle',
+            text: userMarkers.bText || 'B',
+            size: 3,
+            offsetY: -40  // Position higher than DB/DS markers
+          });
+          console.log(`Added B marker at MC: ${bCandle.close} (target: ${userMarkers.bMarketCap})`);
+        }
+      }
+      
+      if (userMarkers.showS && userMarkers.sMarketCap) {
+        const sCandle = findClosestCandle(bars, userMarkers.sMarketCap);
+        if (sCandle) {
+          markers.push({
+            time: sCandle.time,
+            position: 'aboveBar',
+            color: '#ef5350',
+            shape: 'circle',
+            text: userMarkers.sText || 'S',
+            size: 3,
+            offsetY: -40  // Position higher than DB/DS markers
+          });
+          console.log(`Added S marker at MC: ${sCandle.close} (target: ${userMarkers.sMarketCap})`);
+        }
+      }
+      
+      return markers;
+    }
+    
     
     // Function to restart animation
     function restartAnimation() {
@@ -424,17 +481,65 @@
               console.log('Added marker above first candle:', config.markers.firstCandleText);
             }
             
+            // Check for user markers (B and S) as we progress through the animation
+            const currentBar = bars[current];
+            const userMarkers = config.markers.userMarkers;
+            const existingMarkers = series.markers() || [];
+            let markersToAdd = [];
+            
+            console.log(`Bar ${current}: MC=${currentBar.close}, B target=${userMarkers.bMarketCap}, S target=${userMarkers.sMarketCap}`);
+            
+            // Check for B marker
+            if (userMarkers.showB && userMarkers.bMarketCap && !existingMarkers.some(m => m.text === (userMarkers.bText || 'B'))) {
+              if (currentBar.close >= userMarkers.bMarketCap) {
+                markersToAdd.push({
+                  time: currentBar.time,
+                  position: 'aboveBar',
+                  color: '#26a69a',
+                  shape: 'circle',
+                  text: userMarkers.bText || 'B',
+                  size: 3,
+                  offsetY: -40
+                });
+                console.log(`B marker triggered at MC: ${currentBar.close} (target: ${userMarkers.bMarketCap})`);
+              }
+            }
+            
+            // Check for S marker
+            if (userMarkers.showS && userMarkers.sMarketCap && !existingMarkers.some(m => m.text === (userMarkers.sText || 'S'))) {
+              if (currentBar.close <= userMarkers.sMarketCap) {
+                markersToAdd.push({
+                  time: currentBar.time,
+                  position: 'aboveBar',
+                  color: '#ef5350',
+                  shape: 'circle',
+                  text: userMarkers.sText || 'S',
+                  size: 3,
+                  offsetY: -40
+                });
+                console.log(`S marker triggered at MC: ${currentBar.close} (target: ${userMarkers.sMarketCap})`);
+              }
+            }
+            
+            // Add new markers if any were triggered
+            if (markersToAdd.length > 0) {
+              const allMarkers = [...existingMarkers, ...markersToAdd];
+              series.setMarkers(allMarkers);
+              console.log(`Added ${markersToAdd.length} new markers`);
+            }
+            
             current++;
             
             // Check if this was the last bar
             if (current === bars.length) {
               // Add marker to final action candle if enabled
               if (config.markers.showFinalCandle) {
-                // Build array of all markers (preserve existing ones)
-                const allMarkers = [];
+                // Get existing markers (including user markers added during animation)
+                const existingMarkers = series.markers() || [];
+                const allMarkers = [...existingMarkers];
                 
-                // Add first candle marker if enabled
-                if (config.markers.showFirstCandle) {
+                // Add first candle marker if enabled and not already present
+                if (config.markers.showFirstCandle && !existingMarkers.some(m => m.text === config.markers.firstCandleText)) {
                   allMarkers.push({
                     time: bars[0].time,
                     position: 'aboveBar',
@@ -446,19 +551,22 @@
                   });
                 }
                 
-                // Add final action marker
-                allMarkers.push({
-                  time: bars[bars.length - 1].time,
-                  position: 'aboveBar',
-                  color: config.finalAction.type === 'pump' ? '#26a69a' : '#ef5350',  // Green for pump, red for dump
-                  shape: 'circle',
-                  text: config.markers.finalCandleText || (config.finalAction.type === 'pump' ? 'B' : 'S'),
-                  size: 3,
-                  offsetY: -20  // Move marker higher above the candle
-                });
+                // Add final action marker if not already present
+                const finalMarkerText = config.markers.finalCandleText || (config.finalAction.type === 'pump' ? 'B' : 'S');
+                if (!existingMarkers.some(m => m.text === finalMarkerText)) {
+                  allMarkers.push({
+                    time: bars[bars.length - 1].time,
+                    position: 'aboveBar',
+                    color: config.finalAction.type === 'pump' ? '#26a69a' : '#ef5350',  // Green for pump, red for dump
+                    shape: 'circle',
+                    text: finalMarkerText,
+                    size: 3,
+                    offsetY: -20  // Move marker higher above the candle
+                  });
+                }
                 
                 series.setMarkers(allMarkers);
-                console.log('Added all markers - first and final');
+                console.log('Added all markers - preserved user markers and added first/final');
               }
               console.log('Animation complete - showing final values');
               
