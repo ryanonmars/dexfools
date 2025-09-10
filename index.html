@@ -843,7 +843,11 @@
         scaleMargins: {
           top: 0.6,  // Volume takes up bottom 40% of chart
           bottom: 0
-        }
+        },
+        // Set minimum to 0 to prevent negative volume display
+        minimum: 0,
+        // Auto-scale the maximum based on data
+        maximum: undefined,
       });
     }
     
@@ -1040,6 +1044,10 @@
           bottom: 0,
         },
         priceFormatter: volumeFormatter,
+        // Set minimum to 0 to prevent negative volume display
+        minimum: 0,
+        // Auto-scale the maximum based on data
+        maximum: undefined,
       });
 
       // Don't add marker here - wait for animation to complete
