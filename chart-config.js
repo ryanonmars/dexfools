@@ -11,6 +11,9 @@ const chartConfig = {
   totalSeconds: 60,                // How many seconds the animation should run
   speedMultiplier: 2,              // Animation speed: 1 = real-time, 0.5 = half speed, 2 = double speed
   
+  // Randomness Control
+  seed: 1,                     // Seed for reproducible animations (change this for different patterns)
+  
   // Pre-Animation History
   enableHistoricalData: false,      // Enable/disable historical data before animation
   preAnimationTime: '2h',          // Historical data before animation starts (e.g., '60s', '2h', '10m', '1d')

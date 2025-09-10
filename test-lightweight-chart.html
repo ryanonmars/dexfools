@@ -136,6 +136,34 @@
       }
     }
 
+    // Seeded random number generator (Linear Congruential Generator)
+    class SeededRandom {
+      constructor(seed) {
+        this.seed = seed;
+      }
+      
+      // Generate next random number between 0 and 1
+      next() {
+        this.seed = (this.seed * 1664525 + 1013904223) % Math.pow(2, 32);
+        return this.seed / Math.pow(2, 32);
+      }
+      
+      // Generate random number between min and max
+      range(min, max) {
+        return min + this.next() * (max - min);
+      }
+      
+      // Generate random integer between min and max (inclusive)
+      int(min, max) {
+        return Math.floor(this.range(min, max + 1));
+      }
+      
+      // Generate random boolean
+      bool() {
+        return this.next() < 0.5;
+      }
+    }
+
     const mainChartDiv = document.getElementById('main-chart');
     const restartButton = document.getElementById('restart-button');
     
@@ -327,6 +355,10 @@
       const totalBars = config.totalSeconds; // Number of bars = number of seconds
       const preAnimationSeconds = config.enableHistoricalData ? parseTimeToSeconds(config.preAnimationTime) : 0;
       
+      // Initialize seeded random generator
+      const rng = new SeededRandom(config.seed);
+      console.log(`Using seed: ${config.seed} for reproducible animation`);
+      
       // Generate data
       const bars = [];
       const volumeData = [];
@@ -340,7 +372,7 @@
         console.log(`Generating ${preAnimationSeconds} seconds of pre-animation history...`);
         
         // Start historical data from a completely random point - no constraints
-        let historicalPrice = config.initialMarketCap * (0.1 + Math.random() * 1.8); // 10% to 190% of initial MC
+        let historicalPrice = config.initialMarketCap * (0.1 + rng.next() * 1.8); // 10% to 190% of initial MC
         
         // Add some momentum and trend variables for more realistic behavior
         let momentum = 0;
@@ -353,14 +385,14 @@
         
         // Create more natural price movements
         // Base volatility that changes over time
-        const baseVolatility = config.rangeMarketCap * (0.5 + Math.random() * 1.5); // 0.5x to 2x range
+        const baseVolatility = config.rangeMarketCap * (0.5 + rng.next() * 1.5); // 0.5x to 2x range
         
         // Add momentum (price tends to continue in same direction)
-        momentum = momentum * 0.9 + (Math.random() - 0.5) * 0.1; // Decay momentum with some randomness
+        momentum = momentum * 0.9 + (rng.next() - 0.5) * 0.1; // Decay momentum with some randomness
         
         // Add trend changes (market can trend up or down for periods)
-        if (i - lastTrendChange > 50 + Math.random() * 200) { // Change trend every 50-250 seconds
-          trend = (Math.random() - 0.5) * 2; // -1 to 1 trend
+        if (i - lastTrendChange > 50 + rng.next() * 200) { // Change trend every 50-250 seconds
+          trend = (rng.next() - 0.5) * 2; // -1 to 1 trend
           lastTrendChange = i;
         }
         
@@ -368,7 +400,7 @@
         let change = 0;
         
         // Random walk component
-        change += (Math.random() - 0.5) * baseVolatility;
+        change += (rng.next() - 0.5) * baseVolatility;
         
         // Momentum component
         change += momentum * baseVolatility * 0.3;
@@ -377,9 +409,9 @@
         change += trend * baseVolatility * 0.2;
         
         // Occasional big moves (news events, etc.) - but not too frequent
-        if (Math.random() < 0.02) { // 2% chance of big move
-          const bigMoveDirection = Math.random() < 0.5 ? 1 : -1;
-          change += bigMoveDirection * baseVolatility * (2 + Math.random() * 3); // 2-5x normal move
+        if (rng.next() < 0.02) { // 2% chance of big move
+          const bigMoveDirection = rng.next() < 0.5 ? 1 : -1;
+          change += bigMoveDirection * baseVolatility * (2 + rng.next() * 3); // 2-5x normal move
         }
         
         // Add some mean reversion (prices tend to come back toward a "fair value")
@@ -398,15 +430,15 @@
         let low = Math.min(open, close);
         
         // Only add wicks 20% of the time (more realistic)
-        if (Math.random() < 0.2) {
-          const wickSize = Math.abs(change) * (0.5 + Math.random() * 1.5); // 0.5-2x the change
+        if (rng.next() < 0.2) {
+          const wickSize = Math.abs(change) * (0.5 + rng.next() * 1.5); // 0.5-2x the change
           
           if (close > open) {
             // Green candle: only add wick on top
-            high = Math.max(open, close) + Math.random() * wickSize;
+            high = Math.max(open, close) + rng.next() * wickSize;
           } else {
             // Red candle: only add wick on bottom
-            low = Math.min(open, close) - Math.random() * wickSize;
+            low = Math.min(open, close) - rng.next() * wickSize;
           }
         }
         
@@ -419,9 +451,9 @@
         });
         
         // More realistic volume that correlates with price movement
-        const baseVolume = 200 + Math.random() * 1500; // 200-1700 base
+        const baseVolume = 200 + rng.next() * 1500; // 200-1700 base
         const volumeMultiplier = 1 + Math.abs(change) / config.rangeMarketCap; // Higher volume on bigger moves
-        const volume = baseVolume * volumeMultiplier + Math.random() * 1000;
+        const volume = baseVolume * volumeMultiplier + rng.next() * 1000;
         
         volumeData.push({
           time: time / 1000,
@@ -476,7 +508,7 @@
         const open = lastClose;
         
         // Random trading within the configured range
-        let change = (Math.random() - 0.5) * config.rangeMarketCap * 2; // +/- range
+        let change = (rng.next() - 0.5) * config.rangeMarketCap * 2; // +/- range
         
         // First candle should always be a buy (green)
         if (i === 0) {
@@ -495,15 +527,15 @@
         let low = Math.min(open, close);
         
         // Only add wicks 20% of the time (more realistic)
-        if (Math.random() < 0.2) {
-          const wickSize = config.rangeMarketCap * (0.05 + Math.random() * 0.15); // 5-20% of range
+        if (rng.next() < 0.2) {
+          const wickSize = config.rangeMarketCap * (0.05 + rng.next() * 0.15); // 5-20% of range
           
           if (close > open) {
             // Green candle: only add wick on top
-            high = Math.max(open, close) + Math.random() * wickSize;
+            high = Math.max(open, close) + rng.next() * wickSize;
           } else {
             // Red candle: only add wick on bottom
-            low = Math.min(open, close) - Math.random() * wickSize;
+            low = Math.min(open, close) - rng.next() * wickSize;
           }
         }
         
@@ -515,7 +547,7 @@
           close: close,
         });
         
-        const volume = Math.random() * 2000 + 1000;
+        const volume = rng.next() * 2000 + 1000;
         animatedVolumeData.push({
           time: time / 1000,
           value: volume,
@@ -535,15 +567,15 @@
       let finalLow = Math.min(finalOpen, finalClose);
       
       // Only add wicks 20% of the time (more realistic)
-      if (Math.random() < 0.2) {
-        const wickSize = Math.abs(finalClose - finalOpen) * (0.5 + Math.random() * 1.5);
+      if (rng.next() < 0.2) {
+        const wickSize = Math.abs(finalClose - finalOpen) * (0.5 + rng.next() * 1.5);
         
         if (finalClose > finalOpen) {
           // Green candle: only add wick on top
-          finalHigh = Math.max(finalOpen, finalClose) + Math.random() * wickSize;
+          finalHigh = Math.max(finalOpen, finalClose) + rng.next() * wickSize;
         } else {
           // Red candle: only add wick on bottom
-          finalLow = Math.min(finalOpen, finalClose) - Math.random() * wickSize;
+          finalLow = Math.min(finalOpen, finalClose) - rng.next() * wickSize;
         }
       }
       
@@ -555,7 +587,7 @@
         close: finalClose,
       });
       
-      const finalVolume = Math.random() * 5000 + 5000;
+      const finalVolume = rng.next() * 5000 + 5000;
       animatedVolumeData.push({
         time: finalTime / 1000,
         value: finalVolume,
@@ -572,15 +604,15 @@
       let actionLow = Math.min(actionOpen, actionClose);
       
       // Only add wicks 20% of the time (more realistic)
-      if (Math.random() < 0.2) {
-        const wickSize = Math.abs(actionClose - actionOpen) * (0.5 + Math.random() * 1.5);
+      if (rng.next() < 0.2) {
+        const wickSize = Math.abs(actionClose - actionOpen) * (0.5 + rng.next() * 1.5);
         
         if (actionClose > actionOpen) {
           // Green candle: only add wick on top
-          actionHigh = Math.max(actionOpen, actionClose) + Math.random() * wickSize;
+          actionHigh = Math.max(actionOpen, actionClose) + rng.next() * wickSize;
         } else {
           // Red candle: only add wick on bottom
-          actionLow = Math.min(actionOpen, actionClose) - Math.random() * wickSize;
+          actionLow = Math.min(actionOpen, actionClose) - rng.next() * wickSize;
         }
       }
       
@@ -592,7 +624,7 @@
         close: actionClose,
       });
       
-      const actionVolume = Math.random() * 10000 + 10000; // Higher volume for action
+      const actionVolume = rng.next() * 10000 + 10000; // Higher volume for action
       animatedVolumeData.push({
         time: actionTime / 1000,
         value: actionVolume,
