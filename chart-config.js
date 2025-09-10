@@ -40,15 +40,15 @@ const chartConfig = {
   markers: {
     showFirstCandle: true,         // Show marker on first candle
     showFinalCandle: true,         // Show marker on final action candle
-    firstCandleText: 'DB',         // Text for first candle marker
-    finalCandleText: 'DS',         // Text for final action marker (DB for Dump Buy, DS for Dump Sell)
+    firstCandleTime: 1,            // Time in seconds where first candle marker appears
+    finalCandleTime: 60,           // Time in seconds where final candle marker appears
     
     // User markers - appear at specific times
     userMarkers: {
       showB: true,                 // Show B marker for user buy
       showS: false,                 // Show S marker for user sell
-      bTime: 57,                   // Time in seconds where B marker appears
-      sTime: 15,                  // Time in seconds where S marker appears
+      bTime: 30,                   // Time in seconds where B marker appears
+      sTime: 45,                  // Time in seconds where S marker appears
       bText: 'B',                 // Text for B marker
       sText: 'S'                  // Text for S marker
     }

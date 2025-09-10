@@ -107,6 +107,90 @@
       border-radius: 0 0 8px 8px;
     }
     
+    .marker-section {
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #222;
+      border-radius: 6px;
+      border: 1px solid #333;
+    }
+    
+    .marker-section h5 {
+      margin: 0 0 15px 0;
+      color: #26a69a;
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .marker-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      padding: 10px;
+      background: #1a1a1a;
+      border-radius: 4px;
+      border: 1px solid #333;
+    }
+    
+    .marker-item .config-item {
+      flex: 1;
+      margin: 0;
+    }
+    
+    .marker-item .config-item label {
+      font-size: 11px;
+      margin-bottom: 2px;
+    }
+    
+    .marker-item .config-item input {
+      font-size: 11px;
+      padding: 4px 6px;
+    }
+    
+    .add-marker-btn {
+      width: 100%;
+      padding: 8px 12px;
+      background: #26a69a;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      transition: background-color 0.3s;
+      margin-top: 10px;
+    }
+    
+    .add-marker-btn:hover {
+      background: #2bbbad;
+    }
+    
+    .remove-marker {
+      width: 24px;
+      height: 24px;
+      background: #ef5350;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+      opacity: 0.8;
+      flex-shrink: 0;
+    }
+    
+    .remove-marker:hover {
+      background: #d32f2f;
+      opacity: 1;
+      transform: scale(1.1);
+    }
+    
     /* Adjust panel for smaller screens */
     @media (max-width: 1200px) {
       #config-panel {
@@ -304,37 +388,65 @@
       
       <div class="config-group">
         <h4>Markers</h4>
-        <div class="config-item">
-          <label>Dev Buy:</label>
-          <input type="checkbox" id="showFirstCandle" checked>
+        
+        <!-- Dev Markers -->
+        <div class="marker-section">
+          <h5>Developer Markers</h5>
+          <div id="dev-markers">
+            <div class="marker-item">
+              <div class="config-item">
+                <label>Dev Buy 1:</label>
+                <input type="checkbox" id="showFirstCandle" checked>
+              </div>
+              <div class="config-item">
+                <label>Time (s):</label>
+                <input type="number" id="firstCandleTime" value="1">
+              </div>
+              <button type="button" class="remove-marker" onclick="removeDevMarker(this)" style="display: none;">🗑️</button>
+            </div>
+            <div class="marker-item">
+              <div class="config-item">
+                <label>Dev Sell 1:</label>
+                <input type="checkbox" id="showFinalCandle" checked>
+              </div>
+              <div class="config-item">
+                <label>Time (s):</label>
+                <input type="number" id="finalCandleTime" value="60">
+              </div>
+              <button type="button" class="remove-marker" onclick="removeDevMarker(this)" style="display: none;">🗑️</button>
+            </div>
+          </div>
+          <button type="button" class="add-marker-btn" onclick="addDevMarker()">+ Add Dev Marker</button>
         </div>
-        <div class="config-item">
-          <label>Label:</label>
-          <input type="text" id="firstCandleText" value="DB">
-        </div>
-        <div class="config-item">
-          <label>Dev Sell:</label>
-          <input type="checkbox" id="showFinalCandle" checked>
-        </div>
-        <div class="config-item">
-          <label>Label:</label>
-          <input type="text" id="finalCandleText" value="DS">
-        </div>
-        <div class="config-item">
-          <label>Show User Buy:</label>
-          <input type="checkbox" id="showB" checked>
-        </div>
-        <div class="config-item">
-          <label>User Buy Marker Time (s):</label>
-          <input type="number" id="bTime" value="57">
-        </div>
-        <div class="config-item">
-          <label>Show User Sell:</label>
-          <input type="checkbox" id="showS">
-        </div>
-        <div class="config-item">
-          <label>User Sell Marker Time (s):</label>
-          <input type="number" id="sTime" value="15">
+        
+        <!-- User Markers -->
+        <div class="marker-section">
+          <h5>User Markers</h5>
+          <div id="user-markers">
+            <div class="marker-item">
+              <div class="config-item">
+                <label>User Buy 1:</label>
+                <input type="checkbox" id="showB" checked>
+              </div>
+              <div class="config-item">
+                <label>Time (s):</label>
+                <input type="number" id="bTime" value="30">
+              </div>
+              <button type="button" class="remove-marker" onclick="removeUserMarker(this)" style="display: none;">🗑️</button>
+            </div>
+            <div class="marker-item">
+              <div class="config-item">
+                <label>User Sell 1:</label>
+                <input type="checkbox" id="showS">
+              </div>
+              <div class="config-item">
+                <label>Time (s):</label>
+                <input type="number" id="sTime" value="45">
+              </div>
+              <button type="button" class="remove-marker" onclick="removeUserMarker(this)" style="display: none;">🗑️</button>
+            </div>
+          </div>
+          <button type="button" class="add-marker-btn" onclick="addUserMarker()">+ Add User Marker</button>
         </div>
       </div>
     </div>
@@ -348,6 +460,86 @@
     <div id="main-chart"></div>
   </div>
   <script>
+    // Marker management functions
+    let devMarkerCount = 1;
+    let userMarkerCount = 1;
+    
+    function addDevMarker() {
+      devMarkerCount++;
+      const devMarkersContainer = document.getElementById('dev-markers');
+      const markerItem = document.createElement('div');
+      markerItem.className = 'marker-item';
+      markerItem.innerHTML = `
+        <div class="config-item">
+          <label>Dev Buy ${devMarkerCount}:</label>
+          <input type="checkbox" id="showDevBuy${devMarkerCount}" checked>
+        </div>
+        <div class="config-item">
+          <label>Time (s):</label>
+          <input type="number" id="devBuyTime${devMarkerCount}" value="30">
+        </div>
+        <button type="button" class="remove-marker" onclick="removeDevMarker(this)">🗑️</button>
+      `;
+      devMarkersContainer.appendChild(markerItem);
+      updateRemoveButtons();
+    }
+    
+    function removeDevMarker(button) {
+      button.parentElement.remove();
+      updateRemoveButtons();
+    }
+    
+    function addUserMarker() {
+      userMarkerCount++;
+      const userMarkersContainer = document.getElementById('user-markers');
+      const markerItem = document.createElement('div');
+      markerItem.className = 'marker-item';
+      markerItem.innerHTML = `
+        <div class="config-item">
+          <label>User Buy ${userMarkerCount}:</label>
+          <input type="checkbox" id="showUserBuy${userMarkerCount}" checked>
+        </div>
+        <div class="config-item">
+          <label>Time (s):</label>
+          <input type="number" id="userBuyTime${userMarkerCount}" value="30">
+        </div>
+        <button type="button" class="remove-marker" onclick="removeUserMarker(this)">🗑️</button>
+      `;
+      userMarkersContainer.appendChild(markerItem);
+      updateRemoveButtons();
+    }
+    
+    function removeUserMarker(button) {
+      button.parentElement.remove();
+      updateRemoveButtons();
+    }
+    
+    function updateRemoveButtons() {
+      // Show remove buttons only if there are more than 1 markers
+      const devMarkers = document.querySelectorAll('#dev-markers .marker-item');
+      const userMarkers = document.querySelectorAll('#user-markers .marker-item');
+      
+      console.log('Updating remove buttons - Dev markers:', devMarkers.length, 'User markers:', userMarkers.length);
+      
+      devMarkers.forEach((marker, index) => {
+        const removeBtn = marker.querySelector('.remove-marker');
+        if (removeBtn) {
+          const shouldShow = devMarkers.length > 1;
+          removeBtn.style.display = shouldShow ? 'flex' : 'none';
+          console.log(`Dev marker ${index + 1} remove button:`, shouldShow ? 'shown' : 'hidden');
+        }
+      });
+      
+      userMarkers.forEach((marker, index) => {
+        const removeBtn = marker.querySelector('.remove-marker');
+        if (removeBtn) {
+          const shouldShow = userMarkers.length > 1;
+          removeBtn.style.display = shouldShow ? 'flex' : 'none';
+          console.log(`User marker ${index + 1} remove button:`, shouldShow ? 'shown' : 'hidden');
+        }
+      });
+    }
+    
     // Robust market cap formatter
     function marketCapFormatter(price) {
       if (price >= 1_000_000_000) {
@@ -469,9 +661,9 @@
       
       // Markers
       document.getElementById('showFirstCandle').checked = config.markers.showFirstCandle;
-      document.getElementById('firstCandleText').value = config.markers.firstCandleText;
+      document.getElementById('firstCandleTime').value = config.markers.firstCandleTime || 1;
       document.getElementById('showFinalCandle').checked = config.markers.showFinalCandle;
-      document.getElementById('finalCandleText').value = config.markers.finalCandleText;
+      document.getElementById('finalCandleTime').value = config.markers.finalCandleTime || config.totalSeconds;
       document.getElementById('showB').checked = config.markers.userMarkers.showB;
       document.getElementById('bTime').value = config.markers.userMarkers.bTime;
       document.getElementById('showS').checked = config.markers.userMarkers.showS;
@@ -572,12 +764,20 @@
       
       // Marker timing validation
       const totalSeconds = parseInt(document.getElementById('totalSeconds').value);
-      if (!validateNumber(document.getElementById('bTime').value, 0, totalSeconds - 1)) {
-        showValidationError('bTime', `B Time must be between 0 and ${totalSeconds - 1} seconds`);
+      if (!validateNumber(document.getElementById('firstCandleTime').value, 1, totalSeconds)) {
+        showValidationError('firstCandleTime', `Dev Buy Time must be between 1 and ${totalSeconds} seconds`);
         hasErrors = true;
       }
-      if (!validateNumber(document.getElementById('sTime').value, 0, totalSeconds - 1)) {
-        showValidationError('sTime', `S Time must be between 0 and ${totalSeconds - 1} seconds`);
+      if (!validateNumber(document.getElementById('finalCandleTime').value, 1, totalSeconds)) {
+        showValidationError('finalCandleTime', `Dev Sell Time must be between 1 and ${totalSeconds} seconds`);
+        hasErrors = true;
+      }
+      if (!validateNumber(document.getElementById('bTime').value, 1, totalSeconds)) {
+        showValidationError('bTime', `User Buy Time must be between 1 and ${totalSeconds} seconds`);
+        hasErrors = true;
+      }
+      if (!validateNumber(document.getElementById('sTime').value, 1, totalSeconds)) {
+        showValidationError('sTime', `User Sell Time must be between 1 and ${totalSeconds} seconds`);
         hasErrors = true;
       }
       
@@ -605,9 +805,9 @@
       config.finalAction.marketCap = parseInt(document.getElementById('finalActionMarketCap').value);
       
       config.markers.showFirstCandle = document.getElementById('showFirstCandle').checked;
-      config.markers.firstCandleText = document.getElementById('firstCandleText').value;
+      config.markers.firstCandleTime = parseInt(document.getElementById('firstCandleTime').value);
       config.markers.showFinalCandle = document.getElementById('showFinalCandle').checked;
-      config.markers.finalCandleText = document.getElementById('finalCandleText').value;
+      config.markers.finalCandleTime = parseInt(document.getElementById('finalCandleTime').value);
       config.markers.userMarkers.showB = document.getElementById('showB').checked;
       config.markers.userMarkers.bTime = parseInt(document.getElementById('bTime').value);
       config.markers.userMarkers.showS = document.getElementById('showS').checked;
@@ -707,7 +907,8 @@
     
     // Add real-time validation for number fields
     const numberFields = ['initialMarketCap', 'finalMarketCap', 'minMarketCap', 'rangeMarketCap', 
-                         'totalSeconds', 'speedMultiplier', 'seed', 'finalActionMarketCap', 'bTime', 'sTime'];
+                         'totalSeconds', 'speedMultiplier', 'seed', 'finalActionMarketCap', 
+                         'firstCandleTime', 'finalCandleTime', 'bTime', 'sTime'];
     
     numberFields.forEach(fieldId => {
       document.getElementById(fieldId).addEventListener('input', function(e) {
@@ -754,6 +955,9 @@
     
     // Initialize config form
     populateConfigForm();
+    
+    // Initialize remove button visibility
+    updateRemoveButtons();
     
     // Function to update chart size responsively
     function updateChartSize() {
@@ -1053,13 +1257,30 @@
       const animatedBars = [];
       const animatedVolumeData = [];
       
-      // Start with initial market cap and begin random trading
+      // Calculate the target progression toward final market cap
+      const totalChange = config.finalMarketCap - config.initialMarketCap;
+      const progressPerBar = totalChange / (totalBars - 1); // How much to progress each bar
+      
+      // Start with initial market cap and begin trending toward final
       for (let i = 0; i < totalBars - 2; i++) { // -2 because we'll add final candle and action candle
         const time = startTime + i * 1000; // 1 second intervals
         const open = lastClose;
         
-        // Random trading within the configured range - much smaller movements
-        let change = (rng.next() - 0.5) * config.rangeMarketCap * 0.3; // +/- 30% of range (was 200%)
+        // Calculate where we should be at this point in the animation
+        const targetPrice = config.initialMarketCap + (progressPerBar * (i + 1));
+        
+        // Random trading with subtle trend toward target
+        const trendStrength = 0.05; // Very subtle trend (5% of distance to target)
+        const randomStrength = 0.95; // Mostly random variation (95%)
+        
+        // Calculate trend component (very subtle pull toward target)
+        const trendComponent = (targetPrice - open) * trendStrength;
+        
+        // Calculate random component (full range variation)
+        const randomComponent = (rng.next() - 0.5) * config.rangeMarketCap * randomStrength;
+        
+        // Combine trend and random movement
+        let change = trendComponent + randomComponent;
         
         // First candle should always be a buy (green)
         if (i === 0) {
@@ -1068,26 +1289,26 @@
         
         let close = open + change;
         
-        // Apply soft resistance beyond the normal range for more natural movement
-        const normalMin = Math.max(config.minMarketCap, config.initialMarketCap - config.rangeMarketCap);
-        const normalMax = config.initialMarketCap + config.rangeMarketCap;
-        const bufferZone = config.rangeMarketCap * 0.3; // 30% buffer zone
+        // Apply constraints based on your requirements
+        // 1. Individual candles can't go below minMarketCap (except final action)
+        // 2. Allow full range variation around current price
+        // 3. Very subtle trend toward final target
         
-        // Soft resistance: gradually reduce movement as we go beyond normal range
-        if (close < normalMin) {
-          const excess = normalMin - close;
-          const resistance = Math.min(excess / bufferZone, 1); // 0 to 1 resistance factor
-          close = normalMin - (excess * (1 - resistance * 0.7)); // Reduce excess by up to 70%
-        } else if (close > normalMax) {
-          const excess = close - normalMax;
-          const resistance = Math.min(excess / bufferZone, 1); // 0 to 1 resistance factor
-          close = normalMax + (excess * (1 - resistance * 0.7)); // Reduce excess by up to 70%
+        // Only apply min constraint (no max constraint for individual candles)
+        if (close < config.minMarketCap) {
+          close = config.minMarketCap;
         }
         
-        // Hard limits only at extreme values
-        const absoluteMin = Math.max(config.minMarketCap, config.initialMarketCap - config.rangeMarketCap - bufferZone);
-        const absoluteMax = config.initialMarketCap + config.rangeMarketCap + bufferZone;
-        close = Math.max(absoluteMin, Math.min(absoluteMax, close));
+        // Very subtle pull toward target if we're way off track
+        const totalDistance = Math.abs(config.finalMarketCap - config.initialMarketCap);
+        const currentProgress = Math.abs(close - config.initialMarketCap) / totalDistance;
+        const expectedProgress = (i + 1) / (totalBars - 1);
+        
+        // Only apply gentle correction if we're significantly behind/behind the expected progress
+        if (Math.abs(currentProgress - expectedProgress) > 0.3) {
+          const correction = (targetPrice - close) * 0.02; // Very gentle 2% correction
+          close = close + correction;
+        }
         
         // Create realistic high/low - only add wicks occasionally (like real charts)
         let high = Math.max(open, close);
@@ -1124,10 +1345,10 @@
         lastClose = close;
       }
 
-      // Final candle (the big one)
+      // Final candle (the big one) - ensure it reaches the exact final market cap
       const finalTime = startTime + (totalBars - 1) * 1000; // 1 second intervals
       const finalOpen = lastClose;
-      const finalClose = Math.max(config.minMarketCap, config.finalMarketCap); // Use configured final market cap, never below minMarketCap
+      const finalClose = config.finalMarketCap; // Use exact final market cap
       
       // Create realistic high/low - only add wicks occasionally
       let finalHigh = Math.max(finalOpen, finalClose);
@@ -1210,23 +1431,7 @@
             series.setData(liveBars);
             volumeSeries.setData(liveVolume);
             
-            // Add green circle above the first animated candle when it appears
-            if (current === 0 && config.markers.showFirstCandle) {
-              // Use built-in marker for correct positioning
-              const myMarkers = [
-                {
-                  time: animatedBars[0].time,
-                  position: 'aboveBar',
-                  color: '#26a69a',
-                  shape: 'circle',
-                  text: config.markers.firstCandleText || 'DB',  // Use config text
-                  size: 3,  // Bigger circle for better visibility
-                  offsetY: -20  // Move marker higher above the candle
-                }
-              ];
-              series.setMarkers(myMarkers);
-              console.log('Added marker above first animated candle:', config.markers.firstCandleText);
-            }
+            // Dev buy marker is now handled in the timing logic below
             
             // Check for user markers (B and S) as we progress through the animation
             const currentBar = animatedBars[current];
@@ -1234,10 +1439,42 @@
             const existingMarkers = series.markers() || [];
             let markersToAdd = [];
             
-            // Calculate current time in seconds (each bar is 1 second)
-            const currentTime = current;
+            // Calculate current time in seconds (each bar is 1 second, starting from 1)
+            const currentTime = current + 1;
             
-            console.log(`Bar ${current}: Time=${currentTime}s, MC=${currentBar.close}, B target=${userMarkers.bTime}s, S target=${userMarkers.sTime}s`);
+            console.log(`Bar ${current}: Time=${currentTime}s, MC=${currentBar.close}, Dev Buy target=${config.markers.firstCandleTime}s, Dev Sell target=${config.markers.finalCandleTime}s, B target=${userMarkers.bTime}s, S target=${userMarkers.sTime}s`);
+            
+            // Check for Dev Buy marker at specific time
+            if (config.markers.showFirstCandle && config.markers.firstCandleTime !== undefined && !existingMarkers.some(m => m.text === 'DB')) {
+              if (currentTime === config.markers.firstCandleTime) {
+                markersToAdd.push({
+                  time: currentBar.time,
+                  position: 'aboveBar',
+                  color: '#26a69a',
+                  shape: 'circle',
+                  text: 'DB',
+                  size: 3,
+                  offsetY: -20
+                });
+                console.log(`Dev Buy marker triggered at time: ${currentTime}s (target: ${config.markers.firstCandleTime}s)`);
+              }
+            }
+            
+            // Check for Dev Sell marker at specific time
+            if (config.markers.showFinalCandle && config.markers.finalCandleTime !== undefined && !existingMarkers.some(m => m.text === 'DS')) {
+              if (currentTime === config.markers.finalCandleTime) {
+                markersToAdd.push({
+                  time: currentBar.time,
+                  position: 'aboveBar',
+                  color: '#ef5350',
+                  shape: 'circle',
+                  text: 'DS',
+                  size: 3,
+                  offsetY: -20
+                });
+                console.log(`Dev Sell marker triggered at time: ${currentTime}s (target: ${config.markers.finalCandleTime}s)`);
+              }
+            }
             
             // Check for B marker at specific time
             if (userMarkers.showB && userMarkers.bTime !== undefined && !existingMarkers.some(m => m.text === (userMarkers.bText || 'B'))) {
