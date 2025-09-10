@@ -33,7 +33,7 @@ const chartConfig = {
     showFirstCandle: true,         // Show marker on first candle
     showFinalCandle: true,         // Show marker on final action candle
     firstCandleText: 'B',          // Text for first candle marker
-    finalCandleText: 'P'           // Text for final action marker (P for Pump, D for Dump)
+    finalCandleText: 'S'           // Text for final action marker (B for Buy/Pump, S for Sell/Dump)
   }
 };
 

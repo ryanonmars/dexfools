@@ -290,7 +290,7 @@
             volumeSeries.setData(liveVolume);
             
             // Add green circle above the first candle when it appears
-            if (current === 0) {
+            if (current === 0 && config.markers.showFirstCandle) {
               // Use built-in marker for correct positioning
               const myMarkers = [
                 {
@@ -298,19 +298,48 @@
                   position: 'aboveBar',
                   color: '#26a69a',
                   shape: 'circle',
-                  text: '',  // No text, just circle
+                  text: config.markers.firstCandleText || 'B',  // Use config text
                   size: 3  // Bigger circle for better visibility
                 }
               ];
               series.setMarkers(myMarkers);
-              console.log('Added larger green circle above first candle');
+              console.log('Added marker above first candle:', config.markers.firstCandleText);
             }
             
             current++;
             
             // Check if this was the last bar
             if (current === bars.length) {
-              // No animation - just show the final values as they are
+              // Add marker to final action candle if enabled
+              if (config.markers.showFinalCandle) {
+                // Build array of all markers (preserve existing ones)
+                const allMarkers = [];
+                
+                // Add first candle marker if enabled
+                if (config.markers.showFirstCandle) {
+                  allMarkers.push({
+                    time: bars[0].time,
+                    position: 'aboveBar',
+                    color: '#26a69a',
+                    shape: 'circle',
+                    text: config.markers.firstCandleText || 'B',
+                    size: 3
+                  });
+                }
+                
+                // Add final action marker
+                allMarkers.push({
+                  time: bars[bars.length - 1].time,
+                  position: 'aboveBar',
+                  color: config.finalAction.type === 'pump' ? '#26a69a' : '#ef5350',  // Green for pump, red for dump
+                  shape: 'circle',
+                  text: config.markers.finalCandleText || (config.finalAction.type === 'pump' ? 'B' : 'S'),
+                  size: 3
+                });
+                
+                series.setMarkers(allMarkers);
+                console.log('Added all markers - first and final');
+              }
               console.log('Animation complete - showing final values');
             } else {
               setTimeout(showNextBar, config.chartStyle.candleSpeed); // Configurable speed per candle
