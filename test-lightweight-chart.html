@@ -251,13 +251,15 @@
       });
 
       volumeSeries = chart.addHistogramSeries({
-        color: 'rgba(38, 166, 154, 0.3)', // 30% opacity for up volume
+        color: 'transparent', // Hide the volume line
         priceFormat: {
           type: 'custom',
           minMove: 1,
           formatter: volumeFormatter,
         },
         priceScaleId: 'volume',
+        priceLineVisible: false, // Hide the horizontal price line
+        lastValueVisible: false, // Hide the last value label
       });
 
       // Add a separate price scale for volume
@@ -416,7 +418,7 @@
                   position: 'aboveBar',
                   color: '#26a69a',
                   shape: 'circle',
-                  text: config.markers.firstCandleText || 'B',  // Use config text
+                  text: config.markers.firstCandleText || 'DB',  // Use config text
                   size: 3,  // Bigger circle for better visibility
                   offsetY: -20  // Move marker higher above the candle
                 }
@@ -438,7 +440,7 @@
             
             // Check for B marker at specific time
             if (userMarkers.showB && userMarkers.bTime !== undefined && !existingMarkers.some(m => m.text === (userMarkers.bText || 'B'))) {
-              if (currentTime >= userMarkers.bTime) {
+              if (currentTime === userMarkers.bTime) {
                 markersToAdd.push({
                   time: currentBar.time,
                   position: 'aboveBar',
@@ -446,7 +448,7 @@
                   shape: 'circle',
                   text: userMarkers.bText || 'B',
                   size: 3,
-                  offsetY: -40
+                  offsetY: -20
                 });
                 console.log(`B marker triggered at time: ${currentTime}s (target: ${userMarkers.bTime}s)`);
               }
@@ -454,7 +456,7 @@
             
             // Check for S marker at specific time
             if (userMarkers.showS && userMarkers.sTime !== undefined && !existingMarkers.some(m => m.text === (userMarkers.sText || 'S'))) {
-              if (currentTime >= userMarkers.sTime) {
+              if (currentTime === userMarkers.sTime) {
                 markersToAdd.push({
                   time: currentBar.time,
                   position: 'aboveBar',
@@ -462,7 +464,7 @@
                   shape: 'circle',
                   text: userMarkers.sText || 'S',
                   size: 3,
-                  offsetY: -40
+                  offsetY: -20
                 });
                 console.log(`S marker triggered at time: ${currentTime}s (target: ${userMarkers.sTime}s)`);
               }
@@ -492,7 +494,7 @@
                     position: 'aboveBar',
                     color: '#26a69a',
                     shape: 'circle',
-                    text: config.markers.firstCandleText || 'B',
+                    text: config.markers.firstCandleText || 'DB',
                     size: 3,
                     offsetY: -20  // Move marker higher above the candle
                   });
@@ -522,7 +524,9 @@
                 onComplete();
               }
             } else {
-              currentAnimation = setTimeout(showNextBar, config.chartStyle.candleSpeed); // Configurable speed per candle
+              // Apply speed multiplier to candle speed
+              const actualCandleSpeed = config.chartStyle.candleSpeed / config.speedMultiplier;
+              currentAnimation = setTimeout(showNextBar, actualCandleSpeed);
             }
           } catch (error) {
             console.error('Animation error:', error);
