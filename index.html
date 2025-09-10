@@ -82,14 +82,29 @@
       background: #1a1a1a;
       border: 1px solid #333;
       border-radius: 8px;
-      padding: 20px;
+      padding: 0;
       color: #d1d4dc;
       font-family: Arial, sans-serif;
       font-size: 12px;
       max-height: calc(100vh - 100px);
-      overflow-y: auto;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
       box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .config-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    
+    .config-button-container {
+      flex-shrink: 0;
+      padding: 20px;
+      border-top: 1px solid #333;
+      background: #1a1a1a;
+      border-radius: 0 0 8px 8px;
     }
     
     /* Adjust panel for smaller screens */
@@ -165,18 +180,36 @@
     
     #apply-config {
       width: 100%;
-      padding: 8px;
+      padding: 15px 24px;
       background: #26a69a;
       color: white;
       border: none;
-      border-radius: 4px;
+      border-radius: 6px;
       cursor: pointer;
-      font-size: 12px;
-      margin-top: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 8px rgba(38, 166, 154, 0.3);
     }
     
     #apply-config:hover {
-      background: #1e8b7f;
+      background: #2bbbad;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(38, 166, 154, 0.4);
+    }
+    
+    #apply-config:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 6px rgba(38, 166, 154, 0.3);
+    }
+    
+    #apply-config:disabled {
+      background: #666;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
     }
     #main-chart {
       width: 100%;
@@ -199,112 +232,116 @@
 </head>
 <body>
   <div id="config-panel">
-    <h3>Chart Configuration</h3>
-    
-    <div class="config-group">
-      <h4>Market Cap Settings</h4>
-      <div class="config-item">
-        <label>Initial MC:</label>
-        <input type="number" id="initialMarketCap" value="16000">
+    <div class="config-content">
+      <h3>Chart Configuration</h3>
+      
+      <div class="config-group">
+        <h4>Market Cap Settings</h4>
+        <div class="config-item">
+          <label>Initial MC:</label>
+          <input type="number" id="initialMarketCap" value="16000">
+        </div>
+        <div class="config-item">
+          <label>Final MC:</label>
+          <input type="number" id="finalMarketCap" value="20000">
+        </div>
+        <div class="config-item">
+          <label>Min MC:</label>
+          <input type="number" id="minMarketCap" value="2000">
+        </div>
+        <div class="config-item">
+          <label>Range MC:</label>
+          <input type="number" id="rangeMarketCap" value="5000">
+        </div>
       </div>
-      <div class="config-item">
-        <label>Final MC:</label>
-        <input type="number" id="finalMarketCap" value="20000">
+      
+      <div class="config-group">
+        <h4>Animation Timing</h4>
+        <div class="config-item">
+          <label>Duration (s):</label>
+          <input type="number" id="totalSeconds" value="60">
+        </div>
+        <div class="config-item">
+          <label>Speed Multiplier:</label>
+          <input type="number" id="speedMultiplier" value="2" step="0.1">
+        </div>
       </div>
-      <div class="config-item">
-        <label>Min MC:</label>
-        <input type="number" id="minMarketCap" value="2000">
+      
+      <div class="config-group">
+        <h4>Randomness Control</h4>
+        <div class="config-item">
+          <label>Seed:</label>
+          <input type="number" id="seed" value="1">
+        </div>
       </div>
-      <div class="config-item">
-        <label>Range MC:</label>
-        <input type="number" id="rangeMarketCap" value="5000">
+      
+      <div class="config-group">
+        <h4>Historical Data</h4>
+        <div class="config-item">
+          <label>Enable:</label>
+          <input type="checkbox" id="enableHistoricalData">
+        </div>
+        <div class="config-item">
+          <label>Time:</label>
+          <input type="text" id="preAnimationTime" value="2h" placeholder="e.g., 2h, 60s">
+        </div>
+      </div>
+      
+      <div class="config-group">
+        <h4>Final Action</h4>
+        <div class="config-item">
+          <label>Type:</label>
+          <select id="finalActionType">
+            <option value="dump">Dump</option>
+            <option value="pump">Pump</option>
+          </select>
+        </div>
+        <div class="config-item">
+          <label>Target MC:</label>
+          <input type="number" id="finalActionMarketCap" value="1000">
+        </div>
+      </div>
+      
+      <div class="config-group">
+        <h4>Markers</h4>
+        <div class="config-item">
+          <label>Show First:</label>
+          <input type="checkbox" id="showFirstCandle" checked>
+        </div>
+        <div class="config-item">
+          <label>First Text:</label>
+          <input type="text" id="firstCandleText" value="DB">
+        </div>
+        <div class="config-item">
+          <label>Show Final:</label>
+          <input type="checkbox" id="showFinalCandle" checked>
+        </div>
+        <div class="config-item">
+          <label>Final Text:</label>
+          <input type="text" id="finalCandleText" value="DS">
+        </div>
+        <div class="config-item">
+          <label>Show B Marker:</label>
+          <input type="checkbox" id="showB" checked>
+        </div>
+        <div class="config-item">
+          <label>B Time (s):</label>
+          <input type="number" id="bTime" value="57">
+        </div>
+        <div class="config-item">
+          <label>Show S Marker:</label>
+          <input type="checkbox" id="showS">
+        </div>
+        <div class="config-item">
+          <label>S Time (s):</label>
+          <input type="number" id="sTime" value="15">
+        </div>
       </div>
     </div>
     
-    <div class="config-group">
-      <h4>Animation Timing</h4>
-      <div class="config-item">
-        <label>Duration (s):</label>
-        <input type="number" id="totalSeconds" value="60">
-      </div>
-      <div class="config-item">
-        <label>Speed Multiplier:</label>
-        <input type="number" id="speedMultiplier" value="2" step="0.1">
-      </div>
+    <div class="config-button-container">
+      <button id="apply-config">Apply & Start Animation</button>
     </div>
-    
-    <div class="config-group">
-      <h4>Randomness Control</h4>
-      <div class="config-item">
-        <label>Seed:</label>
-        <input type="number" id="seed" value="1">
-      </div>
-    </div>
-    
-    <div class="config-group">
-      <h4>Historical Data</h4>
-      <div class="config-item">
-        <label>Enable:</label>
-        <input type="checkbox" id="enableHistoricalData">
-      </div>
-      <div class="config-item">
-        <label>Time:</label>
-        <input type="text" id="preAnimationTime" value="2h" placeholder="e.g., 2h, 60s">
-      </div>
-    </div>
-    
-    <div class="config-group">
-      <h4>Final Action</h4>
-      <div class="config-item">
-        <label>Type:</label>
-        <select id="finalActionType">
-          <option value="dump">Dump</option>
-          <option value="pump">Pump</option>
-        </select>
-      </div>
-      <div class="config-item">
-        <label>Target MC:</label>
-        <input type="number" id="finalActionMarketCap" value="1000">
-      </div>
-    </div>
-    
-    <div class="config-group">
-      <h4>Markers</h4>
-      <div class="config-item">
-        <label>Show First:</label>
-        <input type="checkbox" id="showFirstCandle" checked>
-      </div>
-      <div class="config-item">
-        <label>First Text:</label>
-        <input type="text" id="firstCandleText" value="DB">
-      </div>
-      <div class="config-item">
-        <label>Show Final:</label>
-        <input type="checkbox" id="showFinalCandle" checked>
-      </div>
-      <div class="config-item">
-        <label>Final Text:</label>
-        <input type="text" id="finalCandleText" value="DS">
-      </div>
-      <div class="config-item">
-        <label>Show B Marker:</label>
-        <input type="checkbox" id="showB" checked>
-      </div>
-      <div class="config-item">
-        <label>B Time (s):</label>
-        <input type="number" id="bTime" value="57">
-      </div>
-      <div class="config-item">
-        <label>Show S Marker:</label>
-        <input type="checkbox" id="showS">
-      </div>
-      <div class="config-item">
-        <label>S Time (s):</label>
-        <input type="number" id="sTime" value="15">
-      </div>
-    </div>
-    
-    <button id="apply-config">Apply & Start Animation</button>
   </div>
   
   <div id="chart-container">
