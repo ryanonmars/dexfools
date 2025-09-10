@@ -795,10 +795,26 @@
         
         let close = open + change;
         
-        // Clamp within range around initial market cap, but never below minMarketCap
-        const minPrice = Math.max(config.minMarketCap, config.initialMarketCap - config.rangeMarketCap);
-        const maxPrice = config.initialMarketCap + config.rangeMarketCap;
-        close = Math.max(minPrice, Math.min(maxPrice, close));
+        // Apply soft resistance beyond the normal range for more natural movement
+        const normalMin = Math.max(config.minMarketCap, config.initialMarketCap - config.rangeMarketCap);
+        const normalMax = config.initialMarketCap + config.rangeMarketCap;
+        const bufferZone = config.rangeMarketCap * 0.3; // 30% buffer zone
+        
+        // Soft resistance: gradually reduce movement as we go beyond normal range
+        if (close < normalMin) {
+          const excess = normalMin - close;
+          const resistance = Math.min(excess / bufferZone, 1); // 0 to 1 resistance factor
+          close = normalMin - (excess * (1 - resistance * 0.7)); // Reduce excess by up to 70%
+        } else if (close > normalMax) {
+          const excess = close - normalMax;
+          const resistance = Math.min(excess / bufferZone, 1); // 0 to 1 resistance factor
+          close = normalMax + (excess * (1 - resistance * 0.7)); // Reduce excess by up to 70%
+        }
+        
+        // Hard limits only at extreme values
+        const absoluteMin = Math.max(config.minMarketCap, config.initialMarketCap - config.rangeMarketCap - bufferZone);
+        const absoluteMax = config.initialMarketCap + config.rangeMarketCap + bufferZone;
+        close = Math.max(absoluteMin, Math.min(absoluteMax, close));
         
         // Create realistic high/low - only add wicks occasionally (like real charts)
         let high = Math.max(open, close);
