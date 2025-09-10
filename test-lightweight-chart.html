@@ -30,7 +30,20 @@
     #main-chart {
       width: 100%;
       height: 100%;
+      position: relative;
     }
+    
+    /* Try to override marker text color */
+    #main-chart canvas {
+      filter: none;
+    }
+    
+    /* Custom marker styling */
+    .tv-lightweight-charts .marker-text {
+      color: white !important;
+      fill: white !important;
+    }
+    
   </style>
 </head>
 <body>
@@ -142,6 +155,23 @@
         },
         priceFormatter: volumeFormatter,
       });
+
+      // Don't add marker here - wait for animation to complete
+
+      // Try to override marker text color after chart is created
+      setTimeout(() => {
+        const style = document.createElement('style');
+        style.textContent = `
+          .tv-lightweight-charts .marker-text,
+          .tv-lightweight-charts text,
+          .tv-lightweight-charts tspan {
+            fill: white !important;
+            color: white !important;
+          }
+        `;
+        document.head.appendChild(style);
+        console.log('Added marker text color override');
+      }, 1000);
 
       // Start the animation after chart is ready
       startAnimation(series, volumeSeries);
@@ -273,7 +303,24 @@
             liveVolume.push(volumeData[current]);
             series.setData(liveBars);
             volumeSeries.setData(liveVolume);
-            series.setMarkers([]);
+            
+            // Add green circle above the first candle when it appears
+            if (current === 0) {
+              // Use built-in marker for correct positioning
+              const myMarkers = [
+                {
+                  time: bars[0].time,
+                  position: 'aboveBar',
+                  color: '#26a69a',
+                  shape: 'circle',
+                  text: '',  // No text, just circle
+                  size: 3  // Bigger circle for better visibility
+                }
+              ];
+              series.setMarkers(myMarkers);
+              console.log('Added larger green circle above first candle');
+            }
+            
             current++;
             
             // Check if this was the last bar
