@@ -262,6 +262,16 @@
       width: 100px;
     }
     
+    .config-item select {
+      width: 80px;
+      padding: 5px;
+      border: 1px solid #555;
+      border-radius: 4px;
+      background: #333;
+      color: #d1d4dc;
+      font-size: 12px;
+    }
+    
     #apply-config {
       width: 100%;
       padding: 15px 24px;
@@ -471,12 +481,19 @@
       markerItem.className = 'marker-item';
       markerItem.innerHTML = `
         <div class="config-item">
-          <label>Dev Buy ${devMarkerCount}:</label>
-          <input type="checkbox" id="showDevBuy${devMarkerCount}" checked>
+          <label>Dev Marker ${devMarkerCount}:</label>
+          <input type="checkbox" id="showDevMarker${devMarkerCount}" checked>
+        </div>
+        <div class="config-item">
+          <label>Type:</label>
+          <select id="devMarkerType${devMarkerCount}">
+            <option value="buy">Buy</option>
+            <option value="sell">Sell</option>
+          </select>
         </div>
         <div class="config-item">
           <label>Time (s):</label>
-          <input type="number" id="devBuyTime${devMarkerCount}" value="30">
+          <input type="number" id="devMarkerTime${devMarkerCount}" value="30">
         </div>
         <button type="button" class="remove-marker" onclick="removeDevMarker(this)">🗑️</button>
       `;
@@ -496,12 +513,19 @@
       markerItem.className = 'marker-item';
       markerItem.innerHTML = `
         <div class="config-item">
-          <label>User Buy ${userMarkerCount}:</label>
-          <input type="checkbox" id="showUserBuy${userMarkerCount}" checked>
+          <label>User Marker ${userMarkerCount}:</label>
+          <input type="checkbox" id="showUserMarker${userMarkerCount}" checked>
+        </div>
+        <div class="config-item">
+          <label>Type:</label>
+          <select id="userMarkerType${userMarkerCount}">
+            <option value="buy">Buy</option>
+            <option value="sell">Sell</option>
+          </select>
         </div>
         <div class="config-item">
           <label>Time (s):</label>
-          <input type="number" id="userBuyTime${userMarkerCount}" value="30">
+          <input type="number" id="userMarkerTime${userMarkerCount}" value="30">
         </div>
         <button type="button" class="remove-marker" onclick="removeUserMarker(this)">🗑️</button>
       `;
@@ -1526,6 +1550,58 @@
                   offsetY: -20
                 });
                 console.log(`S marker triggered at time: ${currentTime}s (target: ${userMarkers.sTime}s), showS: ${userMarkers.showS}`);
+              }
+            }
+            
+            // Check for dynamic Dev markers
+            for (let i = 2; i <= devMarkerCount; i++) {
+              const showMarker = document.getElementById(`showDevMarker${i}`);
+              const markerType = document.getElementById(`devMarkerType${i}`);
+              const markerTime = document.getElementById(`devMarkerTime${i}`);
+              
+              if (showMarker && markerType && markerTime && showMarker.checked) {
+                const time = parseInt(markerTime.value);
+                const type = markerType.value;
+                const markerText = `D${type.toUpperCase().charAt(0)}${i}`;
+                
+                if (currentTime === time && !existingMarkers.some(m => m.text === markerText)) {
+                  markersToAdd.push({
+                    time: currentBar.time,
+                    position: 'aboveBar',
+                    color: type === 'buy' ? '#26a69a' : '#ef5350',
+                    shape: 'circle',
+                    text: markerText,
+                    size: 3,
+                    offsetY: -20
+                  });
+                  console.log(`Dynamic Dev ${type} marker ${i} triggered at time: ${currentTime}s`);
+                }
+              }
+            }
+            
+            // Check for dynamic User markers
+            for (let i = 2; i <= userMarkerCount; i++) {
+              const showMarker = document.getElementById(`showUserMarker${i}`);
+              const markerType = document.getElementById(`userMarkerType${i}`);
+              const markerTime = document.getElementById(`userMarkerTime${i}`);
+              
+              if (showMarker && markerType && markerTime && showMarker.checked) {
+                const time = parseInt(markerTime.value);
+                const type = markerType.value;
+                const markerText = `${type.toUpperCase().charAt(0)}${i}`;
+                
+                if (currentTime === time && !existingMarkers.some(m => m.text === markerText)) {
+                  markersToAdd.push({
+                    time: currentBar.time,
+                    position: 'aboveBar',
+                    color: type === 'buy' ? '#26a69a' : '#ef5350',
+                    shape: 'circle',
+                    text: markerText,
+                    size: 3,
+                    offsetY: -20
+                  });
+                  console.log(`Dynamic User ${type} marker ${i} triggered at time: ${currentTime}s`);
+                }
               }
             }
             
