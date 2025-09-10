@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Lightweight Chart Test - Live Trading Simulation</title>
   <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
+  <script src="chart-config.js"></script>
   <style>
     html, body {
       height: 100%;
@@ -178,52 +179,39 @@
     }, 100);
 
     function startAnimation(series, volumeSeries) {
+      // Use configuration values
+      const config = chartConfig;
+      const totalBars = config.totalSeconds; // Number of bars = number of seconds
+      
       // Generate data
       const bars = [];
       const volumeData = [];
-      const startTime = Date.now() - 50 * 1000; // 50 seconds ago
-      const basePrice = 10_000; // Start at 10K market cap
+      const startTime = Date.now() - totalBars * 1000; // X seconds ago
+      const basePrice = config.initialMarketCap; // Start at configured market cap
       let lastClose = basePrice;
 
-      // First 8 bars are forced uptrend
-      for (let i = 0; i < 8; i++) {
+      // Start with initial market cap and begin random trading
+      for (let i = 0; i < totalBars - 2; i++) { // -2 because we'll add final candle and action candle
         const time = startTime + i * 1000; // 1 second intervals
         const open = lastClose;
-        const change = Math.random() * 2000 + 500; // 500-2500 increase
-        const close = open + change;
-        const high = close + Math.random() * 1000;
-        const low = open - Math.random() * 500;
         
-        bars.push({
-          time: time / 1000,
-          open: open,
-          high: high,
-          low: low,
-          close: close,
-        });
+        // Random trading within the configured range
+        let change = (Math.random() - 0.5) * config.rangeMarketCap * 2; // +/- range
         
-        const volume = Math.random() * 2000 + 1000;
-        volumeData.push({
-          time: time / 1000,
-          value: volume,
-          color: close > open ? 'rgba(38, 166, 154, 0.3)' : 'rgba(239, 83, 80, 0.3)',
-        });
+        // First candle should always be a buy (green)
+        if (i === 0) {
+          change = Math.abs(change); // Force positive change for first candle
+        }
         
-        lastClose = close;
-      }
-
-      // Random trading between 3K and 40K
-      for (let i = 8; i < 49; i++) {
-        const time = startTime + i * 1000; // 1 second intervals
-        const open = lastClose;
-        const change = (Math.random() - 0.5) * 4000; // -2000 to +2000
         let close = open + change;
         
-        // Clamp between 3K and 40K
-        close = Math.max(3_000, Math.min(40_000, close));
+        // Clamp within range around initial market cap, but never below minMarketCap
+        const minPrice = Math.max(config.minMarketCap, config.initialMarketCap - config.rangeMarketCap);
+        const maxPrice = config.initialMarketCap + config.rangeMarketCap;
+        close = Math.max(minPrice, Math.min(maxPrice, close));
         
-        const high = Math.max(open, close) + Math.random() * 1000;
-        const low = Math.min(open, close) - Math.random() * 1000;
+        const high = Math.max(open, close) + Math.random() * (config.rangeMarketCap * 0.1);
+        const low = Math.min(open, close) - Math.random() * (config.rangeMarketCap * 0.1);
         
         bars.push({
           time: time / 1000,
@@ -243,12 +231,13 @@
         lastClose = close;
       }
 
+
       // Final candle (the big one)
-      const finalTime = startTime + 49 * 1000; // 1 second intervals
+      const finalTime = startTime + (totalBars - 1) * 1000; // 1 second intervals
       const finalOpen = lastClose;
-      const finalClose = 1_000_000; // 1M market cap
-      const finalHigh = finalClose + Math.random() * 100_000;
-      const finalLow = finalOpen - Math.random() * 10_000;
+      const finalClose = Math.max(config.minMarketCap, config.finalMarketCap); // Use configured final market cap, never below minMarketCap
+      const finalHigh = finalClose + Math.random() * (finalClose * 0.1); // 10% of final MC
+      const finalLow = Math.max(config.minMarketCap, finalOpen - Math.random() * (finalOpen * 0.05)); // 5% of open, never below minMarketCap
       
       bars.push({
         time: finalTime / 1000,
@@ -265,36 +254,32 @@
         color: 'rgba(38, 166, 154, 0.3)',
       });
 
+      // Add dump/pump action candle
+      const actionTime = startTime + totalBars * 1000;
+      const actionOpen = finalClose;
+      const actionClose = Math.max(config.minMarketCap, config.finalAction.marketCap); // Never below minMarketCap
+      const actionHigh = Math.max(actionOpen, actionClose) + Math.random() * (Math.abs(actionClose - actionOpen) * 0.1);
+      const actionLow = Math.max(config.minMarketCap, Math.min(actionOpen, actionClose) - Math.random() * (Math.abs(actionClose - actionOpen) * 0.1)); // Never below minMarketCap
+      
+      bars.push({
+        time: actionTime / 1000,
+        open: actionOpen,
+        high: actionHigh,
+        low: actionLow,
+        close: actionClose,
+      });
+      
+      const actionVolume = Math.random() * 10000 + 10000; // Higher volume for action
+      volumeData.push({
+        time: actionTime / 1000,
+        value: actionVolume,
+        color: actionClose > actionOpen ? 'rgba(38, 166, 154, 0.3)' : 'rgba(239, 83, 80, 0.3)',
+      });
+
       let current = 0;
       const liveBars = [];
       const liveVolume = [];
 
-      function animateFinalCandle(liveBars, liveVolume, openValue, targetValue, steps, duration) {
-        let step = 0;
-        const stepDuration = duration / steps;
-        const stepSize = (targetValue - openValue) / steps;
-        
-        function grow() {
-          if (step < steps) {
-            const currentValue = openValue + (stepSize * step);
-            const currentHigh = currentValue + Math.random() * 1000;
-            const currentLow = Math.min(openValue, currentValue) - Math.random() * 500;
-            
-            liveBars[liveBars.length - 1] = {
-              ...liveBars[liveBars.length - 1],
-              close: currentValue,
-              high: currentHigh,
-              low: currentLow,
-            };
-            
-            series.setData(liveBars);
-            volumeSeries.setData(liveVolume);
-            step++;
-            setTimeout(grow, stepDuration);
-          }
-        }
-        grow();
-      }
 
       function showNextBar() {
         if (current < bars.length) {
@@ -325,14 +310,10 @@
             
             // Check if this was the last bar
             if (current === bars.length) {
-              // Animate the final candle's growth
-              const openValue = liveBars[liveBars.length - 1].open;
-              const targetValue = 1_000_000;
-              animateFinalCandle(liveBars, liveVolume, openValue, targetValue, 60, 4000);
-            } else if (current === bars.length - 1) {
-              setTimeout(showNextBar, 1000); // 1 second pause before the last candle
+              // No animation - just show the final values as they are
+              console.log('Animation complete - showing final values');
             } else {
-              setTimeout(showNextBar, 200); // 0.2 second per candle
+              setTimeout(showNextBar, config.chartStyle.candleSpeed); // Configurable speed per candle
             }
           } catch (error) {
             console.error('Animation error:', error);
