@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lightweight Chart Test - Live Trading Simulation</title>
+  <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: #000;
+    }
+    body {
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    #chart-container {
+      width: 900px;
+      height: 540px;
+      margin: 0 auto;
+      position: relative;
+      background: #000;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.4);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+    }
+    #main-chart {
+      width: 100%;
+      height: 70%;
+    }
+    #volume-chart {
+      width: 100%;
+      height: 30%;
+      border-top: 1px solid #333;
+    }
+  </style>
+</head>
+<body>
+  <div id="chart-container">
+    <div id="main-chart"></div>
+    <div id="volume-chart"></div>
+  </div>
+  <script>
+    // Robust market cap formatter
+    function marketCapFormatter(price) {
+      if (price >= 1_000_000_000) {
+        return (price / 1_000_000_000) % 1 === 0
+          ? (price / 1_000_000_000).toFixed(0) + 'B'
+          : (price / 1_000_000_000).toFixed(2).replace(/0+$/, '').replace(/\.$/, '') + 'B';
+      } else if (price >= 1_000_000) {
+        return (price / 1_000_000) % 1 === 0
+          ? (price / 1_000_000).toFixed(0) + 'M'
+          : (price / 1_000_000).toFixed(2).replace(/0+$/, '').replace(/\.$/, '') + 'M';
+      } else if (price >= 1_000) {
+        return (price / 1_000) % 1 === 0
+          ? (price / 1_000).toFixed(0) + 'K'
+          : (price / 1_000).toFixed(2).replace(/0+$/, '').replace(/\.$/, '') + 'K';
+      } else {
+        return price.toFixed(2).replace(/\.00$/, '');
+      }
+    }
+
+    // Volume formatter
+    function volumeFormatter(volume) {
+      if (volume >= 1_000_000) {
+        return (volume / 1_000_000).toFixed(1) + 'M';
+      } else if (volume >= 1_000) {
+        return (volume / 1_000).toFixed(1) + 'K';
+      } else {
+        return volume.toFixed(0);
+      }
+    }
+
+    // Chart setup
+    const mainChartDiv = document.getElementById('main-chart');
+    const volumeChartDiv = document.getElementById('volume-chart');
+    
+    // Wait for DOM to be ready and ensure dimensions are available
+    setTimeout(() => {
+      const mainChart = LightweightCharts.createChart(mainChartDiv, {
+        width: mainChartDiv.clientWidth,
+        height: mainChartDiv.clientHeight,
+        layout: {
+          background: { color: '#000' },
+          textColor: '#d1d4dc',
+        },
+        grid: {
+          vertLines: { color: '#222' },
+          horzLines: { color: '#222' },
+        },
+        rightPriceScale: {
+          priceFormatter: marketCapFormatter,
+        },
+        timeScale: {
+          rightOffset: 20,
+        },
+      });
+
+      const volumeChart = LightweightCharts.createChart(volumeChartDiv, {
+        width: volumeChartDiv.clientWidth,
+        height: volumeChartDiv.clientHeight,
+        layout: {
+          background: { color: '#000' },
+          textColor: '#d1d4dc',
+        },
+        grid: {
+          vertLines: { color: '#222' },
+          horzLines: { color: '#222' },
+        },
+        rightPriceScale: {
+          priceFormatter: volumeFormatter,
+        },
+        timeScale: {
+          rightOffset: 20,
+        },
+      });
+
+      const series = mainChart.addCandlestickSeries({
+        upColor: '#26a69a',
+        downColor: '#ef5350',
+        borderVisible: false,
+        wickUpColor: '#26a69a',
+        wickDownColor: '#ef5350',
+        priceFormat: {
+          type: 'custom',
+          minMove: 1,
+          formatter: marketCapFormatter,
+        },
+      });
+
+      const volumeSeries = volumeChart.addHistogramSeries({
+        color: '#26a69a',
+        priceFormat: {
+          type: 'volume',
+        },
+        priceScaleId: '',
+      });
+
+      // Note: Time scale synchronization removed to prevent null value errors
+
+      // Start the animation after charts are ready
+      startAnimation(series, volumeSeries);
+    }, 100);
+
+    function startAnimation(series, volumeSeries) {
+      // Generate data with volume
+      const bars = [];
+      const volumeData = [];
+      let base = 1;
+      let time = Math.floor(Date.now() / 1000) - 60 * 60 * 24; // 24 hours ago
+      let lastClose = base;
+      const minCap = 3;
+      const maxCap = 40;
+      const uptrendBars = 8; // Number of initial uptrend bars
+      for (let i = 0; i < 100; i++) {
+        const open = lastClose;
+        let close;
+        if (i < uptrendBars) {
+          // Force uptrend: close > open
+          close = open + Math.abs(Math.random() * 0.5 + 0.1); // always up
+        } else {
+          close = open + (Math.random() - 0.5) * 0.5;
+        }
+        // Clamp to min/max cap (in units of 1k, since we scale by 10,000)
+        close = Math.max(minCap, Math.min(maxCap, close));
+        const high = Math.max(open, close);
+        const low = Math.min(open, close);
+        
+        // Generate volume (higher volume for bigger moves)
+        const priceChange = Math.abs(close - open);
+        const baseVolume = 1000 + Math.random() * 2000;
+        const volume = Math.floor(baseVolume + priceChange * 1000);
+        
+        bars.push({
+          time: time,
+          open: Number((open * 10000).toFixed(2)),
+          high: Number((high * 10000).toFixed(2)),
+          low: Number((low * 10000).toFixed(2)),
+          close: Number((close * 10000).toFixed(2)),
+        });
+
+        volumeData.push({
+          time: time,
+          value: volume,
+          color: close >= open ? '#26a69a' : '#ef5350',
+        });
+        
+        lastClose = close;
+        time += 60 * 3; // 3 minutes per bar
+      }
+      // Add the huge green candle at the end, jumping to 1M
+      bars.push({
+        time: time,
+        open: Number((lastClose * 10000).toFixed(2)),
+        low: Number((lastClose * 10000).toFixed(2)),
+        high: 1_000_000,
+        close: 1_000_000,
+      });
+
+      volumeData.push({
+        time: time,
+        value: 50000, // High volume for the big move
+        color: '#26a69a',
+      });
+
+      // Animate the chart (no markers)
+      let current = 0;
+      const liveBars = [];
+      const liveVolume = [];
+      
+      function animateFinalCandle(liveBars, liveVolume, openValue, targetValue, steps, duration) {
+        let step = 0;
+        function grow() {
+          step++;
+          const progress = step / steps;
+          const value = openValue + (targetValue - openValue) * progress;
+          // Update the last candle's close and high
+          const animatedBar = {
+            ...liveBars[liveBars.length - 1],
+            close: value,
+            high: value,
+          };
+          const updatedBars = liveBars.slice(0, -1).concat([animatedBar]);
+          series.setData(updatedBars);
+          volumeSeries.setData(liveVolume); // Keep volume chart updated too
+          if (step < steps) {
+            setTimeout(grow, duration / steps);
+          }
+        }
+        grow();
+      }
+
+      function showNextBar() {
+        if (current < bars.length) {
+          try {
+            liveBars.push(bars[current]);
+            liveVolume.push(volumeData[current]);
+            series.setData(liveBars);
+            volumeSeries.setData(liveVolume);
+            series.setMarkers([]);
+            current++;
+            
+            // Check if this was the last bar
+            if (current === bars.length) {
+              // Animate the final candle's growth
+              const openValue = liveBars[liveBars.length - 1].open;
+              const targetValue = 1_000_000;
+              animateFinalCandle(liveBars, liveVolume, openValue, targetValue, 60, 4000);
+            } else if (current === bars.length - 1) {
+              setTimeout(showNextBar, 1000); // 1 second pause before the last candle
+            } else {
+              setTimeout(showNextBar, 200); // 0.2 second per candle
+            }
+          } catch (error) {
+            console.error('Animation error:', error);
+          }
+        }
+      }
+      showNextBar();
+    }
+  </script>
+</body>
+</html> 
