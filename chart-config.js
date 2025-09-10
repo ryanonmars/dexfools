@@ -3,13 +3,17 @@
 
 const chartConfig = {
   // Market Cap Settings
-  initialMarketCap: 10000,        // Starting market cap (e.g., 10K)
+  initialMarketCap: 16000,        // Starting market cap (e.g., 10K)
   finalMarketCap: 20000,        // Target market cap (e.g., 1M)
   minMarketCap: 2000,                // Minimum market cap (can't go below this)
   
   // Animation Timing
-  totalSeconds: 20,                // How many seconds the animation should run
+  totalSeconds: 60,                // How many seconds the animation should run
   speedMultiplier: 2,              // Animation speed: 1 = real-time, 0.5 = half speed, 2 = double speed
+  
+  // Pre-Animation History
+  enableHistoricalData: false,      // Enable/disable historical data before animation
+  preAnimationTime: '2h',          // Historical data before animation starts (e.g., '60s', '2h', '10m', '1d')
   
   // Trading Range
   rangeMarketCap: 5000,             // Random trading stays within +/- this range
@@ -40,7 +44,7 @@ const chartConfig = {
     userMarkers: {
       showB: true,                 // Show B marker for user buy
       showS: false,                 // Show S marker for user sell
-      bTime: 18,                   // Time in seconds where B marker appears
+      bTime: 57,                   // Time in seconds where B marker appears
       sTime: 15,                  // Time in seconds where S marker appears
       bText: 'B',                 // Text for B marker
       sText: 'S'                  // Text for S marker

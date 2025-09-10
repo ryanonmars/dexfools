@@ -114,6 +114,28 @@
       return volume.toFixed(0);
     }
 
+    // Parse time string to seconds
+    function parseTimeToSeconds(timeString) {
+      const timeStr = timeString.toLowerCase().trim();
+      const match = timeStr.match(/^(\d+)([smhd])$/);
+      
+      if (!match) {
+        console.warn(`Invalid time format: ${timeString}. Using default 1 hour.`);
+        return 3600; // Default to 1 hour
+      }
+      
+      const value = parseInt(match[1]);
+      const unit = match[2];
+      
+      switch (unit) {
+        case 's': return value; // seconds
+        case 'm': return value * 60; // minutes
+        case 'h': return value * 3600; // hours
+        case 'd': return value * 86400; // days
+        default: return 3600; // Default to 1 hour
+      }
+    }
+
     const mainChartDiv = document.getElementById('main-chart');
     const restartButton = document.getElementById('restart-button');
     
@@ -303,14 +325,151 @@
       // Use configuration values
       const config = chartConfig;
       const totalBars = config.totalSeconds; // Number of bars = number of seconds
+      const preAnimationSeconds = config.enableHistoricalData ? parseTimeToSeconds(config.preAnimationTime) : 0;
       
       // Generate data
       const bars = [];
       const volumeData = [];
-      const startTime = Date.now() - totalBars * 1000; // X seconds ago
+      const animationStartTime = Date.now() - totalBars * 1000; // When animation starts
+      const historicalStartTime = animationStartTime - preAnimationSeconds * 1000; // Historical data starts here
       const basePrice = config.initialMarketCap; // Start at configured market cap
       let lastClose = basePrice;
 
+      // Generate pre-animation historical data with completely natural variation (if enabled)
+      if (config.enableHistoricalData && preAnimationSeconds > 0) {
+        console.log(`Generating ${preAnimationSeconds} seconds of pre-animation history...`);
+        
+        // Start historical data from a completely random point - no constraints
+        let historicalPrice = config.initialMarketCap * (0.1 + Math.random() * 1.8); // 10% to 190% of initial MC
+        
+        // Add some momentum and trend variables for more realistic behavior
+        let momentum = 0;
+        let trend = 0;
+        let lastTrendChange = 0;
+        
+        for (let i = 0; i < preAnimationSeconds; i++) {
+        const time = historicalStartTime + i * 1000; // 1 second intervals
+        const open = historicalPrice;
+        
+        // Create more natural price movements
+        // Base volatility that changes over time
+        const baseVolatility = config.rangeMarketCap * (0.5 + Math.random() * 1.5); // 0.5x to 2x range
+        
+        // Add momentum (price tends to continue in same direction)
+        momentum = momentum * 0.9 + (Math.random() - 0.5) * 0.1; // Decay momentum with some randomness
+        
+        // Add trend changes (market can trend up or down for periods)
+        if (i - lastTrendChange > 50 + Math.random() * 200) { // Change trend every 50-250 seconds
+          trend = (Math.random() - 0.5) * 2; // -1 to 1 trend
+          lastTrendChange = i;
+        }
+        
+        // Calculate price change with multiple factors
+        let change = 0;
+        
+        // Random walk component
+        change += (Math.random() - 0.5) * baseVolatility;
+        
+        // Momentum component
+        change += momentum * baseVolatility * 0.3;
+        
+        // Trend component
+        change += trend * baseVolatility * 0.2;
+        
+        // Occasional big moves (news events, etc.) - but not too frequent
+        if (Math.random() < 0.02) { // 2% chance of big move
+          const bigMoveDirection = Math.random() < 0.5 ? 1 : -1;
+          change += bigMoveDirection * baseVolatility * (2 + Math.random() * 3); // 2-5x normal move
+        }
+        
+        // Add some mean reversion (prices tend to come back toward a "fair value")
+        const meanReversion = (config.initialMarketCap - historicalPrice) * 0.01; // 1% pull toward initial
+        change += meanReversion;
+        
+        let close = open + change;
+        
+        // NO HARD CONSTRAINTS - let the price be completely natural
+        // Only prevent completely unrealistic values (negative prices or astronomical values)
+        if (close < 1) close = 1; // Minimum $1
+        if (close > config.initialMarketCap * 100) close = config.initialMarketCap * 100; // Maximum 100x initial
+        
+        // Create realistic high/low - only add wicks occasionally (like real charts)
+        let high = Math.max(open, close);
+        let low = Math.min(open, close);
+        
+        // Only add wicks 20% of the time (more realistic)
+        if (Math.random() < 0.2) {
+          const wickSize = Math.abs(change) * (0.5 + Math.random() * 1.5); // 0.5-2x the change
+          
+          if (close > open) {
+            // Green candle: only add wick on top
+            high = Math.max(open, close) + Math.random() * wickSize;
+          } else {
+            // Red candle: only add wick on bottom
+            low = Math.min(open, close) - Math.random() * wickSize;
+          }
+        }
+        
+        bars.push({
+          time: time / 1000,
+          open: open,
+          high: high,
+          low: low,
+          close: close,
+        });
+        
+        // More realistic volume that correlates with price movement
+        const baseVolume = 200 + Math.random() * 1500; // 200-1700 base
+        const volumeMultiplier = 1 + Math.abs(change) / config.rangeMarketCap; // Higher volume on bigger moves
+        const volume = baseVolume * volumeMultiplier + Math.random() * 1000;
+        
+        volumeData.push({
+          time: time / 1000,
+          value: volume,
+          color: close > open ? 'rgba(38, 166, 154, 0.3)' : 'rgba(239, 83, 80, 0.3)',
+        });
+        
+          historicalPrice = close;
+        }
+        
+        // Ensure the last historical candle always ends at the initial market cap
+        if (bars.length > 0) {
+          const lastBar = bars[bars.length - 1];
+          const lastVolume = volumeData[volumeData.length - 1];
+          
+          // Adjust the last candle to close at initial market cap
+          lastBar.close = config.initialMarketCap;
+          lastBar.high = Math.max(lastBar.high, config.initialMarketCap);
+          lastBar.low = Math.min(lastBar.low, config.initialMarketCap);
+          
+          // Update volume color based on new close price
+          lastVolume.color = config.initialMarketCap > lastBar.open ? 
+            'rgba(38, 166, 154, 0.3)' : 'rgba(239, 83, 80, 0.3)';
+          
+          // Update historical price to match
+          historicalPrice = config.initialMarketCap;
+        }
+        
+        // Set the historical data immediately (no animation for this part)
+        series.setData(bars);
+        volumeSeries.setData(volumeData);
+        console.log(`Pre-animation history loaded: ${bars.length} bars, ending at MC: ${config.initialMarketCap}`);
+      } else {
+        console.log('Historical data disabled - starting animation immediately');
+        // Set empty data to start fresh
+        series.setData([]);
+        volumeSeries.setData([]);
+      }
+
+      // Now generate the animated data starting from the initial market cap
+      const startTime = animationStartTime;
+      lastClose = config.initialMarketCap;
+
+
+      // Generate animated data (this will be added to the existing historical data)
+      const animatedBars = [];
+      const animatedVolumeData = [];
+      
       // Start with initial market cap and begin random trading
       for (let i = 0; i < totalBars - 2; i++) { // -2 because we'll add final candle and action candle
         const time = startTime + i * 1000; // 1 second intervals
@@ -331,10 +490,24 @@
         const maxPrice = config.initialMarketCap + config.rangeMarketCap;
         close = Math.max(minPrice, Math.min(maxPrice, close));
         
-        const high = Math.max(open, close) + Math.random() * (config.rangeMarketCap * 0.1);
-        const low = Math.min(open, close) - Math.random() * (config.rangeMarketCap * 0.1);
+        // Create realistic high/low - only add wicks occasionally (like real charts)
+        let high = Math.max(open, close);
+        let low = Math.min(open, close);
         
-        bars.push({
+        // Only add wicks 20% of the time (more realistic)
+        if (Math.random() < 0.2) {
+          const wickSize = config.rangeMarketCap * (0.05 + Math.random() * 0.15); // 5-20% of range
+          
+          if (close > open) {
+            // Green candle: only add wick on top
+            high = Math.max(open, close) + Math.random() * wickSize;
+          } else {
+            // Red candle: only add wick on bottom
+            low = Math.min(open, close) - Math.random() * wickSize;
+          }
+        }
+        
+        animatedBars.push({
           time: time / 1000,
           open: open,
           high: high,
@@ -343,7 +516,7 @@
         });
         
         const volume = Math.random() * 2000 + 1000;
-        volumeData.push({
+        animatedVolumeData.push({
           time: time / 1000,
           value: volume,
           color: close > open ? 'rgba(38, 166, 154, 0.3)' : 'rgba(239, 83, 80, 0.3)',
@@ -352,15 +525,29 @@
         lastClose = close;
       }
 
-
       // Final candle (the big one)
       const finalTime = startTime + (totalBars - 1) * 1000; // 1 second intervals
       const finalOpen = lastClose;
       const finalClose = Math.max(config.minMarketCap, config.finalMarketCap); // Use configured final market cap, never below minMarketCap
-      const finalHigh = finalClose + Math.random() * (finalClose * 0.1); // 10% of final MC
-      const finalLow = Math.max(config.minMarketCap, finalOpen - Math.random() * (finalOpen * 0.05)); // 5% of open, never below minMarketCap
       
-      bars.push({
+      // Create realistic high/low - only add wicks occasionally
+      let finalHigh = Math.max(finalOpen, finalClose);
+      let finalLow = Math.min(finalOpen, finalClose);
+      
+      // Only add wicks 20% of the time (more realistic)
+      if (Math.random() < 0.2) {
+        const wickSize = Math.abs(finalClose - finalOpen) * (0.5 + Math.random() * 1.5);
+        
+        if (finalClose > finalOpen) {
+          // Green candle: only add wick on top
+          finalHigh = Math.max(finalOpen, finalClose) + Math.random() * wickSize;
+        } else {
+          // Red candle: only add wick on bottom
+          finalLow = Math.min(finalOpen, finalClose) - Math.random() * wickSize;
+        }
+      }
+      
+      animatedBars.push({
         time: finalTime / 1000,
         open: finalOpen,
         high: finalHigh,
@@ -369,7 +556,7 @@
       });
       
       const finalVolume = Math.random() * 5000 + 5000;
-      volumeData.push({
+      animatedVolumeData.push({
         time: finalTime / 1000,
         value: finalVolume,
         color: 'rgba(38, 166, 154, 0.3)',
@@ -379,10 +566,25 @@
       const actionTime = startTime + totalBars * 1000;
       const actionOpen = finalClose;
       const actionClose = Math.max(config.minMarketCap, config.finalAction.marketCap); // Never below minMarketCap
-      const actionHigh = Math.max(actionOpen, actionClose) + Math.random() * (Math.abs(actionClose - actionOpen) * 0.1);
-      const actionLow = Math.max(config.minMarketCap, Math.min(actionOpen, actionClose) - Math.random() * (Math.abs(actionClose - actionOpen) * 0.1)); // Never below minMarketCap
       
-      bars.push({
+      // Create realistic high/low - only add wicks occasionally
+      let actionHigh = Math.max(actionOpen, actionClose);
+      let actionLow = Math.min(actionOpen, actionClose);
+      
+      // Only add wicks 20% of the time (more realistic)
+      if (Math.random() < 0.2) {
+        const wickSize = Math.abs(actionClose - actionOpen) * (0.5 + Math.random() * 1.5);
+        
+        if (actionClose > actionOpen) {
+          // Green candle: only add wick on top
+          actionHigh = Math.max(actionOpen, actionClose) + Math.random() * wickSize;
+        } else {
+          // Red candle: only add wick on bottom
+          actionLow = Math.min(actionOpen, actionClose) - Math.random() * wickSize;
+        }
+      }
+      
+      animatedBars.push({
         time: actionTime / 1000,
         open: actionOpen,
         high: actionHigh,
@@ -391,30 +593,30 @@
       });
       
       const actionVolume = Math.random() * 10000 + 10000; // Higher volume for action
-      volumeData.push({
+      animatedVolumeData.push({
         time: actionTime / 1000,
         value: actionVolume,
         color: actionClose > actionOpen ? 'rgba(38, 166, 154, 0.3)' : 'rgba(239, 83, 80, 0.3)',
       });
 
       let current = 0;
-      const liveBars = [];
-      const liveVolume = [];
+      const liveBars = [...bars]; // Start with historical data
+      const liveVolume = [...volumeData]; // Start with historical volume data
 
       function showNextBar() {
-        if (current < bars.length) {
+        if (current < animatedBars.length) {
           try {
-            liveBars.push(bars[current]);
-            liveVolume.push(volumeData[current]);
+            liveBars.push(animatedBars[current]);
+            liveVolume.push(animatedVolumeData[current]);
             series.setData(liveBars);
             volumeSeries.setData(liveVolume);
             
-            // Add green circle above the first candle when it appears
+            // Add green circle above the first animated candle when it appears
             if (current === 0 && config.markers.showFirstCandle) {
               // Use built-in marker for correct positioning
               const myMarkers = [
                 {
-                  time: bars[0].time,
+                  time: animatedBars[0].time,
                   position: 'aboveBar',
                   color: '#26a69a',
                   shape: 'circle',
@@ -424,11 +626,11 @@
                 }
               ];
               series.setMarkers(myMarkers);
-              console.log('Added marker above first candle:', config.markers.firstCandleText);
+              console.log('Added marker above first animated candle:', config.markers.firstCandleText);
             }
             
             // Check for user markers (B and S) as we progress through the animation
-            const currentBar = bars[current];
+            const currentBar = animatedBars[current];
             const userMarkers = config.markers.userMarkers;
             const existingMarkers = series.markers() || [];
             let markersToAdd = [];
@@ -480,17 +682,17 @@
             current++;
             
             // Check if this was the last bar
-            if (current === bars.length) {
+            if (current === animatedBars.length) {
               // Add marker to final action candle if enabled
               if (config.markers.showFinalCandle) {
                 // Get existing markers (including user markers added during animation)
                 const existingMarkers = series.markers() || [];
                 const allMarkers = [...existingMarkers];
                 
-                // Add first candle marker if enabled and not already present
+                // Add first animated candle marker if enabled and not already present
                 if (config.markers.showFirstCandle && !existingMarkers.some(m => m.text === config.markers.firstCandleText)) {
                   allMarkers.push({
-                    time: bars[0].time,
+                    time: animatedBars[0].time,
                     position: 'aboveBar',
                     color: '#26a69a',
                     shape: 'circle',
@@ -504,7 +706,7 @@
                 const finalMarkerText = config.markers.finalCandleText || (config.finalAction.type === 'pump' ? 'B' : 'S');
                 if (!existingMarkers.some(m => m.text === finalMarkerText)) {
                   allMarkers.push({
-                    time: bars[bars.length - 1].time,
+                    time: animatedBars[animatedBars.length - 1].time,
                     position: 'aboveBar',
                     color: config.finalAction.type === 'pump' ? '#26a69a' : '#ef5350',  // Green for pump, red for dump
                     shape: 'circle',
