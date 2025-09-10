@@ -416,7 +416,8 @@
                   color: '#26a69a',
                   shape: 'circle',
                   text: config.markers.firstCandleText || 'B',  // Use config text
-                  size: 3  // Bigger circle for better visibility
+                  size: 3,  // Bigger circle for better visibility
+                  offsetY: -20  // Move marker higher above the candle
                 }
               ];
               series.setMarkers(myMarkers);
@@ -440,7 +441,8 @@
                     color: '#26a69a',
                     shape: 'circle',
                     text: config.markers.firstCandleText || 'B',
-                    size: 3
+                    size: 3,
+                    offsetY: -20  // Move marker higher above the candle
                   });
                 }
                 
@@ -451,7 +453,8 @@
                   color: config.finalAction.type === 'pump' ? '#26a69a' : '#ef5350',  // Green for pump, red for dump
                   shape: 'circle',
                   text: config.markers.finalCandleText || (config.finalAction.type === 'pump' ? 'B' : 'S'),
-                  size: 3
+                  size: 3,
+                  offsetY: -20  // Move marker higher above the candle
                 });
                 
                 series.setMarkers(allMarkers);
