@@ -30,19 +30,20 @@
     }
     
     #restart-button {
-      position: absolute;
-      top: 10px;
-      right: 10px;
+      position: fixed;
+      top: 20px;
+      right: 20px;
       background: #26a69a;
       color: white;
       border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
+      padding: 12px 20px;
+      border-radius: 8px;
       cursor: pointer;
       font-size: 14px;
       font-weight: 500;
       z-index: 1000;
       transition: background-color 0.2s;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
     
     #restart-button:hover {
@@ -73,8 +74,8 @@
   </style>
 </head>
 <body>
+  <button id="restart-button">Restart Animation</button>
   <div id="chart-container">
-    <button id="restart-button">Restart Animation</button>
     <div id="main-chart"></div>
   </div>
   <script>
@@ -132,11 +133,20 @@
         rightBarStaysOnScroll: true
       });
       
+      // Configure main chart with proper separation
       chart.priceScale('right').applyOptions({
         autoScale: true,
         scaleMargins: {
-          top: 0.1,  // 10% buffer at top
-          bottom: 0.1  // 10% buffer at bottom
+          top: 0.15,  // 15% buffer at top for markers
+          bottom: 0.4  // Candlesticks take up top 60% of chart
+        }
+      });
+      
+      // Configure volume with proper separation
+      chart.priceScale('volume').applyOptions({
+        scaleMargins: {
+          top: 0.6,  // Volume takes up bottom 40% of chart
+          bottom: 0
         }
       });
     }
@@ -231,11 +241,11 @@
         priceScaleId: 'right',
       });
 
-      // Adjust main price scale to use top 70% of chart
+      // Adjust main price scale to use top 60% of chart
       chart.priceScale('right').applyOptions({
         scaleMargins: {
           top: 0,
-          bottom: 0.3,  // Candlesticks take up top 70% of chart
+          bottom: 0.4,  // Candlesticks take up top 60% of chart
         },
       });
 
@@ -252,7 +262,7 @@
       // Add a separate price scale for volume
       chart.priceScale('volume').applyOptions({
         scaleMargins: {
-          top: 0.7,  // Volume takes up bottom 30% of chart
+          top: 0.6,  // Volume takes up bottom 40% of chart
           bottom: 0,
         },
         priceFormatter: volumeFormatter,
