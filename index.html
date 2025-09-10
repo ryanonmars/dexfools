@@ -1532,42 +1532,38 @@
             
             // Check if this was the last bar
             if (current === animatedBars.length) {
-              // Add marker to final action candle if enabled
-              if (config.markers.showFinalCandle) {
-                // Get existing markers (including user markers added during animation)
-                const existingMarkers = series.markers() || [];
-                const allMarkers = [...existingMarkers];
-                
-                // Add first animated candle marker if enabled and not already present
-                if (config.markers.showFirstCandle && !existingMarkers.some(m => m.text === config.markers.firstCandleText)) {
-                  allMarkers.push({
-                    time: animatedBars[0].time,
-                    position: 'aboveBar',
-                    color: '#26a69a',
-                    shape: 'circle',
-                    text: config.markers.firstCandleText || 'DB',
-                    size: 3,
-                    offsetY: -20  // Move marker higher above the candle
-                  });
-                }
-                
-                // Add final action marker if not already present
-                const finalMarkerText = config.markers.finalCandleText || (config.finalAction.type === 'pump' ? 'PUMP' : 'DUMP');
-                if (!existingMarkers.some(m => m.text === finalMarkerText)) {
-                  allMarkers.push({
-                    time: animatedBars[animatedBars.length - 1].time,
-                    position: 'aboveBar',
-                    color: config.finalAction.type === 'pump' ? '#26a69a' : '#ef5350',  // Green for pump, red for dump
-                    shape: 'circle',
-                    text: finalMarkerText,
-                    size: 3,
-                    offsetY: -20  // Move marker higher above the candle
-                  });
-                }
-                
-                series.setMarkers(allMarkers);
-                console.log('Added all markers - preserved user markers and added first/final');
+              // Get existing markers (including user markers added during animation)
+              const existingMarkers = series.markers() || [];
+              const allMarkers = [...existingMarkers];
+              
+              // Add first animated candle marker if enabled and not already present
+              if (config.markers.showFirstCandle && !existingMarkers.some(m => m.text === 'DB')) {
+                allMarkers.push({
+                  time: animatedBars[0].time,
+                  position: 'aboveBar',
+                  color: '#26a69a',
+                  shape: 'circle',
+                  text: 'DB',
+                  size: 3,
+                  offsetY: -20  // Move marker higher above the candle
+                });
               }
+              
+              // Add final animated candle marker if enabled and not already present
+              if (config.markers.showFinalCandle && !existingMarkers.some(m => m.text === 'DS')) {
+                allMarkers.push({
+                  time: animatedBars[animatedBars.length - 1].time,
+                  position: 'aboveBar',
+                  color: '#ef5350',
+                  shape: 'circle',
+                  text: 'DS',
+                  size: 3,
+                  offsetY: -20  // Move marker higher above the candle
+                });
+              }
+              
+              series.setMarkers(allMarkers);
+              console.log('Added all markers - preserved user markers and added first/final');
               console.log('Animation complete - showing final values');
               
               // Call completion callback if provided
