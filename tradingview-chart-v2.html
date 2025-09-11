@@ -118,6 +118,22 @@
       width: 50px;
     }
     
+    .config-item input[type="text"] {
+      width: 120px;
+      padding: 4px 8px;
+      background: #2a2a2a;
+      border: 1px solid #444;
+      border-radius: 4px;
+      color: #d1d4dc;
+      font-size: 12px;
+    }
+    
+    .config-item input[type="text"]:focus {
+      outline: none;
+      border-color: #26a69a;
+      box-shadow: 0 0 0 2px rgba(38, 166, 154, 0.2);
+    }
+    
     /* Marker section styles */
     .marker-section {
       margin-bottom: 20px;
@@ -280,6 +296,14 @@
   <div id="config-panel">
     <div class="config-content">
       <h3>Chart Configuration</h3>
+      
+        <div class="config-group">
+          <h4>Token Information</h4>
+          <div class="config-item">
+            <label>Token Name:</label>
+            <input type="text" id="tokenName" value="Custom animated token" placeholder="Enter token name">
+          </div>
+        </div>
       
       <div class="config-group">
         <h4>Market Cap Settings</h4>
@@ -467,8 +491,6 @@
     
     <div class="config-button-container">
       <button id="apply-config">Apply & Start Animation</button>
-      <button id="refresh-marks" style="margin-top: 10px; background: #ff9800; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Refresh Marks</button>
-      <button id="test-realtime" style="margin-top: 10px; background: #9c27b0; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Test Realtime</button>
       <div id="animation-status">Chart ready - click "Apply & Start" to begin</div>
     </div>
   </div>
@@ -526,23 +548,29 @@
       resolveSymbol(symbolName, onSymbolResolvedCallback, onResolveErrorCallback) {
         console.log('🔗 resolveSymbol called for:', symbolName);
         
+        // Get current config values
+        const tokenName = document.getElementById('tokenName')?.value || 'Custom animated token';
+        
+        console.log('🔗 Current form values - tokenName:', tokenName);
+        
         const symbolInfo = {
-          ticker: 'CUSTOM',
-          name: 'Custom Token',
-          description: 'Custom animated token',
+          ticker: '', // Empty ticker to hide symbol
+          name: tokenName,
+          description: tokenName,
           type: 'crypto',
           session: '24x7',
           timezone: 'UTC',
-          exchange: 'Custom',
+          exchange: '', // Empty exchange to hide it
           minmov: 1,
           pricescale: 100,
           has_intraday: true,
           has_weekly_and_monthly: false,
-          supported_resolutions: ['1', '5', '15', '30', '60', '240', '1D'],
+          supported_resolutions: ['1S', '5S', '15S', '30S', '1', '5', '15', '30', '60', '240', '1D'],
           volume_precision: 0,
           data_status: 'streaming',
         };
 
+        console.log('🔗 Sending symbolInfo to TradingView:', symbolInfo);
         setTimeout(() => onSymbolResolvedCallback(symbolInfo), 0);
       }
 
@@ -1085,8 +1113,12 @@
         visible: container.offsetParent !== null
       } : 'Container not found');
 
+      // Get current token name from config
+      const currentTokenName = document.getElementById('tokenName')?.value || 'Custom animated token';
+      console.log('🚀 Creating widget with name:', currentTokenName);
+      
       tvWidget = new TradingView.widget({
-        symbol: 'CUSTOM',
+        symbol: currentTokenName,
         interval: '1',
         container: 'tv_chart_container',
         datafeed: globalDatafeed,
@@ -1178,6 +1210,38 @@
 
       tvWidget.onChartReady(() => {
         console.log('✅ TradingView Advanced Chart ready');
+        
+        // Update name to current form value
+        const currentTokenName = document.getElementById('tokenName')?.value || 'Custom animated token';
+        console.log('🔄 Updating chart name to:', currentTokenName);
+        
+        // Force TradingView to refresh its symbol cache and update the header
+        setTimeout(() => {
+          console.log('🔄 Forcing TradingView symbol refresh...');
+          
+          // Force a complete symbol change with different approaches
+          tvWidget.setSymbol(currentTokenName, '1', () => {
+            console.log('✅ setSymbol callback executed');
+            
+            // Try to force a chart refresh
+            setTimeout(() => {
+              try {
+                // Force the chart to refresh its display
+                tvWidget.chart().executeActionById('timeScaleReset');
+                tvWidget.chart().executeActionById('chartReset');
+                
+                // Try to trigger a data refresh
+                tvWidget.chart().executeActionById('dataReset');
+                
+                console.log('✅ Chart refresh commands sent');
+              } catch (e) {
+                console.log('❌ Chart refresh failed:', e.message);
+              }
+            }, 100);
+          });
+          
+        }, 1000);
+        
         document.getElementById('animation-status').textContent = 'Chart ready - Position as needed, then click "Apply & Start"';
         document.getElementById('animation-status').style.color = '#26a69a';
         
@@ -1655,7 +1719,8 @@
         console.log('🔍 Parsed speedMultiplier:', parsedSpeedMultiplier);
         console.log('🔍 Is NaN:', isNaN(parsedSpeedMultiplier));
         
-        return {
+    return {
+      tokenName: document.getElementById('tokenName').value || 'Custom animated token',
           initialMarketCap: parseInt(document.getElementById('initialMarketCap').value),
           finalMarketCap: parseInt(document.getElementById('finalMarketCap').value),
           minMarketCap: parseInt(document.getElementById('minMarketCap').value),
@@ -1759,15 +1824,6 @@
         console.error('❌ Apply & Start button not found!');
       }
       
-      // Add test realtime button
-      const testButton = document.getElementById('test-realtime');
-      if (testButton) {
-        testButton.addEventListener('click', () => {
-          console.log('🧪 Test Realtime button clicked!');
-          testRealtimeCallback();
-        });
-        console.log('🧪 Test realtime button event listener added');
-      }
       
       setTimeout(initTradingView, 100);
       updateRemoveButtons(); // Hide trash cans initially
