@@ -1550,10 +1550,8 @@
         
         // Only apply minimum if it's not lower than the final target
         const effectiveMin = Math.min(config.minMarketCap, config.finalMarketCap);
-        console.log(`🔍 Bar ${i}: close=${close}, effectiveMin=${effectiveMin}, finalMarketCap=${config.finalMarketCap}, minMarketCap=${config.minMarketCap}`);
         if (close < effectiveMin) {
           close = effectiveMin;
-          console.log(`🔍 Applied effectiveMin constraint: ${close}`);
         }
         
         // Balanced correction toward target
@@ -1612,7 +1610,7 @@
       // Add final action candle
       const actionTime = animationStartTime + ((totalBars - 1) * 60);
       const actionOpen = config.finalMarketCap;
-      const actionClose = config.finalMarketCap; // Use finalMarketCap, not minMarketCap
+      const actionClose = config.finalActionMarketCap; // Use finalActionMarketCap from config
       const actionHigh = Math.max(actionOpen, actionClose);
       const actionLow = Math.min(actionOpen, actionClose);
 
@@ -1780,6 +1778,7 @@
           initialMarketCap: parseInt(document.getElementById('initialMarketCap').value),
           finalMarketCap: parseInt(document.getElementById('finalMarketCap').value),
           minMarketCap: parseInt(document.getElementById('minMarketCap').value),
+          finalActionMarketCap: parseInt(document.getElementById('finalActionMarketCap').value),
           rangeMarketCap: parseInt(document.getElementById('rangeMarketCap').value),
           totalSeconds: parseInt(document.getElementById('totalSeconds').value),
           speedMultiplier: parsedSpeedMultiplier || 1.0,
