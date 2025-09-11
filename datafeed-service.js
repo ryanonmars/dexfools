@@ -14,14 +14,15 @@ class CustomDatafeed {
       pointvalue: 1,
       has_intraday: true,
       has_weekly_and_monthly: false,
-      has_seconds: true,
+      has_seconds: false, // Disable seconds resolution - TradingView doesn't support it well
       has_daily: true,
-      supported_resolutions: ['1S', '5S', '10S', '15S', '30S', '1', '5', '15', '30', '60', '240', '1D'],
+      supported_resolutions: ['1', '5', '15', '30', '60', '240', '1D'],
       volume_precision: 0,
       data_status: 'streaming',
       visible_plots_set: 'ohlcv',
-      intraday_multipliers: ['1S', '5S', '10S', '15S', '30S', '1', '5', '15', '30', '60', '240'],
-      seconds_multipliers: ['1S', '5S', '10S', '15S', '30S'],
+      intraday_multipliers: ['1', '5', '15', '30', '60', '240'], // Minutes only
+      // seconds_multipliers: ['1S', '5S', '10S', '15S', '30S'], // Disabled - TradingView doesn't support well
+      daily_multipliers: ['1D'], // Daily only
       format: 'price',
       // Add required fields to prevent schema warnings
       listed_exchange: 'Custom',
@@ -62,7 +63,7 @@ class CustomDatafeed {
     console.log('🚀 Datafeed onReady called');
     setTimeout(() => {
       const config = {
-        supported_resolutions: ['1S', '5S', '10S', '15S', '30S', '1', '5', '15', '30', '60', '240', '1D'],
+        supported_resolutions: ['1', '5', '15', '30', '60', '240', '1D'],
         supports_marks: true,
         supports_timescale_marks: true,
         supports_time: true,
@@ -77,22 +78,30 @@ class CustomDatafeed {
   }
 
   addInitialData() {
-    // Add some initial data to prevent "no data" message
+    // Add minimal data to help chart load, but will be cleared when animation starts
     const now = Math.floor(Date.now() / 1000);
     const initialPrice = 10000;
     
-    for (let i = 0; i < 10; i++) {
-      this.currentData.push({
-        time: now - (10 - i),
-        open: initialPrice + i * 10,
-        high: initialPrice + i * 10 + 50,
-        low: initialPrice + i * 10 - 50,
-        close: initialPrice + (i + 1) * 10,
-        volume: 1000 + i * 100
-      });
-    }
-    console.log('Added initial data:', this.currentData.length, 'bars');
-    console.log('Sample data:', this.currentData[0]);
+    // Add just 2 bars to help chart initialize
+    this.currentData = [
+      {
+        time: now - 120, // 2 minutes ago
+        open: initialPrice,
+        high: initialPrice + 10,
+        low: initialPrice - 10,
+        close: initialPrice,
+        volume: 1000
+      },
+      {
+        time: now - 60, // 1 minute ago
+        open: initialPrice,
+        high: initialPrice + 10,
+        low: initialPrice - 10,
+        close: initialPrice,
+        volume: 1000
+      }
+    ];
+    console.log('Added minimal initial data for chart loading:', this.currentData.length, 'bars');
   }
 
   searchSymbols(userInput, exchange, symbolType, onResultReadyCallback) {
@@ -104,13 +113,18 @@ class CustomDatafeed {
     console.log('🔍 Datafeed resolveSymbol called for:', symbolName);
     setTimeout(() => {
       // Return a copy of the symbolInfo to avoid reference issues
-      const symbolInfo = { ...this.symbolInfo };
+      const symbolInfo = { 
+        ...this.symbolInfo
+      };
       console.log('📋 Resolving symbol with info:', symbolInfo);
       onSymbolResolvedCallback(symbolInfo);
     }, 0);
   }
 
   getBars(symbolInfo, resolution, periodParams, onHistoryCallback, onErrorCallback) {
+    console.log('🔥 getBars called with resolution:', resolution, 'periodParams:', periodParams, 'data length:', this.currentData.length);
+    console.log('Current data sample:', this.currentData ? this.currentData.slice(0, 3) : 'No data');
+    
     // Validate inputs
     if (!onHistoryCallback || typeof onHistoryCallback !== 'function') {
       console.error('❌ Invalid onHistoryCallback provided to getBars');
@@ -125,15 +139,22 @@ class CustomDatafeed {
       return;
     }
     
+    // Store original resolution for logging
+    const originalResolution = resolution;
+    
+    // For now, use the requested resolution to get basic chart working
+    console.log(`📊 Using requested resolution: ${resolution}`);
+    // resolution = '1S'; // Commented out for now
+    
     // Check if resolution is supported
     if (!this.symbolInfo.supported_resolutions.includes(resolution)) {
-      console.error('❌ Unsupported resolution requested:', resolution);
-      console.error('Available resolutions:', this.symbolInfo.supported_resolutions);
+      console.log('❌ Unsupported resolution:', resolution);
       if (onErrorCallback) {
         onErrorCallback(new Error(`Unsupported resolution: ${resolution}`));
       }
       return;
     }
+    console.log('✅ Resolution check passed for:', resolution);
     
     // Create cache key
     const cacheKey = `${resolution}_${JSON.stringify(periodParams || {})}`;
@@ -149,7 +170,11 @@ class CustomDatafeed {
     if (this.getBarsCache.has(cacheKey)) {
       const cachedData = this.getBarsCache.get(cacheKey);
       console.log('📋 Using cached data for', resolution);
-      onHistoryCallback(cachedData.data, cachedData.meta);
+      
+      // Use setTimeout to break the call stack and prevent recursion
+      setTimeout(() => {
+        onHistoryCallback(cachedData.data, cachedData.meta);
+      }, 0);
       return;
     }
     
@@ -159,29 +184,27 @@ class CustomDatafeed {
         if (this.currentData && this.currentData.length > 0) {
           let tvData;
           
-          // Handle daily resolution by aggregating minute data
-          if (resolution === '1D') {
-            console.log('📅 Processing daily resolution - aggregating minute data');
-            tvData = this.aggregateToDaily(this.currentData);
-          } else {
-            // Convert our data format to TradingView format for other resolutions
-            tvData = this.currentData.map(bar => {
-              if (!bar || typeof bar.time !== 'number') {
-                console.warn('Invalid bar data:', bar);
-                return null;
-              }
-              return {
-                time: bar.time * 1000, // TradingView expects milliseconds
-                open: bar.open || 0,
-                high: bar.high || 0,
-                low: bar.low || 0,
-                close: bar.close || 0,
-                volume: bar.volume || 0
-              };
-            }).filter(bar => bar !== null); // Remove invalid bars
-          }
+          // Convert our data format to TradingView format (always use 1S data)
+          tvData = this.currentData.map(bar => {
+            if (!bar || typeof bar.time !== 'number') {
+              console.warn('Invalid bar data:', bar);
+              return null;
+            }
+            return {
+              time: bar.time * 1000, // TradingView expects milliseconds
+              open: bar.open || 0,
+              high: bar.high || 0,
+              low: bar.low || 0,
+              close: bar.close || 0,
+              volume: bar.volume || 0
+            };
+          }).filter(bar => bar !== null) // Remove invalid bars
+          .sort((a, b) => a.time - b.time); // Sort by time to ensure chronological order
           
-          const meta = { noData: false };
+          // Create meta - don't set nextTime when we have data
+          const meta = { 
+            noData: false
+          };
           
           // Cache the response
           this.getBarsCache.set(cacheKey, { data: tvData, meta: meta });
@@ -192,13 +215,32 @@ class CustomDatafeed {
             this.getBarsCache.delete(firstKey);
           }
           
-          console.log('✅ Sending', tvData.length, 'bars to TradingView for resolution', resolution);
-          onHistoryCallback(tvData, meta);
+          console.log('✅ Sending', tvData.length, 'bars to TradingView for resolution', resolution, '(original:', originalResolution, ')');
+          console.log('📊 Sample TV data:', tvData[0]);
+          console.log('📊 Price range in TV data:', Math.min(...tvData.map(b => b.low)), 'to', Math.max(...tvData.map(b => b.high)));
+          
+          // Use setTimeout to break the call stack and prevent recursion
+          setTimeout(() => {
+            console.log('📈 Calling onHistoryCallback with', tvData.length, 'bars');
+            console.log('📈 Time range being sent:', 
+              new Date(tvData[0]?.time || 0), 'to', 
+              new Date(tvData[tvData.length - 1]?.time || 0)
+            );
+            console.log('📈 Meta object:', meta);
+            
+            onHistoryCallback(tvData, meta);
+            
+            console.log('✅ onHistoryCallback completed');
+          }, 0);
         } else {
           console.log('📊 No data available, sending empty response');
           const emptyMeta = { noData: true };
           this.getBarsCache.set(cacheKey, { data: [], meta: emptyMeta });
-          onHistoryCallback([], emptyMeta);
+          
+          // Use setTimeout to break the call stack and prevent recursion
+          setTimeout(() => {
+            onHistoryCallback([], emptyMeta);
+          }, 0);
         }
       } catch (error) {
         console.error('❌ Error in getBars:', error);
@@ -338,6 +380,14 @@ class CustomDatafeed {
       console.log('⚠️ No realtimeCallback available for updateData');
     }
   }
+
+  // Method to force chart to use second resolution
+  forceSecondResolution() {
+    console.log('🔄 Forcing chart to use 1S resolution for animation');
+    // This will be called by the chart when animation starts
+  }
+
+  // Method removed - using standard resolutions now
 }
 
 // Export for use in other files
