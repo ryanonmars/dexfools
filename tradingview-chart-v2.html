@@ -562,7 +562,15 @@
             const toTime = periodParams.to;
             
             console.log('📊 Filtering data from', fromTime, 'to', toTime);
-            console.log('📊 Available data times:', this.currentData.map(bar => ({
+            console.log('📊 Requested time range:', {
+              from: new Date(fromTime * 1000).toISOString(),
+              to: new Date(toTime * 1000).toISOString()
+            });
+            console.log('📊 Available data times (first 10):', this.currentData.slice(0, 10).map(bar => ({
+              time: bar.time,
+              timestamp: new Date(bar.time * 1000).toISOString()
+            })));
+            console.log('📊 Available data times (last 10):', this.currentData.slice(-10).map(bar => ({
               time: bar.time,
               timestamp: new Date(bar.time * 1000).toISOString()
             })));
@@ -1058,20 +1066,9 @@
         tvWidget = null;
       }
 
-      // Always create a new datafeed instance for each chart
-      globalDatafeed = new CustomDatafeed();
+      // Datafeed is already created with historical data before calling initTradingView
       
-      // Add initial data so chart has something to display
-      const initialTime = Math.floor(Date.now() / 1000);
-      const initialBar = {
-        time: initialTime,
-        open: 10000,
-        high: 10100,
-        low: 9900,
-        close: 10000,
-      };
-      globalDatafeed.currentData.push(initialBar);
-      console.log('🚀 Added initial bar to datafeed:', initialBar);
+      // Historical data is already loaded in the datafeed
       console.log('🚀 Datafeed currentData length:', globalDatafeed.currentData.length);
       
       console.log('🚀 Datafeed created:', globalDatafeed);
@@ -1254,12 +1251,115 @@
         tvWidget = null;
       }
       
-      // Create a completely fresh datafeed
-      globalDatafeed = new CustomDatafeed();
-      
-      // Recreate the chart widget
-      console.log('🔄 Creating fresh chart widget...');
-      initTradingView();
+        // Pre-load historical data first
+        let historicalBars = [];
+        console.log('🔄 DEBUG: config.enableHistoricalData:', config.enableHistoricalData);
+        if (config.enableHistoricalData) {
+          const preAnimationSeconds = parseTimeToSeconds(config.preAnimationTime);
+          if (preAnimationSeconds > 0) {
+            console.log(`📈 Pre-loading ${preAnimationSeconds} seconds of historical data...`);
+            
+            // Generate historical data immediately
+            const rng = new SeededRandom(config.seed);
+            const animationStartTime = Math.floor(Date.now() / 1000); // Current time in seconds
+            const historicalStartTime = animationStartTime - preAnimationSeconds;
+            
+            // historicalBars already declared above
+            let historicalPrice = config.initialMarketCap * (0.1 + rng.next() * 1.8);
+            let momentum = 0;
+            let trend = 0;
+            let lastTrendChange = 0;
+            
+            // Generate historical data in 1-minute intervals using sophisticated algorithm
+            const historicalMinutes = Math.floor(preAnimationSeconds / 60);
+            for (let i = 0; i < historicalMinutes; i++) {
+              const time = historicalStartTime + (i * 60); // 1 minute intervals
+              const open = historicalPrice;
+              
+              // Use the same sophisticated algorithm as animation data
+              const progressRatio = i / (historicalMinutes - 1);
+              const trendStrength = 0.01 + (progressRatio * 0.05); // Weaker trend for historical data
+              const randomStrength = 0.8; // More random for historical data
+              
+              // Random target price for historical data (around initial market cap)
+              const targetPrice = config.initialMarketCap * (0.8 + rng.next() * 0.4);
+              const trendComponent = (targetPrice - open) * trendStrength;
+              const randomComponent = (rng.next() - 0.5) * config.rangeMarketCap * randomStrength;
+              
+              const randomDirectionChance = 0.4; // More random direction changes for historical data
+              const trendDirection = rng.next() < randomDirectionChance ? (rng.next() - 0.5) * 2 : 1;
+              
+              const volatility = 0.6 + rng.next() * 0.6; // More volatile for historical data
+              const momentum = rng.next() < 0.3 ? (rng.next() - 0.5) * 0.4 : 0; // More momentum changes
+              
+              let change = (trendComponent * trendDirection) + (randomComponent + momentum) * volatility;
+              
+              // Add some mean reversion to keep price around initial market cap
+              const meanReversion = (config.initialMarketCap - historicalPrice) * 0.02;
+              change += meanReversion;
+              
+              let close = open + change;
+              
+              if (close < config.minMarketCap) {
+                close = config.minMarketCap;
+              }
+              
+              // Create realistic high/low with wicks
+              let high = Math.max(open, close);
+              let low = Math.min(open, close);
+              
+              // Add wicks 30% of the time for more realistic trading
+              if (rng.next() < 0.3) {
+                const wickSize = Math.abs(change) * (0.2 + rng.next() * 0.8);
+                if (close > open) {
+                  high = Math.max(open, close) + rng.next() * wickSize;
+                } else {
+                  low = Math.min(open, close) - rng.next() * wickSize;
+                }
+              }
+              
+              historicalBars.push({
+                time: time,
+                open: open,
+                high: high,
+                low: low,
+                close: close,
+                volume: 1000 + rng.next() * 2000
+              });
+              
+              historicalPrice = close;
+            }
+            
+            // Ensure last historical candle ends at initial market cap
+            if (historicalBars.length > 0) {
+              const lastBar = historicalBars[historicalBars.length - 1];
+              lastBar.close = config.initialMarketCap;
+              lastBar.high = Math.max(lastBar.high, lastBar.open, lastBar.close);
+              lastBar.low = Math.min(lastBar.low, lastBar.open, lastBar.close);
+            }
+            
+            console.log(`📈 Generated ${historicalBars.length} historical bars`);
+            console.log(`📈 Historical data time range:`, {
+              first: new Date(historicalBars[0].time * 1000).toISOString(),
+              last: new Date(historicalBars[historicalBars.length - 1].time * 1000).toISOString()
+            });
+            console.log(`📈 Sample historical bars:`, historicalBars.slice(0, 3).map(bar => ({
+              time: new Date(bar.time * 1000).toISOString(),
+              close: bar.close
+            })));
+          }
+        }
+        
+        // Create datafeed with historical data already loaded
+        globalDatafeed = new CustomDatafeed();
+        console.log('🔄 DEBUG: historicalBars length before loading:', historicalBars.length);
+        console.log('🔄 DEBUG: historicalBars sample:', historicalBars.slice(0, 3));
+        globalDatafeed.currentData = [...historicalBars];
+        console.log('🔄 Datafeed created with historical data:', globalDatafeed.currentData.length, 'bars');
+        
+        // Recreate the chart widget
+        console.log('🔄 Creating fresh chart widget...');
+        initTradingView();
       
       // Wait for chart to be ready, then start animation
       setTimeout(() => {
@@ -1279,12 +1379,13 @@
       const totalBars = config.totalSeconds;
       const rng = new SeededRandom(config.seed);
       
-      // Use current time as base for animation
-      const animationStartTime = Date.now();
+      // Use current time as base for animation (in seconds)
+      const animationStartTime = Math.floor(Date.now() / 1000);
       
       console.log(`Generating ${totalBars} bars for animation...`);
+      console.log(`📈 Historical data: ${config.enableHistoricalData ? 'enabled' : 'disabled'}`);
       
-      // Generate ALL data upfront like working version
+      // Generate ALL animation data upfront like working version
       const animatedBars = [];
       let lastClose = config.initialMarketCap;
       
@@ -1302,7 +1403,7 @@
       
       // Generate animated data exactly like working version
       for (let i = 0; i < totalBars - 2; i++) {
-        const time = animationStartTime + (i * 1000); // 1 second intervals in milliseconds
+        const time = animationStartTime + (i * 60); // 1 minute intervals in seconds
         const open = lastClose;
         
         // Calculate where we should be at this point in the animation
@@ -1362,7 +1463,7 @@
         }
         
         const bar = {
-          time: time, // Keep as milliseconds for 1-minute resolution
+          time: time, // Time in seconds
           open: open,
           high: high,
           low: low,
@@ -1374,7 +1475,7 @@
       }
 
       // Add final candle that hits the final market cap
-      const finalTime = animationStartTime + ((totalBars - 2) * 1000);
+      const finalTime = animationStartTime + ((totalBars - 2) * 60);
       const finalOpen = lastClose;
       const finalClose = config.finalMarketCap;
       const finalHigh = Math.max(finalOpen, finalClose);
@@ -1389,7 +1490,7 @@
       });
 
       // Add final action candle
-      const actionTime = animationStartTime + ((totalBars - 1) * 1000);
+      const actionTime = animationStartTime + ((totalBars - 1) * 60);
       const actionOpen = config.finalMarketCap;
       const actionClose = config.minMarketCap;
       const actionHigh = Math.max(actionOpen, actionClose);
@@ -1418,8 +1519,8 @@
       let current = 0;
       const liveBars = [];
       
-      // Clear any existing data before starting
-      globalDatafeed.currentData = [];
+      // Historical data is already loaded into datafeed before chart creation
+      console.log(`📈 Datafeed has ${globalDatafeed.currentData.length} bars (including historical data)`);
       
       // Calculate animation speed based on speed multiplier
       const baseSpeed = 1000; // 1 second base speed
@@ -1463,8 +1564,12 @@
           try {
             liveBars.push(animatedBars[current]);
             
-            // Update TradingView chart with all data so far
-            globalDatafeed.currentData = [...liveBars];
+            // Update TradingView chart with all data (historical + animation so far)
+            // Keep existing historical data and add new animation bars
+            const existingHistoricalData = globalDatafeed.currentData.filter(bar => 
+              animatedBars.length === 0 || bar.time < animatedBars[0].time
+            );
+            globalDatafeed.currentData = [...existingHistoricalData, ...liveBars];
             
             // Force TradingView to refresh and show the data
             const currentBar = liveBars[liveBars.length - 1];
@@ -1558,6 +1663,8 @@
           totalSeconds: parseInt(document.getElementById('totalSeconds').value),
           speedMultiplier: parsedSpeedMultiplier || 1.0,
           seed: parseInt(document.getElementById('seed').value) || 1,
+          enableHistoricalData: document.getElementById('enableHistoricalData').checked,
+          preAnimationTime: document.getElementById('preAnimationTime').value,
           markers: {
             showFirstCandle: document.getElementById('showFirstCandle').checked,
             firstCandleType: document.getElementById('firstCandleType').value,
@@ -1587,6 +1694,8 @@
           totalSeconds: 10,
           speedMultiplier: 1.0,
           seed: 1,
+          enableHistoricalData: false,
+          preAnimationTime: '1h',
           markers: {
             showFirstCandle: true,
             firstCandleType: 'buy',
