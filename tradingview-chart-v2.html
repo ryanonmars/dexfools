@@ -467,6 +467,7 @@
     
     <div class="config-button-container">
       <button id="apply-config">Apply & Start Animation</button>
+      <button id="refresh-marks" style="margin-top: 10px; background: #ff9800; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Refresh Marks</button>
       <div id="animation-status">Chart ready - click "Apply & Start" to begin</div>
     </div>
   </div>
@@ -510,8 +511,8 @@
         console.log('📡 TradingView Advanced Chart onReady called');
         setTimeout(() => callback({
           supported_resolutions: ['1', '5', '15', '30', '60', '240', '1D'],
-          supports_marks: false,
-          supports_timescale_marks: false,
+          supports_marks: true,
+          supports_timescale_marks: true,
           supports_time: true,
         }), 0);
       }
@@ -608,6 +609,134 @@
         this.currentData = [];
         this.animationIndex = 0;
       }
+
+      // Get marks (chart markers)
+      getMarks(symbolInfo, from, to, onDataCallback, resolution) {
+        console.log('🎯 getMarks called:', { symbolInfo, from, to, resolution });
+        console.log('🎯 Current data length:', this.currentData ? this.currentData.length : 0);
+        console.log('🎯 Current data:', this.currentData);
+        
+        // Return marks from our current data
+        const marks = this.getCurrentMarks(from, to);
+        console.log('🎯 Returning marks:', marks.length, marks);
+        
+        // Log each mark in detail
+        marks.forEach((mark, index) => {
+          console.log(`🎯 Mark ${index}:`, {
+            id: mark.id,
+            time: mark.time,
+            color: mark.color,
+            text: mark.text,
+            shape: mark.shape,
+            minSize: mark.minSize
+          });
+        });
+        
+        onDataCallback(marks);
+      }
+
+      // Get current marks for the specified time range
+      getCurrentMarks(from, to) {
+        const marks = [];
+        
+        if (!this.currentData || this.currentData.length === 0) {
+          return marks;
+        }
+
+        // Find bars in the time range
+        for (let i = 0; i < this.currentData.length; i++) {
+          const bar = this.currentData[i];
+          const barTime = bar.time;
+          
+          if (barTime >= from && barTime <= to) {
+            // Check if this bar should have a mark
+            if (bar.mark) {
+              marks.push({
+                id: bar.mark.id,
+                time: barTime,
+                color: bar.mark.color,
+                text: bar.mark.text,
+                minSize: 14,
+                shape: bar.mark.shape || 'circle'
+              });
+            }
+          }
+        }
+
+        // Sort marks by time
+        marks.sort((a, b) => a.time - b.time);
+        return marks;
+      }
+
+      // Add a mark to a specific bar
+      addMark(barTime, markData) {
+        console.log('🎯 addMark called:', { barTime, markData, currentDataLength: this.currentData.length });
+        
+        // Find the bar and add mark data
+        for (let i = 0; i < this.currentData.length; i++) {
+          if (this.currentData[i].time === barTime) {
+            this.currentData[i].mark = markData;
+            console.log('🎯 Mark added to bar at index', i, 'time', barTime);
+            
+            // Trigger marks refresh by calling getMarks for the current visible range
+            this.refreshMarks(barTime);
+            break;
+          }
+        }
+      }
+
+      // Refresh marks for the chart
+      refreshMarks(centerTime) {
+        console.log('🔄 Refreshing marks around time:', centerTime);
+        
+        // Calculate a time range around the mark
+        const from = centerTime - 3600; // 1 hour before
+        const to = centerTime + 3600;   // 1 hour after
+        
+        // Get marks for this range
+        const marks = this.getCurrentMarks(from, to);
+        console.log('🔄 Found marks to refresh:', marks.length, marks);
+        
+        // Try to force a marks refresh by changing the visible range
+        if (window.chartWidget && window.chartWidget.chart) {
+          try {
+            console.log('🔄 Attempting to force marks refresh via chart API...');
+            
+            const chart = window.chartWidget.chart();
+            if (chart && chart.getVisibleRange && chart.setVisibleRange) {
+              console.log('🔄 Found chart methods, triggering marks refresh...');
+              
+              // Get current visible range
+              const currentRange = chart.getVisibleRange();
+              if (currentRange) {
+                console.log('🔄 Current visible range:', currentRange);
+                
+                // Slightly adjust the range to trigger marks refresh
+                const newRange = {
+                  from: currentRange.from - 1, // 1ms before
+                  to: currentRange.to + 1      // 1ms after
+                };
+                console.log('🔄 Setting new visible range to trigger marks:', newRange);
+                chart.setVisibleRange(newRange);
+                
+                // Set it back after a short delay
+                setTimeout(() => {
+                  console.log('🔄 Restoring original visible range...');
+                  chart.setVisibleRange(currentRange);
+                }, 50);
+              }
+            }
+          } catch (error) {
+            console.error('❌ Error trying to force marks refresh:', error);
+          }
+        }
+      }
+
+      // Get timescale marks
+      getTimescaleMarks(symbolInfo, from, to, onDataCallback, resolution) {
+        console.log('📅 getTimescaleMarks called:', { symbolInfo, from, to, resolution });
+        onDataCallback([]);
+      }
     }
 
     // Parse time string to seconds (from working version)
@@ -665,6 +794,72 @@
           }
         }
       };
+    }
+
+    // Add marks to data before animation starts
+    function addMarksToData(animatedBars, config) {
+      console.log('🎯 Pre-adding marks to animation data...');
+      
+      // Dev 1 marker
+      if (config.markers.showFirstCandle && config.markers.firstCandleTime <= animatedBars.length) {
+        const barIndex = config.markers.firstCandleTime - 1; // Convert to 0-based index
+        if (barIndex >= 0 && barIndex < animatedBars.length) {
+          const bar = animatedBars[barIndex];
+          bar.mark = {
+            id: 'dev1',
+            color: config.markers.firstCandleType === 'buy' ? '#26a69a' : '#ef5350',
+            text: 'D1',
+            shape: 'circle'
+          };
+          console.log('🎯 Pre-added Dev 1 mark to bar at index', barIndex, 'time', bar.time);
+        }
+      }
+      
+      // Dev 2 marker
+      if (config.markers.showFinalCandle && config.markers.finalCandleTime <= animatedBars.length) {
+        const barIndex = config.markers.finalCandleTime - 1; // Convert to 0-based index
+        if (barIndex >= 0 && barIndex < animatedBars.length) {
+          const bar = animatedBars[barIndex];
+          bar.mark = {
+            id: 'dev2',
+            color: config.markers.finalCandleType === 'buy' ? '#26a69a' : '#ef5350',
+            text: 'D2',
+            shape: 'circle'
+          };
+          console.log('🎯 Pre-added Dev 2 mark to bar at index', barIndex, 'time', bar.time);
+        }
+      }
+      
+      // User markers
+      if (config.markers.showB && config.markers.bTime <= animatedBars.length) {
+        const barIndex = config.markers.bTime - 1;
+        if (barIndex >= 0 && barIndex < animatedBars.length) {
+          const bar = animatedBars[barIndex];
+          bar.mark = {
+            id: 'user1',
+            color: config.markers.bType === 'buy' ? '#26a69a' : '#ef5350',
+            text: 'U1',
+            shape: 'circle'
+          };
+          console.log('🎯 Pre-added User 1 mark to bar at index', barIndex, 'time', bar.time);
+        }
+      }
+      
+      if (config.markers.showS && config.markers.sTime <= animatedBars.length) {
+        const barIndex = config.markers.sTime - 1;
+        if (barIndex >= 0 && barIndex < animatedBars.length) {
+          const bar = animatedBars[barIndex];
+          bar.mark = {
+            id: 'user2',
+            color: config.markers.sType === 'buy' ? '#26a69a' : '#ef5350',
+            text: 'U2',
+            shape: 'circle'
+          };
+          console.log('🎯 Pre-added User 2 mark to bar at index', barIndex, 'time', bar.time);
+        }
+      }
+      
+      console.log('🎯 Pre-added marks complete. Bars with marks:', animatedBars.filter(bar => bar.mark).length);
     }
 
     // Marker management functions
@@ -773,10 +968,11 @@
         tvWidget = null;
       }
 
-      // Create custom datafeed if not exists
-      if (!globalDatafeed) {
-        globalDatafeed = new CustomDatafeed();
-      }
+      // Always create a new datafeed instance for each chart
+      globalDatafeed = new CustomDatafeed();
+      
+      console.log('🚀 Datafeed created:', globalDatafeed);
+      console.log('🚀 addMark method available:', typeof globalDatafeed.addMark);
 
       console.log('🚀 Initializing TradingView Advanced Chart...');
 
@@ -808,6 +1004,15 @@
         
         // Store chart reference for marker support
         window.chartWidget = tvWidget;
+        
+        // Try to access the chart's internal API for marks
+        console.log('🔍 Chart widget methods:', Object.getOwnPropertyNames(tvWidget));
+        console.log('🔍 Chart widget prototype:', Object.getOwnPropertyNames(Object.getPrototypeOf(tvWidget)));
+        
+        // Try to find marks-related methods
+        if (tvWidget.chart) {
+          console.log('🔍 Chart object methods:', Object.getOwnPropertyNames(tvWidget.chart));
+        }
       });
     }
 
@@ -983,6 +1188,9 @@
       
       console.log('Generated', animatedBars.length, 'bars for animation');
       
+      // Pre-add marks to the data based on config
+      addMarksToData(animatedBars, config);
+      
       // Start animated display
       let currentIndex = 0;
       
@@ -994,18 +1202,13 @@
           const currentTime = currentIndex + 1; // Animation time in seconds
           const currentBar = animatedBars[currentIndex];
           
-          // Log marker checks for debugging
-          if (config.markers.showFirstCandle && currentTime === config.markers.firstCandleTime) {
-            console.log(`🎯 Dev 1 (${config.markers.firstCandleType}) marker triggered at time: ${currentTime}s`);
-          }
-          if (config.markers.showFinalCandle && currentTime === config.markers.finalCandleTime) {
-            console.log(`🎯 Dev 2 (${config.markers.finalCandleType}) marker triggered at time: ${currentTime}s`);
-          }
-          if (config.markers.userMarkers.showB && currentTime === config.markers.userMarkers.bTime) {
-            console.log(`🎯 User 1 (${config.markers.userMarkers.bType}) marker triggered at time: ${currentTime}s`);
-          }
-          if (config.markers.userMarkers.showS && currentTime === config.markers.userMarkers.sTime) {
-            console.log(`🎯 User 2 (${config.markers.userMarkers.sType}) marker triggered at time: ${currentTime}s`);
+          // Check if this bar has a pre-added mark and trigger refresh
+          if (currentBar.mark) {
+            console.log(`🎯 Bar at time ${currentTime}s has a mark:`, currentBar.mark);
+            // Trigger marks refresh to make the mark visible
+            if (globalDatafeed && typeof globalDatafeed.refreshMarks === 'function') {
+              globalDatafeed.refreshMarks(currentBar.time);
+            }
           }
           
           currentIndex++;
@@ -1018,6 +1221,17 @@
             document.getElementById('animation-status').style.color = '#4CAF50';
             isAnimating = false;
             console.log('✅ TradingView Advanced Chart animation complete');
+            
+            // Force marks refresh after animation completes
+            console.log('🔄 Forcing marks refresh after animation...');
+            if (globalDatafeed && globalDatafeed.refreshMarks) {
+              // Refresh marks for the entire animation range
+              const firstBar = globalDatafeed.currentData[0];
+              const lastBar = globalDatafeed.currentData[globalDatafeed.currentData.length - 1];
+              if (firstBar && lastBar) {
+                globalDatafeed.refreshMarks((firstBar.time + lastBar.time) / 2);
+              }
+            }
           } else {
             // Schedule next bar
             const delay = 1000 / config.speedMultiplier;
@@ -1028,11 +1242,71 @@
       
       // Start the animation
       document.getElementById('animation-status').textContent = 'Starting animation...';
+      
+      // Debug: Check if markers are enabled
+      console.log('🎯 Marker config check:', {
+        showFirstCandle: config.markers.showFirstCandle,
+        firstCandleTime: config.markers.firstCandleTime,
+        showFinalCandle: config.markers.showFinalCandle,
+        finalCandleTime: config.markers.finalCandleTime,
+        showB: config.markers.userMarkers.showB,
+        bTime: config.markers.userMarkers.bTime,
+        showS: config.markers.userMarkers.showS,
+        sTime: config.markers.userMarkers.sTime
+      });
+      
       setTimeout(showNextBar, 500); // Small delay to let chart settle
     }
 
     // Event listeners
     document.getElementById('apply-config').addEventListener('click', startAnimation);
+    
+    // Refresh marks button
+    document.getElementById('refresh-marks').addEventListener('click', () => {
+      console.log('🔄 Manual marks refresh triggered');
+      if (globalDatafeed && globalDatafeed.currentData.length > 0) {
+        const firstBar = globalDatafeed.currentData[0];
+        const lastBar = globalDatafeed.currentData[globalDatafeed.currentData.length - 1];
+        if (firstBar && lastBar) {
+          globalDatafeed.refreshMarks((firstBar.time + lastBar.time) / 2);
+          
+          // Try to force a marks refresh by changing the visible range
+          if (window.chartWidget && window.chartWidget.chart) {
+            try {
+              console.log('🔄 Attempting to force marks refresh via chart API...');
+              
+              // Try to trigger a marks refresh by zooming out and back in
+              const chart = window.chartWidget.chart();
+              if (chart && chart.setVisibleRange) {
+                console.log('🔄 Found setVisibleRange method, trying to trigger marks refresh...');
+                
+                // Get current visible range
+                const currentRange = chart.getVisibleRange();
+                console.log('🔄 Current visible range:', currentRange);
+                
+                // Slightly adjust the range to trigger marks refresh
+                if (currentRange) {
+                  const newRange = {
+                    from: currentRange.from - 1000, // 1 second before
+                    to: currentRange.to + 1000      // 1 second after
+                  };
+                  console.log('🔄 Setting new visible range:', newRange);
+                  chart.setVisibleRange(newRange);
+                  
+                  // Set it back after a short delay
+                  setTimeout(() => {
+                    console.log('🔄 Restoring original visible range...');
+                    chart.setVisibleRange(currentRange);
+                  }, 100);
+                }
+              }
+            } catch (error) {
+              console.error('❌ Error trying to force marks refresh:', error);
+            }
+          }
+        }
+      }
+    });
     
     // Initialize when DOM is ready
     document.addEventListener('DOMContentLoaded', () => {

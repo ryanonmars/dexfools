@@ -1,6 +1,7 @@
 // TradingView Custom Datafeed Service
 class CustomDatafeed {
   constructor() {
+    console.log('🔧 CustomDatafeed constructor called');
     this.symbolInfo = {
       ticker: 'CUSTOM',
       name: 'Custom Token',
@@ -39,6 +40,9 @@ class CustomDatafeed {
     
     // Log all method calls for debugging
     this.logMethodCalls();
+    
+    console.log('🔧 CustomDatafeed methods after construction:', Object.getOwnPropertyNames(this));
+    console.log('🔧 addMark method:', typeof this.addMark);
   }
 
   logMethodCalls() {
@@ -284,6 +288,76 @@ class CustomDatafeed {
     onDataCallback([]);
   }
 
+  // Get marks (chart markers)
+  getMarks(symbolInfo, from, to, onDataCallback, resolution) {
+    console.log('🎯 getMarks called:', { symbolInfo, from, to, resolution });
+    console.log('🎯 Current data length:', this.currentData ? this.currentData.length : 0);
+    
+    // Return marks from our current data
+    const marks = this.getCurrentMarks(from, to);
+    console.log('🎯 Returning marks:', marks.length, marks);
+    onDataCallback(marks);
+  }
+
+  // Get current marks for the specified time range
+  getCurrentMarks(from, to) {
+    const marks = [];
+    
+    if (!this.currentData || this.currentData.length === 0) {
+      return marks;
+    }
+
+    // Find bars in the time range
+    for (let i = 0; i < this.currentData.length; i++) {
+      const bar = this.currentData[i];
+      const barTime = bar.time;
+      
+      if (barTime >= from && barTime <= to) {
+        // Check if this bar should have a mark
+        if (bar.mark) {
+          marks.push({
+            id: bar.mark.id,
+            time: barTime,
+            color: bar.mark.color,
+            text: bar.mark.text,
+            minSize: 14,
+            shape: bar.mark.shape || 'circle'
+          });
+        }
+      }
+    }
+
+    // Sort marks by time
+    marks.sort((a, b) => a.time - b.time);
+    return marks;
+  }
+
+  // Add a mark to a specific bar
+  addMark(barTime, markData) {
+    console.log('🎯 addMark called:', { barTime, markData, currentDataLength: this.currentData.length });
+    
+    // Find the bar and add mark data
+    for (let i = 0; i < this.currentData.length; i++) {
+      if (this.currentData[i].time === barTime) {
+        this.currentData[i].mark = markData;
+        console.log('🎯 Mark added to bar at index', i, 'time', barTime);
+        
+        // Trigger marks refresh if we have a callback
+        if (this.marksCallback) {
+          console.log('🎯 Triggering marks refresh...');
+          const marks = this.getCurrentMarks(barTime - 3600, barTime + 3600); // Get marks around this time
+          this.marksCallback(marks);
+        }
+        break;
+      }
+    }
+  }
+
+  // Set marks callback for real-time updates
+  setMarksCallback(callback) {
+    this.marksCallback = callback;
+  }
+
   getServerTime(callback) {
     console.log('🕐 getServerTime called');
     // Return current server time
@@ -296,10 +370,6 @@ class CustomDatafeed {
     return undefined; // Use default
   }
 
-  getMarks(symbolInfo, from, to, onDataCallback, resolution) {
-    console.log('📍 getMarks called:', symbolInfo, from, to, resolution);
-    onDataCallback([]);
-  }
 
   // Aggregate minute data to daily bars
   aggregateToDaily(minuteData) {
