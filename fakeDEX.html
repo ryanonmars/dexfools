@@ -334,10 +334,11 @@
             background: #0a0a0a;
             position: relative;
             z-index: 1;
+            padding: 0 24px;
         }
 
         .chart-header {
-            padding: 16px 24px;
+            padding: 16px 0;
             border-bottom: 1px solid #1a1a1a;
             display: flex;
             align-items: center;
@@ -408,13 +409,14 @@
         .chart-container {
             background: #0a0a0a;
             position: relative;
-            height: 500px;
-            min-height: 200px;
-            max-height: 80vh;
+            width: 100%;
+            max-width: 100%;
+            height: 0;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio (9/16 = 0.5625) */
+            margin: 16px 0;
             overflow: hidden;
             border: 1px solid #1a1a1a;
             border-radius: 8px;
-            margin: 16px 24px;
             z-index: 2;
         }
 
@@ -447,9 +449,13 @@
 
         .chart-placeholder {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             color: #666;
             font-size: 16px;
         }
@@ -811,6 +817,7 @@
             
             .main-content {
                 margin-left: 0;
+                margin-right: 0;
             }
             
             .right-panel {
@@ -822,6 +829,7 @@
             .container {
                 flex-direction: column;
             }
+            
         }
 
         @media (max-width: 768px) {
@@ -1366,27 +1374,6 @@
 
         // Token name editing functionality
         const tokenNameInput = document.getElementById('tokenNameInput');
-        const chartTokenPair = document.getElementById('chartTokenPair');
-
-        // Sync token names when either is changed
-        function syncTokenNames() {
-            const rightPanelName = tokenNameInput.value;
-            const chartName = chartTokenPair.value;
-            
-            // Extract just the token pair from the chart name (remove " on PumpSwap")
-            const chartTokenPairOnly = chartName.replace(' on PumpSwap', '');
-            
-            // Update the other field
-            if (event.target === tokenNameInput) {
-                chartTokenPair.value = rightPanelName + ' on PumpSwap';
-            } else if (event.target === chartTokenPair) {
-                tokenNameInput.value = chartTokenPairOnly;
-            }
-        }
-
-        // Add event listeners for token name editing
-        tokenNameInput.addEventListener('input', syncTokenNames);
-        chartTokenPair.addEventListener('input', syncTokenNames);
 
         // Handle Enter key to finish editing
         function handleEnterKey(event) {
@@ -1396,7 +1383,6 @@
         }
 
         tokenNameInput.addEventListener('keydown', handleEnterKey);
-        chartTokenPair.addEventListener('keydown', handleEnterKey);
 
         // Add click-to-edit functionality
         function makeEditable(element) {
@@ -1407,55 +1393,66 @@
         }
 
         makeEditable(tokenNameInput);
-        makeEditable(chartTokenPair);
 
         // Chart resizing functionality
         const chartContainer = document.getElementById('chartContainer');
         const resizeHandle = document.getElementById('resizeHandle');
-        let isResizing = false;
-        let startY = 0;
-        let startHeight = 0;
+        
+        if (chartContainer && resizeHandle) {
+            let isResizing = false;
+            let startY = 0;
+            let startHeight = 0;
 
-        function startResize(e) {
-            isResizing = true;
-            startY = e.clientY;
-            startHeight = chartContainer.offsetHeight;
-            document.body.style.cursor = 'ns-resize';
-            document.body.style.userSelect = 'none';
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        function doResize(e) {
-            if (!isResizing) return;
-            
-            const deltaY = e.clientY - startY;
-            const newHeight = startHeight + deltaY;
-            const minHeight = 200;
-            const maxHeight = window.innerHeight * 0.8;
-            
-            if (newHeight >= minHeight && newHeight <= maxHeight) {
-                chartContainer.style.height = newHeight + 'px';
+            function startResize(e) {
+                isResizing = true;
+                startY = e.clientY;
+                // Get current height, accounting for padding-bottom aspect ratio
+                const currentHeight = chartContainer.offsetHeight || (chartContainer.offsetWidth * 9/16);
+                startHeight = currentHeight;
+                document.body.style.cursor = 'ns-resize';
+                document.body.style.userSelect = 'none';
+                e.preventDefault();
+                e.stopPropagation();
             }
-        }
 
-        function stopResize() {
-            if (isResizing) {
-                isResizing = false;
-                document.body.style.cursor = '';
-                document.body.style.userSelect = '';
+            function doResize(e) {
+                if (!isResizing) return;
+                
+                const deltaY = e.clientY - startY;
+                const newHeight = startHeight + deltaY;
+                const minHeight = 200;
+                const maxHeight = window.innerHeight * 0.8;
+                
+                if (newHeight >= minHeight && newHeight <= maxHeight) {
+                    // Calculate width based on 16:9 aspect ratio
+                    const newWidth = newHeight * (16/9);
+                    chartContainer.style.width = newWidth + 'px';
+                    chartContainer.style.height = newHeight + 'px';
+                    chartContainer.style.paddingBottom = '0';
+                }
             }
+
+            function stopResize() {
+                if (isResizing) {
+                    isResizing = false;
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                }
+            }
+
+            resizeHandle.addEventListener('mousedown', startResize);
+            document.addEventListener('mousemove', doResize);
+            document.addEventListener('mouseup', stopResize);
+
+            // Double-click to reset size
+            resizeHandle.addEventListener('dblclick', function(e) {
+                e.preventDefault();
+                // Reset to default 16:9 aspect ratio
+                chartContainer.style.width = '100%';
+                chartContainer.style.height = '0';
+                chartContainer.style.paddingBottom = '56.25%';
+            });
         }
-
-        resizeHandle.addEventListener('mousedown', startResize);
-        document.addEventListener('mousemove', doResize);
-        document.addEventListener('mouseup', stopResize);
-
-        // Double-click to reset size
-        resizeHandle.addEventListener('dblclick', function(e) {
-            e.preventDefault();
-            chartContainer.style.height = '500px';
-        });
 
         // Sidebar resizing functionality
         const leftSidebar = document.getElementById('leftSidebar');
@@ -1464,98 +1461,100 @@
         const rightResizeHandle = document.getElementById('rightResizeHandle');
         const mainContent = document.querySelector('.main-content');
 
-        let isLeftResizing = false;
-        let isRightResizing = false;
-        let startX = 0;
-        let startWidth = 0;
+        if (leftSidebar && leftResizeHandle && rightPanel && rightResizeHandle && mainContent) {
+            let isLeftResizing = false;
+            let isRightResizing = false;
+            let startX = 0;
+            let startWidth = 0;
 
-        // Left sidebar resize
-        function startLeftResize(e) {
-            isLeftResizing = true;
-            startX = e.clientX;
-            startWidth = leftSidebar.offsetWidth;
-            document.body.style.cursor = 'ew-resize';
-            document.body.style.userSelect = 'none';
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        function doLeftResize(e) {
-            if (!isLeftResizing) return;
-            
-            const deltaX = e.clientX - startX;
-            const newWidth = startWidth + deltaX;
-            const minWidth = 200;
-            const maxWidth = 400;
-            
-            if (newWidth >= minWidth && newWidth <= maxWidth) {
-                leftSidebar.style.width = newWidth + 'px';
-                mainContent.style.marginLeft = newWidth + 'px';
-                mainContent.style.maxWidth = `calc(100vw - ${newWidth}px - ${rightPanel.offsetWidth}px)`;
+            // Left sidebar resize
+            function startLeftResize(e) {
+                isLeftResizing = true;
+                startX = e.clientX;
+                startWidth = leftSidebar.offsetWidth;
+                document.body.style.cursor = 'ew-resize';
+                document.body.style.userSelect = 'none';
+                e.preventDefault();
+                e.stopPropagation();
             }
-        }
 
-        // Right panel resize
-        function startRightResize(e) {
-            isRightResizing = true;
-            startX = e.clientX;
-            startWidth = rightPanel.offsetWidth;
-            document.body.style.cursor = 'ew-resize';
-            document.body.style.userSelect = 'none';
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        function doRightResize(e) {
-            if (!isRightResizing) return;
-            
-            const deltaX = startX - e.clientX; // Reverse direction for right panel
-            const newWidth = startWidth + deltaX;
-            const minWidth = 250;
-            const maxWidth = 500;
-            
-            if (newWidth >= minWidth && newWidth <= maxWidth) {
-                rightPanel.style.width = newWidth + 'px';
-                mainContent.style.marginRight = newWidth + 'px';
-                mainContent.style.maxWidth = `calc(100vw - ${leftSidebar.offsetWidth}px - ${newWidth}px)`;
+            function doLeftResize(e) {
+                if (!isLeftResizing) return;
+                
+                const deltaX = e.clientX - startX;
+                const newWidth = startWidth + deltaX;
+                const minWidth = 200;
+                const maxWidth = 400;
+                
+                if (newWidth >= minWidth && newWidth <= maxWidth) {
+                    leftSidebar.style.width = newWidth + 'px';
+                    mainContent.style.marginLeft = newWidth + 'px';
+                    mainContent.style.maxWidth = `calc(100vw - ${newWidth}px - ${rightPanel.offsetWidth}px)`;
+                }
             }
-        }
 
-        function stopSidebarResize() {
-            if (isLeftResizing || isRightResizing) {
-                isLeftResizing = false;
-                isRightResizing = false;
-                document.body.style.cursor = '';
-                document.body.style.userSelect = '';
+            // Right panel resize
+            function startRightResize(e) {
+                isRightResizing = true;
+                startX = e.clientX;
+                startWidth = rightPanel.offsetWidth;
+                document.body.style.cursor = 'ew-resize';
+                document.body.style.userSelect = 'none';
+                e.preventDefault();
+                e.stopPropagation();
             }
+
+            function doRightResize(e) {
+                if (!isRightResizing) return;
+                
+                const deltaX = startX - e.clientX; // Reverse direction for right panel
+                const newWidth = startWidth + deltaX;
+                const minWidth = 250;
+                const maxWidth = 500;
+                
+                if (newWidth >= minWidth && newWidth <= maxWidth) {
+                    rightPanel.style.width = newWidth + 'px';
+                    mainContent.style.marginRight = newWidth + 'px';
+                    mainContent.style.maxWidth = `calc(100vw - ${leftSidebar.offsetWidth}px - ${newWidth}px)`;
+                }
+            }
+
+            function stopSidebarResize() {
+                if (isLeftResizing || isRightResizing) {
+                    isLeftResizing = false;
+                    isRightResizing = false;
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                }
+            }
+
+            // Event listeners for left sidebar
+            leftResizeHandle.addEventListener('mousedown', startLeftResize);
+            
+            // Event listeners for right panel
+            rightResizeHandle.addEventListener('mousedown', startRightResize);
+            
+            // Global mouse events
+            document.addEventListener('mousemove', function(e) {
+                doLeftResize(e);
+                doRightResize(e);
+            });
+            document.addEventListener('mouseup', stopSidebarResize);
+
+            // Double-click to reset sidebar widths
+            leftResizeHandle.addEventListener('dblclick', function(e) {
+                e.preventDefault();
+                leftSidebar.style.width = '280px';
+                mainContent.style.marginLeft = '280px';
+            });
+
+            rightResizeHandle.addEventListener('dblclick', function(e) {
+                e.preventDefault();
+                rightPanel.style.width = '320px';
+                mainContent.style.marginRight = '320px';
+                mainContent.style.maxWidth = `calc(100vw - ${leftSidebar.offsetWidth}px - 320px)`;
+            });
         }
-
-        // Event listeners for left sidebar
-        leftResizeHandle.addEventListener('mousedown', startLeftResize);
-        
-        // Event listeners for right panel
-        rightResizeHandle.addEventListener('mousedown', startRightResize);
-        
-        // Global mouse events
-        document.addEventListener('mousemove', function(e) {
-            doLeftResize(e);
-            doRightResize(e);
-        });
-        document.addEventListener('mouseup', stopSidebarResize);
-
-        // Double-click to reset sidebar widths
-        leftResizeHandle.addEventListener('dblclick', function(e) {
-            e.preventDefault();
-            leftSidebar.style.width = '280px';
-            mainContent.style.marginLeft = '280px';
-        });
-
-        rightResizeHandle.addEventListener('dblclick', function(e) {
-            e.preventDefault();
-            rightPanel.style.width = '320px';
-            mainContent.style.marginRight = '320px';
-            mainContent.style.maxWidth = `calc(100vw - ${leftSidebar.offsetWidth}px - 320px)`;
-        });
     </script>
 </body>
 </html>
