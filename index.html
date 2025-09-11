@@ -327,6 +327,49 @@
       transform: none;
       box-shadow: none;
     }
+    
+    .tooltip {
+      position: relative;
+      display: inline-block;
+      cursor: help;
+    }
+    
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 200px;
+      background-color: #333;
+      color: #d1d4dc;
+      text-align: left;
+      border-radius: 6px;
+      padding: 8px 12px;
+      position: absolute;
+      z-index: 1000;
+      bottom: 125%;
+      left: 50%;
+      margin-left: -100px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      font-size: 11px;
+      line-height: 1.4;
+      border: 1px solid #555;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+    
+    .tooltip .tooltiptext::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: #333 transparent transparent transparent;
+    }
+    
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+      opacity: 1;
+    }
     #main-chart {
       width: 100%;
       height: 100%;
@@ -354,19 +397,27 @@
       <div class="config-group">
         <h4>Market Cap Settings</h4>
         <div class="config-item">
-          <label>Initial MC:</label>
+          <label class="tooltip">Initial MC:
+            <span class="tooltiptext">Starting market cap value where the animation begins. This is the price at the first candle.</span>
+          </label>
           <input type="number" id="initialMarketCap" value="10000">
         </div>
         <div class="config-item">
-          <label>Final MC:</label>
+          <label class="tooltip">Final MC:
+            <span class="tooltiptext">Target market cap that the animation will trend towards. The price will move toward this value over time.</span>
+          </label>
           <input type="number" id="finalMarketCap" value="50000">
         </div>
         <div class="config-item">
-          <label>Min MC:</label>
+          <label class="tooltip">Min MC:
+            <span class="tooltiptext">Minimum price floor. Individual candles won't go below this value (except for final action).</span>
+          </label>
           <input type="number" id="minMarketCap" value="5000">
         </div>
         <div class="config-item">
-          <label>Range MC:</label>
+          <label class="tooltip">Range MC:
+            <span class="tooltiptext">Price variation range per candle. Each candle can move +/- this amount from its starting point (e.g., 2000 = ±2000 variation).</span>
+          </label>
           <input type="number" id="rangeMarketCap" value="2000">
         </div>
       </div>
@@ -374,11 +425,15 @@
       <div class="config-group">
         <h4>Animation Timing</h4>
         <div class="config-item">
-          <label>Duration (s):</label>
+          <label class="tooltip">Duration (s):
+            <span class="tooltiptext">Total length of the animation in seconds. Each second represents one candle on the chart.</span>
+          </label>
           <input type="number" id="totalSeconds" value="10">
         </div>
         <div class="config-item">
-          <label>Speed Multiplier:</label>
+          <label class="tooltip">Speed Multiplier:
+            <span class="tooltiptext">How fast the animation plays. 1.0 = normal speed, 2.0 = double speed, 0.5 = half speed.</span>
+          </label>
           <input type="number" id="speedMultiplier" value="1" step="0.1">
         </div>
       </div>
@@ -386,7 +441,9 @@
       <div class="config-group">
         <h4>Randomness Control</h4>
         <div class="config-item">
-          <label>Seed:</label>
+          <label class="tooltip">Seed:
+            <span class="tooltiptext">Controls the randomness of the animation. Same seed = same animation every time. Different seed = different random pattern.</span>
+          </label>
           <input type="number" id="seed" value="1">
         </div>
       </div>
@@ -394,11 +451,15 @@
       <div class="config-group">
         <h4>Historical Data</h4>
         <div class="config-item">
-          <label>Enable:</label>
+          <label class="tooltip">Enable:
+            <span class="tooltiptext">Adds random historical data before the animation starts. Useful for showing price context and market history.</span>
+          </label>
           <input type="checkbox" id="enableHistoricalData">
         </div>
         <div class="config-item">
-          <label>Time:</label>
+          <label class="tooltip">Time:
+            <span class="tooltiptext">Length of historical data to generate. Use formats like: 60s, 2h, 1d, 30m. Only works when Historical Data is enabled.</span>
+          </label>
           <input type="text" id="preAnimationTime" value="1h" placeholder="e.g., 2h, 60s">
         </div>
       </div>
@@ -406,14 +467,18 @@
       <div class="config-group">
         <h4>Final Action</h4>
         <div class="config-item">
-          <label>Type:</label>
+          <label class="tooltip">Type:
+            <span class="tooltiptext">The final action that happens at the end of the animation. Dump = price drops, Pump = price rises.</span>
+          </label>
           <select id="finalActionType">
             <option value="dump">Dump</option>
             <option value="pump">Pump</option>
           </select>
         </div>
         <div class="config-item">
-          <label>Target MC:</label>
+          <label class="tooltip">Target MC:
+            <span class="tooltiptext">The market cap value that the final action will move the price to. This is the ending price of the animation.</span>
+          </label>
           <input type="number" id="finalActionMarketCap" value="5000">
         </div>
       </div>
@@ -427,36 +492,48 @@
           <div id="dev-markers">
             <div class="marker-item">
               <div class="config-item">
-                <label>Dev 1:</label>
+                <label class="tooltip">Dev 1:
+                  <span class="tooltiptext">Developer marker 1. Shows a marker on the chart at the specified time. Can be Buy or Sell type.</span>
+                </label>
                 <input type="checkbox" id="showFirstCandle" checked>
               </div>
               <div class="config-item">
-                <label>Type:</label>
+                <label class="tooltip">Type:
+                  <span class="tooltiptext">Whether this marker represents a Buy (green) or Sell (red) action on the chart.</span>
+                </label>
                 <select id="firstCandleType">
                   <option value="buy">Buy</option>
                   <option value="sell">Sell</option>
                 </select>
               </div>
               <div class="config-item">
-                <label>Time:</label>
+                <label class="tooltip">Time:
+                  <span class="tooltiptext">Time in seconds when this marker will appear on the chart during the animation.</span>
+                </label>
                 <input type="number" id="firstCandleTime" value="1">
               </div>
               <button type="button" class="remove-marker" onclick="removeDevMarker(this)" style="display: none;">🗑️</button>
             </div>
             <div class="marker-item">
               <div class="config-item">
-                <label>Dev 2:</label>
+                <label class="tooltip">Dev 2:
+                  <span class="tooltiptext">Developer marker 2. Shows a marker on the chart at the specified time. Can be Buy or Sell type.</span>
+                </label>
                 <input type="checkbox" id="showFinalCandle" checked>
               </div>
               <div class="config-item">
-                <label>Type:</label>
+                <label class="tooltip">Type:
+                  <span class="tooltiptext">Whether this marker represents a Buy (green) or Sell (red) action on the chart.</span>
+                </label>
                 <select id="finalCandleType">
                   <option value="buy">Buy</option>
                   <option value="sell" selected>Sell</option>
                 </select>
               </div>
               <div class="config-item">
-                <label>Time:</label>
+                <label class="tooltip">Time:
+                  <span class="tooltiptext">Time in seconds when this marker will appear on the chart during the animation.</span>
+                </label>
                 <input type="number" id="finalCandleTime" value="10">
               </div>
               <button type="button" class="remove-marker" onclick="removeDevMarker(this)" style="display: none;">🗑️</button>
@@ -471,36 +548,48 @@
           <div id="user-markers">
             <div class="marker-item">
               <div class="config-item">
-                <label>User 1:</label>
+                <label class="tooltip">User 1:
+                  <span class="tooltiptext">User marker 1. Shows a marker on the chart at the specified time. Can be Buy or Sell type.</span>
+                </label>
                 <input type="checkbox" id="showB">
               </div>
               <div class="config-item">
-                <label>Type:</label>
+                <label class="tooltip">Type:
+                  <span class="tooltiptext">Whether this marker represents a Buy (green) or Sell (red) action on the chart.</span>
+                </label>
                 <select id="bType">
                   <option value="buy" selected>Buy</option>
                   <option value="sell">Sell</option>
                 </select>
               </div>
               <div class="config-item">
-                <label>Time:</label>
+                <label class="tooltip">Time:
+                  <span class="tooltiptext">Time in seconds when this marker will appear on the chart during the animation.</span>
+                </label>
                 <input type="number" id="bTime" value="5">
               </div>
               <button type="button" class="remove-marker" onclick="removeUserMarker(this)" style="display: none;">🗑️</button>
             </div>
             <div class="marker-item">
               <div class="config-item">
-                <label>User 2:</label>
+                <label class="tooltip">User 2:
+                  <span class="tooltiptext">User marker 2. Shows a marker on the chart at the specified time. Can be Buy or Sell type.</span>
+                </label>
                 <input type="checkbox" id="showS">
               </div>
               <div class="config-item">
-                <label>Type:</label>
+                <label class="tooltip">Type:
+                  <span class="tooltiptext">Whether this marker represents a Buy (green) or Sell (red) action on the chart.</span>
+                </label>
                 <select id="sType">
                   <option value="buy">Buy</option>
                   <option value="sell" selected>Sell</option>
                 </select>
               </div>
               <div class="config-item">
-                <label>Time:</label>
+                <label class="tooltip">Time:
+                  <span class="tooltiptext">Time in seconds when this marker will appear on the chart during the animation.</span>
+                </label>
                 <input type="number" id="sTime" value="8">
               </div>
               <button type="button" class="remove-marker" onclick="removeUserMarker(this)" style="display: none;">🗑️</button>
