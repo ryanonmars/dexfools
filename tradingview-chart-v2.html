@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>TradingView Advanced Chart - Live Trading Simulation</title>
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
+  <meta http-equiv="Permissions-Policy" content="unload=()">
   
   <!-- TradingView Advanced Chart Library -->
   <script type="text/javascript" src="charting_library-master/charting_library/charting_library.standalone.js"></script>
@@ -468,6 +469,7 @@
     <div class="config-button-container">
       <button id="apply-config">Apply & Start Animation</button>
       <button id="refresh-marks" style="margin-top: 10px; background: #ff9800; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Refresh Marks</button>
+      <button id="test-realtime" style="margin-top: 10px; background: #9c27b0; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Test Realtime</button>
       <div id="animation-status">Chart ready - click "Apply & Start" to begin</div>
     </div>
   </div>
@@ -546,13 +548,37 @@
       }
 
       getBars(symbolInfo, resolution, periodParams, onHistoryCallback, onErrorCallback) {
-        console.log('📊 getBars called with:', { resolution, periodParams, dataLength: this.currentData.length });
+        console.log('📊 getBars called with:', { 
+          resolution, 
+          periodParams, 
+          dataLength: this.currentData.length,
+          from: new Date(periodParams.from * 1000).toISOString(),
+          to: new Date(periodParams.to * 1000).toISOString()
+        });
         
         try {
           if (this.currentData.length > 0) {
+            // Filter data based on the requested time range
+            const fromTime = periodParams.from;
+            const toTime = periodParams.to;
+            
+            console.log('📊 Filtering data from', fromTime, 'to', toTime);
+            console.log('📊 Available data times:', this.currentData.map(bar => ({
+              time: bar.time,
+              timestamp: new Date(bar.time * 1000).toISOString()
+            })));
+            
+            // Filter bars that fall within the requested time range
+            const filteredBars = this.currentData.filter(bar => {
+              const barTime = bar.time;
+              return barTime >= fromTime && barTime <= toTime;
+            });
+            
+            console.log('📊 Filtered to', filteredBars.length, 'bars in range');
+            
             // Convert to TradingView format
-            const tvData = this.currentData.map(bar => ({
-              time: bar.time * 1000, // TradingView expects milliseconds
+            const tvData = filteredBars.map(bar => ({
+              time: bar.time * 1000, // Convert to milliseconds for 1-minute resolution
               open: bar.open,
               high: bar.high,
               low: bar.low,
@@ -561,9 +587,18 @@
             }));
 
             console.log('✅ Sending', tvData.length, 'bars to TradingView');
-            console.log('📈 Sample data:', tvData[0]);
+            if (tvData.length > 0) {
+              console.log('📈 Sample data:', tvData[0]);
+              console.log('📈 Time range:', {
+                first: new Date(tvData[0].time).toISOString(),
+                last: new Date(tvData[tvData.length - 1].time).toISOString()
+              });
+            }
 
-            setTimeout(() => onHistoryCallback(tvData, { noData: false }), 0);
+            setTimeout(() => {
+              console.log('📊 Calling onHistoryCallback with filtered data');
+              onHistoryCallback(tvData, { noData: false });
+            }, 0);
           } else {
             console.log('📊 No data available, sending empty response');
             setTimeout(() => onHistoryCallback([], { noData: true }), 0);
@@ -577,8 +612,10 @@
       }
 
       subscribeBars(symbolInfo, resolution, onRealtimeCallback, subscribeUID, onResetCacheNeededCallback) {
-        console.log('📡 subscribeBars called');
+        console.log('📡 subscribeBars called with:', { symbolInfo, resolution, subscribeUID });
+        console.log('📡 onRealtimeCallback type:', typeof onRealtimeCallback);
         this.onRealtimeCallback = onRealtimeCallback;
+        console.log('📡 Realtime callback stored:', !!this.onRealtimeCallback);
       }
 
       unsubscribeBars(subscribeUID) {
@@ -708,7 +745,7 @@
               
               // Get current visible range
               const currentRange = chart.getVisibleRange();
-              if (currentRange) {
+              if (currentRange && currentRange.from > 0 && currentRange.to > 0) {
                 console.log('🔄 Current visible range:', currentRange);
                 
                 // Slightly adjust the range to trigger marks refresh
@@ -724,6 +761,12 @@
                   console.log('🔄 Restoring original visible range...');
                   chart.setVisibleRange(currentRange);
                 }, 50);
+              } else {
+                console.log('🔄 Chart visible range not ready yet, will retry later');
+                // Retry after a delay
+                setTimeout(() => {
+                  this.refreshMarks(centerTime);
+                }, 500);
               }
             }
           } catch (error) {
@@ -770,7 +813,7 @@
         rangeMarketCap: parseInt(document.getElementById('rangeMarketCap').value),
         totalSeconds: parseInt(document.getElementById('totalSeconds').value),
         speedMultiplier: parseFloat(document.getElementById('speedMultiplier').value),
-        seed: parseInt(document.getElementById('seed').value),
+        seed: parseInt(document.getElementById('seed').value) || 1,
         enableHistoricalData: document.getElementById('enableHistoricalData').checked,
         preAnimationTime: document.getElementById('preAnimationTime').value,
         finalAction: {
@@ -800,9 +843,23 @@
     function addMarksToData(animatedBars, config) {
       console.log('🎯 Pre-adding marks to animation data...');
       
-      // Dev 1 marker
+      // Dev 1 marker - TradingView displays first bar as second candle, so adjust timing
       if (config.markers.showFirstCandle && config.markers.firstCandleTime <= animatedBars.length) {
+        // If user wants marker on "first candle" (time 1), put it on bar 0 (which TradingView shows as second candle)
+        // If user wants marker on "second candle" (time 2), put it on bar 1 (which TradingView shows as third candle)
         const barIndex = config.markers.firstCandleTime - 1; // Convert to 0-based index
+        console.log('🎯 Dev 1 marker config:', {
+          firstCandleTime: config.markers.firstCandleTime,
+          barIndex: barIndex,
+          totalBars: animatedBars.length,
+          note: 'TradingView displays bar 0 as second candle, bar 1 as third candle, etc.'
+        });
+        console.log('🎯 Bar details:', {
+          bar0: animatedBars[0] ? { time: animatedBars[0].time, index: 0, displayAs: '2nd candle' } : 'undefined',
+          bar1: animatedBars[1] ? { time: animatedBars[1].time, index: 1, displayAs: '3rd candle' } : 'undefined',
+          targetBar: animatedBars[barIndex] ? { time: animatedBars[barIndex].time, index: barIndex, displayAs: `${barIndex + 2}th candle` } : 'undefined'
+        });
+        
         if (barIndex >= 0 && barIndex < animatedBars.length) {
           const bar = animatedBars[barIndex];
           bar.mark = {
@@ -811,7 +868,10 @@
             text: 'D1',
             shape: 'circle'
           };
-          console.log('🎯 Pre-added Dev 1 mark to bar at index', barIndex, 'time', bar.time);
+          console.log('🎯 Pre-added Dev 1 mark to bar at index', barIndex, 'time', bar.time, `(TradingView will display as ${barIndex + 2}th candle)`);
+          console.log('🎯 Full bar with mark:', bar);
+        } else {
+          console.log('❌ Dev 1 marker index out of range:', barIndex, 'not in range 0-', animatedBars.length - 1);
         }
       }
       
@@ -831,13 +891,13 @@
       }
       
       // User markers
-      if (config.markers.showB && config.markers.bTime <= animatedBars.length) {
-        const barIndex = config.markers.bTime - 1;
+      if (config.markers.userMarkers.showB && config.markers.userMarkers.bTime <= animatedBars.length) {
+        const barIndex = config.markers.userMarkers.bTime - 1;
         if (barIndex >= 0 && barIndex < animatedBars.length) {
           const bar = animatedBars[barIndex];
           bar.mark = {
             id: 'user1',
-            color: config.markers.bType === 'buy' ? '#26a69a' : '#ef5350',
+            color: config.markers.userMarkers.bType === 'buy' ? '#26a69a' : '#ef5350',
             text: 'U1',
             shape: 'circle'
           };
@@ -845,13 +905,13 @@
         }
       }
       
-      if (config.markers.showS && config.markers.sTime <= animatedBars.length) {
-        const barIndex = config.markers.sTime - 1;
+      if (config.markers.userMarkers.showS && config.markers.userMarkers.sTime <= animatedBars.length) {
+        const barIndex = config.markers.userMarkers.sTime - 1;
         if (barIndex >= 0 && barIndex < animatedBars.length) {
           const bar = animatedBars[barIndex];
           bar.mark = {
             id: 'user2',
-            color: config.markers.sType === 'buy' ? '#26a69a' : '#ef5350',
+            color: config.markers.userMarkers.sType === 'buy' ? '#26a69a' : '#ef5350',
             text: 'U2',
             shape: 'circle'
           };
@@ -861,6 +921,71 @@
       
       console.log('🎯 Pre-added marks complete. Bars with marks:', animatedBars.filter(bar => bar.mark).length);
     }
+    
+    // Pre-load marks into the datafeed before animation starts
+    function preloadMarksToDatafeed(animatedBars, config) {
+      console.log('🎯 Pre-loading marks into datafeed...');
+      
+      if (!globalDatafeed || typeof globalDatafeed.addMark !== 'function') {
+        console.log('❌ Datafeed not ready for pre-loading marks');
+        return;
+      }
+      
+      // Add all marks to the datafeed immediately
+      animatedBars.forEach((bar, index) => {
+        if (bar.mark) {
+          console.log(`🎯 Pre-loading mark for bar ${index + 1} at time ${bar.time}:`, bar.mark);
+          globalDatafeed.addMark(bar.time, bar.mark);
+        }
+      });
+      
+      console.log('🎯 Pre-loaded marks into datafeed complete');
+    }
+    
+    // Pre-load all marks into the datafeed before animation starts
+    function preloadAllMarks(animatedBars, config) {
+      console.log('🎯 Pre-loading ALL marks into datafeed before animation...');
+      
+      if (!globalDatafeed || typeof globalDatafeed.addMark !== 'function') {
+        console.log('❌ Datafeed not ready for pre-loading marks');
+        return;
+      }
+      
+      // Add all marks to the datafeed immediately
+      animatedBars.forEach((bar, index) => {
+        if (bar.mark) {
+          console.log(`🎯 Pre-loading mark for bar ${index + 1} at time ${bar.time}:`, bar.mark);
+          globalDatafeed.addMark(bar.time, bar.mark);
+        }
+      });
+      
+      console.log('🎯 Pre-loaded ALL marks into datafeed complete');
+    }
+    
+    // Pre-load ALL data and marks into the datafeed before animation starts (like real trading platforms)
+    function preloadAllDataAndMarks(animatedBars, config) {
+      console.log('🎯 Pre-loading ALL data and marks into datafeed (real trading platform approach)...');
+      
+      if (!globalDatafeed) {
+        console.log('❌ Datafeed not ready for pre-loading');
+        return;
+      }
+      
+      // Add all bars to the datafeed
+      animatedBars.forEach((bar, index) => {
+        globalDatafeed.addBar(bar);
+        console.log(`📊 Pre-loaded bar ${index + 1}/${animatedBars.length} at time ${bar.time}`);
+        
+        // Add mark if this bar has one
+        if (bar.mark) {
+          globalDatafeed.addMark(bar.time, bar.mark);
+          console.log(`🎯 Pre-loaded mark for bar ${index + 1}: ${bar.mark.text}`);
+        }
+      });
+      
+      console.log('🎯 Pre-loaded ALL data and marks into datafeed complete');
+    }
+    
 
     // Marker management functions
     function addDevMarker() {
@@ -971,10 +1096,32 @@
       // Always create a new datafeed instance for each chart
       globalDatafeed = new CustomDatafeed();
       
+      // Add initial data so chart has something to display
+      const initialTime = Math.floor(Date.now() / 1000);
+      const initialBar = {
+        time: initialTime,
+        open: 10000,
+        high: 10100,
+        low: 9900,
+        close: 10000,
+      };
+      globalDatafeed.currentData.push(initialBar);
+      console.log('🚀 Added initial bar to datafeed:', initialBar);
+      console.log('🚀 Datafeed currentData length:', globalDatafeed.currentData.length);
+      
       console.log('🚀 Datafeed created:', globalDatafeed);
       console.log('🚀 addMark method available:', typeof globalDatafeed.addMark);
 
       console.log('🚀 Initializing TradingView Advanced Chart...');
+      
+      // Debug: Check if container exists
+      const container = document.getElementById('tv_chart_container');
+      console.log('🚀 Chart container found:', !!container);
+      console.log('🚀 Container dimensions:', container ? {
+        width: container.offsetWidth,
+        height: container.offsetHeight,
+        visible: container.offsetParent !== null
+      } : 'Container not found');
 
       tvWidget = new TradingView.widget({
         symbol: 'CUSTOM',
@@ -987,23 +1134,112 @@
           'save_chart_properties_to_local_storage',
           'use_localstorage_for_settings',
           'right_bar_stays_on_scroll',
-          'study_templates'
+          'study_templates',
+          'timeframes_toolbar',
+          'scales_context_menu',
+          'pane_context_menu',
+          'create_volume_indicator_by_default',
+          'header_symbol_search',
+          'header_compare',
+          'header_screenshot',
+          'header_widget',
+          'header_saveload',
+          'header_settings',
+          'header_chart_type',
+          'header_resolutions',
+          'header_snapshot_trading_drawing_tools',
+          'header_indicators',
+          'header_fullscreen_button',
+          'header_undo_redo',
+          'header_interval_dialog_button',
+          'show_interval_dialog_on_key_press',
+          'header_chart_type_dialog_button',
+          'show_chart_type_dialog_on_key_press',
+          'header_symbol_search_dialog_button',
+          'show_symbol_search_dialog_on_key_press',
+          'header_resolutions_dialog_button',
+          'show_resolutions_dialog_on_key_press',
+          'header_screenshot_dialog_button',
+          'show_screenshot_dialog_on_key_press',
+          'header_widget_dialog_button',
+          'show_widget_dialog_on_key_press',
+          'header_saveload_dialog_button',
+          'show_saveload_dialog_on_key_press',
+          'header_settings_dialog_button',
+          'show_settings_dialog_on_key_press',
+          'header_indicators_dialog_button',
+          'show_indicators_dialog_on_key_press',
+          'header_fullscreen_button_dialog_button',
+          'show_fullscreen_button_dialog_on_key_press',
+          'header_undo_redo_dialog_button',
+          'show_undo_redo_dialog_on_key_press',
+          'header_interval_dialog_button_dialog_button',
+          'show_interval_dialog_button_dialog_on_key_press',
+          'header_chart_type_dialog_button_dialog_button',
+          'show_chart_type_dialog_button_dialog_on_key_press',
+          'header_symbol_search_dialog_button_dialog_button',
+          'show_symbol_search_dialog_button_dialog_on_key_press',
+          'header_resolutions_dialog_button_dialog_button',
+          'show_resolutions_dialog_button_dialog_on_key_press',
+          'header_screenshot_dialog_button_dialog_button',
+          'show_screenshot_dialog_button_dialog_on_key_press',
+          'header_widget_dialog_button_dialog_button',
+          'show_widget_dialog_button_dialog_on_key_press',
+          'header_saveload_dialog_button_dialog_button',
+          'show_saveload_dialog_button_dialog_on_key_press',
+          'header_settings_dialog_button_dialog_button',
+          'show_settings_dialog_button_dialog_on_key_press',
+          'header_indicators_dialog_button_dialog_button',
+          'show_indicators_dialog_button_dialog_on_key_press',
+          'header_fullscreen_button_dialog_button_dialog_button',
+          'show_fullscreen_button_dialog_button_dialog_on_key_press',
+          'header_undo_redo_dialog_button_dialog_button',
+          'show_undo_redo_dialog_button_dialog_on_key_press'
         ],
         enabled_features: [
           'move_logo_to_main_pane'
         ],
         fullscreen: false,
         autosize: true,
-        theme: 'dark'
+        theme: 'dark',
+        // Add these to prevent page reload issues
+        overrides: {
+          'paneProperties.background': '#000000',
+          'paneProperties.vertGridProperties.color': '#333333',
+          'paneProperties.horzGridProperties.color': '#333333'
+        },
+        // Disable features that might cause page reload
+        studies_overrides: {},
+        // Prevent any unload events that might cause page reload
+        custom_css_url: null
       });
 
       tvWidget.onChartReady(() => {
         console.log('✅ TradingView Advanced Chart ready');
-        document.getElementById('animation-status').textContent = 'Advanced Chart ready - click "Apply & Start" to begin';
+        document.getElementById('animation-status').textContent = 'Chart ready - Position as needed, then click "Apply & Start"';
         document.getElementById('animation-status').style.color = '#26a69a';
         
         // Store chart reference for marker support
         window.chartWidget = tvWidget;
+        
+        // Debug: Check if realtime callback is available
+        console.log('🔍 Chart ready - checking realtime callback status:');
+        console.log('🔍 globalDatafeed.onRealtimeCallback:', !!globalDatafeed.onRealtimeCallback);
+        console.log('🔍 globalDatafeed properties:', Object.keys(globalDatafeed));
+        
+        // Let chart load naturally without forcing initial zoom
+        // User can position chart as needed for marketing material
+        console.log('📊 Chart ready - position as needed for marketing material');
+        
+        // Debug: Check if chart is actually visible
+        const chartContainer = document.getElementById('tv_chart_container');
+        console.log('📊 Chart container after ready:', {
+          exists: !!chartContainer,
+          width: chartContainer?.offsetWidth,
+          height: chartContainer?.offsetHeight,
+          visible: chartContainer?.offsetParent !== null,
+          children: chartContainer?.children?.length || 0
+        });
         
         // Try to access the chart's internal API for marks
         console.log('🔍 Chart widget methods:', Object.getOwnPropertyNames(tvWidget));
@@ -1018,6 +1254,7 @@
 
     // Start animation function
     function startAnimation() {
+      console.log('🎬 startAnimation function called!');
       // Stop any existing animation first
       if (isAnimating) {
         console.log('🛑 Stopping existing animation...');
@@ -1028,131 +1265,124 @@
         }
       }
       
-      if (!tvWidget || !globalDatafeed) {
-        console.error('❌ TradingView widget or datafeed not available');
-        return;
-      }
-      
       isAnimating = true;
       const config = getConfig();
       
       console.log('🎬 Starting TradingView Advanced Chart animation with config:', config);
-      document.getElementById('animation-status').textContent = 'Generating animation data...';
+      
+      console.log('🎯 SEED DEBUGGING:');
+      console.log('🎯 Seed from UI:', document.getElementById('seed').value);
+      console.log('🎯 Seed parsed:', parseInt(document.getElementById('seed').value));
+      console.log('🎯 Seed in config:', config.seed);
+      document.getElementById('animation-status').textContent = 'Resetting chart and generating animation data...';
       document.getElementById('animation-status').style.color = '#26a69a';
       
-      // Clear existing data and reset chart
-      globalDatafeed.clearData();
+      // COMPLETE CHART RESET - Recreate the entire chart widget
+      console.log('🔄 Performing complete chart reset...');
       
-      // Force chart refresh by recreating it
-      console.log('🔄 Recreating chart for new animation...');
+      // Remove the old chart completely
+      if (tvWidget) {
+        console.log('🔄 Removing old chart widget...');
+        tvWidget.remove();
+        tvWidget = null;
+      }
+      
+      // Create a completely fresh datafeed
+      globalDatafeed = new CustomDatafeed();
+      
+      // Recreate the chart widget
+      console.log('🔄 Creating fresh chart widget...');
       initTradingView();
       
-      // Wait for chart to be ready before starting animation
+      // Wait for chart to be ready, then start animation
       setTimeout(() => {
+        // Start animation with fresh chart
+        console.log('🚀 Fresh chart ready, starting animation');
         startAnimationData(config);
-      }, 500);
+      }, 1000);
     }
     
     // Separate function to start the actual animation data generation
     function startAnimationData(config) {
-      // Generate data
+      // Generate data EXACTLY like the working index.html version
       const totalBars = config.totalSeconds;
-      const preAnimationSeconds = config.enableHistoricalData ? parseTimeToSeconds(config.preAnimationTime) : 0;
       const rng = new SeededRandom(config.seed);
-      const animationStartTime = Date.now() / 1000 - totalBars;
-      const historicalStartTime = animationStartTime - preAnimationSeconds;
       
-      console.log(`Using seed: ${config.seed} for reproducible animation`);
+      // Use current time as base for animation
+      const animationStartTime = Date.now();
+      
       console.log(`Generating ${totalBars} bars for animation...`);
       
-      const allBars = [];
-      let lastClose = config.initialMarketCap;
-
-      // Generate pre-animation historical data (if enabled)
-      if (config.enableHistoricalData && preAnimationSeconds > 0) {
-        console.log(`Generating ${preAnimationSeconds} seconds of pre-animation history...`);
-        
-        let historicalPrice = config.initialMarketCap * (0.5 + rng.next() * 1.0); // 50% to 150% of initial
-        
-        for (let i = 0; i < preAnimationSeconds; i++) {
-          const time = Math.floor(historicalStartTime) + i * 60; // 1-minute intervals
-          const open = historicalPrice;
-          
-          // Generate realistic price movement
-          const change = (rng.next() - 0.5) * config.rangeMarketCap * 0.3;
-          const close = Math.max(1, open + change);
-          
-          let high = Math.max(open, close);
-          let low = Math.min(open, close);
-          
-          // Add occasional wicks
-          if (rng.next() < 0.2) {
-            const wickSize = Math.abs(change) * (0.3 + rng.next() * 0.7);
-            if (close > open) {
-              high = Math.max(open, close) + rng.next() * wickSize;
-            } else {
-              low = Math.min(open, close) - rng.next() * wickSize;
-            }
-          }
-          
-          allBars.push({
-            time: time,
-            open: open,
-            high: high,
-            low: low,
-            close: close,
-            volume: 200 + rng.next() * 1500,
-            isHistorical: true
-          });
-          
-          historicalPrice = close;
-        }
-        
-        // Set historical data immediately
-        for (const bar of allBars) {
-          globalDatafeed.currentData.push(bar);
-        }
-        
-        console.log(`Pre-animation history loaded: ${allBars.length} bars`);
-      }
-      
-      const startTime = Math.floor(animationStartTime);
+      // Generate ALL data upfront like working version
       const animatedBars = [];
-      lastClose = config.initialMarketCap;
+      let lastClose = config.initialMarketCap;
       
-      // Calculate progression
+      // Calculate the target progression toward final market cap
       const totalChange = config.finalMarketCap - config.initialMarketCap;
       const progressPerBar = totalChange / (totalBars - 1);
       
-      // Generate bars
-      for (let i = 0; i < totalBars; i++) {
-        const time = startTime + i * 60; // 1-minute intervals
+      console.log(`🎯 Data generation config (WORKING LOGIC):`, {
+        initialMC: config.initialMarketCap,
+        finalMC: config.finalMarketCap,
+        totalChange,
+        progressPerBar,
+        totalBars
+      });
+      
+      // Generate animated data exactly like working version
+      for (let i = 0; i < totalBars - 2; i++) {
+        const time = animationStartTime + (i * 1000); // 1 second intervals in milliseconds
         const open = lastClose;
         
-        // Calculate target price
-        const targetPrice = config.initialMarketCap + (progressPerBar * i);
+        // Calculate where we should be at this point in the animation
+        const targetPrice = config.initialMarketCap + (progressPerBar * (i + 1));
         
-        // Generate price movement
-        const trendStrength = 0.3;
+        // Random trading with balanced trend and variation (EXACT copy from working version)
+        const progressRatio = (i + 1) / (totalBars - 1);
+        const trendStrength = 0.03 + (progressRatio * 0.12);
         const randomStrength = 0.7;
         
         const trendComponent = (targetPrice - open) * trendStrength;
         const randomComponent = (rng.next() - 0.5) * config.rangeMarketCap * randomStrength;
         
-        let close = open + trendComponent + randomComponent;
+        const randomDirectionChance = 0.3;
+        const trendDirection = rng.next() < randomDirectionChance ? (rng.next() - 0.5) * 2 : 1;
         
-        // Apply constraints
+        const volatility = 0.8 + rng.next() * 0.4;
+        const momentum = rng.next() < 0.25 ? (rng.next() - 0.5) * 0.3 : 0;
+        
+        let change = (trendComponent * trendDirection) + (randomComponent + momentum) * volatility;
+        
+        // First candle should always be a buy (green)
+        if (i === 0) {
+          change = Math.abs(change);
+        }
+        
+        let close = open + change;
+        
         if (close < config.minMarketCap) {
           close = config.minMarketCap;
+        }
+        
+        // Balanced correction toward target
+        const totalDistance = Math.abs(config.finalMarketCap - config.initialMarketCap);
+        const currentProgress = Math.abs(close - config.initialMarketCap) / totalDistance;
+        const expectedProgress = (i + 1) / (totalBars - 1);
+        const progressDeviation = Math.abs(currentProgress - expectedProgress);
+        
+        if (progressDeviation > 0.4) {
+          const correctionStrength = 0.01 + (progressRatio * 0.03);
+          const correction = (targetPrice - close) * correctionStrength;
+          close = close + correction;
         }
         
         // Create realistic high/low
         let high = Math.max(open, close);
         let low = Math.min(open, close);
         
-        // Add occasional wicks
+        // Only add wicks 20% of the time
         if (rng.next() < 0.2) {
-          const wickSize = Math.abs(close - open) * (0.2 + rng.next() * 0.8);
+          const wickSize = Math.abs(change) * (0.3 + rng.next() * 0.7);
           if (close > open) {
             high = Math.max(open, close) + rng.next() * wickSize;
           } else {
@@ -1160,156 +1390,224 @@
           }
         }
         
-        animatedBars.push({
-          time: time,
+        const bar = {
+          time: time, // Keep as milliseconds for 1-minute resolution
           open: open,
           high: high,
           low: low,
-          close: close,
-          volume: 1000 + rng.next() * 2000
-        });
-        
+          close: close
+        };
+
+        animatedBars.push(bar);
         lastClose = close;
       }
-      
-      // Add final action
-      const finalTime = startTime + totalBars * 60;
+
+      // Add final candle that hits the final market cap
+      const finalTime = animationStartTime + ((totalBars - 2) * 1000);
       const finalOpen = lastClose;
-      const finalClose = config.finalAction.marketCap;
-      
+      const finalClose = config.finalMarketCap;
+      const finalHigh = Math.max(finalOpen, finalClose);
+      const finalLow = Math.min(finalOpen, finalClose);
+
       animatedBars.push({
         time: finalTime,
         open: finalOpen,
-        high: Math.max(finalOpen, finalClose),
-        low: Math.min(finalOpen, finalClose),
-        close: finalClose,
-        volume: 5000 + rng.next() * 5000
+        high: finalHigh,
+        low: finalLow,
+        close: finalClose
       });
+
+      // Add final action candle
+      const actionTime = animationStartTime + ((totalBars - 1) * 1000);
+      const actionOpen = config.finalMarketCap;
+      const actionClose = config.minMarketCap;
+      const actionHigh = Math.max(actionOpen, actionClose);
+      const actionLow = Math.min(actionOpen, actionClose);
+
+      animatedBars.push({
+        time: actionTime,
+        open: actionOpen,
+        high: actionHigh,
+        low: actionLow,
+        close: actionClose
+      });
+
+      console.log(`Generated ${animatedBars.length} bars for animation`);
+      console.log(`Bar times:`, animatedBars.map((bar, i) => `Bar ${i}: time ${bar.time}`));
       
-      console.log('Generated', animatedBars.length, 'bars for animation');
+      // Update status
+      document.getElementById('animation-status').textContent = 'Starting animation...';
+      document.getElementById('animation-status').style.color = '#26a69a';
       
-      // Pre-add marks to the data based on config
-      addMarksToData(animatedBars, config);
+      // Now start the animation exactly like working version
+      startAnimationLoop(animatedBars, config);
+    }
+    
+    function startAnimationLoop(animatedBars, config) {
+      let current = 0;
+      const liveBars = [];
       
-      // Start animated display
-      let currentIndex = 0;
+      // Clear any existing data before starting
+      globalDatafeed.currentData = [];
       
       function showNextBar() {
-        if (currentIndex < animatedBars.length) {
-          globalDatafeed.addBar(animatedBars[currentIndex]);
-          
-          // Check for markers at this time
-          const currentTime = currentIndex + 1; // Animation time in seconds
-          const currentBar = animatedBars[currentIndex];
-          
-          // Check if this bar has a pre-added mark and trigger refresh
-          if (currentBar.mark) {
-            console.log(`🎯 Bar at time ${currentTime}s has a mark:`, currentBar.mark);
-            // Trigger marks refresh to make the mark visible
-            if (globalDatafeed && typeof globalDatafeed.refreshMarks === 'function') {
-              globalDatafeed.refreshMarks(currentBar.time);
-            }
-          }
-          
-          currentIndex++;
-          
-          // Update status
-          document.getElementById('animation-status').textContent = `Animating... ${currentIndex}/${animatedBars.length}`;
-          
-          if (currentIndex === animatedBars.length) {
-            document.getElementById('animation-status').textContent = 'Animation completed!';
-            document.getElementById('animation-status').style.color = '#4CAF50';
-            isAnimating = false;
-            console.log('✅ TradingView Advanced Chart animation complete');
+        if (current < animatedBars.length) {
+          try {
+            liveBars.push(animatedBars[current]);
             
-            // Force marks refresh after animation completes
-            console.log('🔄 Forcing marks refresh after animation...');
-            if (globalDatafeed && globalDatafeed.refreshMarks) {
-              // Refresh marks for the entire animation range
-              const firstBar = globalDatafeed.currentData[0];
-              const lastBar = globalDatafeed.currentData[globalDatafeed.currentData.length - 1];
-              if (firstBar && lastBar) {
-                globalDatafeed.refreshMarks((firstBar.time + lastBar.time) / 2);
+            // Update TradingView chart with all data so far
+            globalDatafeed.currentData = [...liveBars];
+            
+            // Force TradingView to refresh and show the data
+            const currentBar = liveBars[liveBars.length - 1];
+            const tvBar = {
+              time: currentBar.time * 1000, // Convert to milliseconds for 1-minute resolution
+              open: currentBar.open,
+              high: currentBar.high,
+              low: currentBar.low,
+              close: currentBar.close,
+              volume: currentBar.volume || 1000
+            };
+            
+            console.log(`📊 Calling realtime callback with bar:`, tvBar);
+            console.log(`📊 Realtime callback available:`, !!globalDatafeed.onRealtimeCallback);
+            console.log(`📊 Realtime callback type:`, typeof globalDatafeed.onRealtimeCallback);
+            
+            if (globalDatafeed.onRealtimeCallback) {
+              try {
+                globalDatafeed.onRealtimeCallback(tvBar);
+                console.log(`📊 Realtime callback called successfully`);
+              } catch (error) {
+                console.error(`❌ Error calling realtime callback:`, error);
               }
+            } else {
+              console.error(`❌ No realtime callback available!`);
+              console.log(`📊 Available datafeed properties:`, Object.keys(globalDatafeed));
+              
+              // Fallback: Try to force chart refresh by triggering a data update
+              console.log(`🔄 Attempting fallback: forcing chart data refresh...`);
+              // The chart should automatically call getBars when data changes
+              // We've already updated globalDatafeed.currentData above
             }
-          } else {
-            // Schedule next bar
-            const delay = 1000 / config.speedMultiplier;
-            currentAnimation = setTimeout(showNextBar, delay);
+            
+            // Check for markers exactly like working version
+            const currentTime = current + 1; // 1-based time like working version
+            
+            console.log(`📊 Bar ${current + 1}/${animatedBars.length}: Time=${currentTime}s, MC=${animatedBars[current].close}`);
+            console.log(`📊 Datafeed has ${globalDatafeed.currentData.length} bars total`);
+            console.log(`📊 Realtime callback available:`, !!globalDatafeed.onRealtimeCallback);
+            
+            // Add markers if triggered (simplified for now)
+            if (config.markers.showFirstCandle && currentTime === config.markers.firstCandleTime) {
+              console.log(`🎯 Dev 1 marker triggered at time: ${currentTime}s`);
+            }
+            
+            if (config.markers.showFinalCandle && currentTime === config.markers.finalCandleTime) {
+              console.log(`🎯 Dev 2 marker triggered at time: ${currentTime}s`);
+            }
+            
+            current++;
+            
+            if (current < animatedBars.length) {
+              setTimeout(showNextBar, 1000); // 1 second per bar
+            } else {
+              console.log('✅ Animation complete');
+              document.getElementById('animation-status').textContent = 'Animation complete!';
+              document.getElementById('animation-status').style.color = '#26a69a';
+            }
+          } catch (error) {
+            console.error('Animation error:', error);
           }
         }
       }
       
       // Start the animation
-      document.getElementById('animation-status').textContent = 'Starting animation...';
-      
-      // Debug: Check if markers are enabled
-      console.log('🎯 Marker config check:', {
-        showFirstCandle: config.markers.showFirstCandle,
-        firstCandleTime: config.markers.firstCandleTime,
-        showFinalCandle: config.markers.showFinalCandle,
-        finalCandleTime: config.markers.finalCandleTime,
-        showB: config.markers.userMarkers.showB,
-        bTime: config.markers.userMarkers.bTime,
-        showS: config.markers.userMarkers.showS,
-        sTime: config.markers.userMarkers.sTime
-      });
-      
-      setTimeout(showNextBar, 500); // Small delay to let chart settle
+      console.log('🚀 Starting animation loop...');
+      showNextBar();
     }
 
-    // Event listeners
-    document.getElementById('apply-config').addEventListener('click', startAnimation);
-    
-    // Refresh marks button
-    document.getElementById('refresh-marks').addEventListener('click', () => {
-      console.log('🔄 Manual marks refresh triggered');
-      if (globalDatafeed && globalDatafeed.currentData.length > 0) {
-        const firstBar = globalDatafeed.currentData[0];
-        const lastBar = globalDatafeed.currentData[globalDatafeed.currentData.length - 1];
-        if (firstBar && lastBar) {
-          globalDatafeed.refreshMarks((firstBar.time + lastBar.time) / 2);
-          
-          // Try to force a marks refresh by changing the visible range
-          if (window.chartWidget && window.chartWidget.chart) {
-            try {
-              console.log('🔄 Attempting to force marks refresh via chart API...');
-              
-              // Try to trigger a marks refresh by zooming out and back in
-              const chart = window.chartWidget.chart();
-              if (chart && chart.setVisibleRange) {
-                console.log('🔄 Found setVisibleRange method, trying to trigger marks refresh...');
-                
-                // Get current visible range
-                const currentRange = chart.getVisibleRange();
-                console.log('🔄 Current visible range:', currentRange);
-                
-                // Slightly adjust the range to trigger marks refresh
-                if (currentRange) {
-                  const newRange = {
-                    from: currentRange.from - 1000, // 1 second before
-                    to: currentRange.to + 1000      // 1 second after
-                  };
-                  console.log('🔄 Setting new visible range:', newRange);
-                  chart.setVisibleRange(newRange);
-                  
-                  // Set it back after a short delay
-                  setTimeout(() => {
-                    console.log('🔄 Restoring original visible range...');
-                    chart.setVisibleRange(currentRange);
-                  }, 100);
-                }
-              }
-            } catch (error) {
-              console.error('❌ Error trying to force marks refresh:', error);
-            }
+    // Remove the broken addMarksToData function - markers are handled in the animation loop
+
+    function getConfig() {
+      return {
+        initialMarketCap: parseInt(document.getElementById('initialMarketCap').value),
+        finalMarketCap: parseInt(document.getElementById('finalMarketCap').value),
+        minMarketCap: parseInt(document.getElementById('minMarketCap').value),
+        rangeMarketCap: parseInt(document.getElementById('rangeMarketCap').value),
+        totalSeconds: parseInt(document.getElementById('totalSeconds').value),
+        seed: parseInt(document.getElementById('seed').value) || 1,
+        markers: {
+          showFirstCandle: document.getElementById('showFirstCandle').checked,
+          firstCandleType: document.getElementById('firstCandleType').value,
+          firstCandleTime: parseInt(document.getElementById('firstCandleTime').value),
+          showFinalCandle: document.getElementById('showFinalCandle').checked,
+          finalCandleType: document.getElementById('finalCandleType').value,
+          finalCandleTime: parseInt(document.getElementById('finalCandleTime').value),
+          userMarkers: {
+            showB: document.getElementById('showB').checked,
+            bTime: parseInt(document.getElementById('bTime').value),
+            bType: document.getElementById('bType').value,
+            showS: document.getElementById('showS').checked,
+            sTime: parseInt(document.getElementById('sTime').value),
+            sType: document.getElementById('sType').value
           }
         }
+      };
+    }
+    
+    // Test function to manually test realtime callback
+    function testRealtimeCallback() {
+      console.log('🧪 Testing realtime callback...');
+      console.log('🧪 globalDatafeed:', globalDatafeed);
+      console.log('🧪 onRealtimeCallback:', globalDatafeed?.onRealtimeCallback);
+      
+      if (globalDatafeed && globalDatafeed.onRealtimeCallback) {
+        const testBar = {
+          time: Date.now(),
+          open: 10000,
+          high: 10100,
+          low: 9900,
+          close: 10050,
+          volume: 1000
+        };
+        
+        console.log('🧪 Sending test bar:', testBar);
+        try {
+          globalDatafeed.onRealtimeCallback(testBar);
+          console.log('🧪 Test bar sent successfully!');
+        } catch (error) {
+          console.error('🧪 Error sending test bar:', error);
+        }
+      } else {
+        console.error('🧪 No realtime callback available for testing');
       }
-    });
+    }
     
     // Initialize when DOM is ready
     document.addEventListener('DOMContentLoaded', () => {
+      console.log('🎬 DOM loaded, setting up event listeners...');
+      const button = document.getElementById('apply-config');
+      console.log('🎬 Button found:', !!button);
+      if (button) {
+        button.addEventListener('click', () => {
+          console.log('🎬 Apply & Start button clicked!');
+          startAnimation();
+        });
+        console.log('🎬 Event listener added to button');
+      } else {
+        console.error('❌ Apply & Start button not found!');
+      }
+      
+      // Add test realtime button
+      const testButton = document.getElementById('test-realtime');
+      if (testButton) {
+        testButton.addEventListener('click', () => {
+          console.log('🧪 Test Realtime button clicked!');
+          testRealtimeCallback();
+        });
+        console.log('🧪 Test realtime button event listener added');
+      }
+      
       setTimeout(initTradingView, 100);
       updateRemoveButtons(); // Hide trash cans initially
     });
