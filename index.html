@@ -1576,14 +1576,15 @@
             // Check for User marker 1 at specific time
             if (userMarkers.showB && userMarkers.bTime !== undefined) {
               const user1Type = document.getElementById('bType')?.value || 'buy';
-              const user1Text = `${user1Type.toUpperCase().charAt(0)}1`;
-              if (currentTime === userMarkers.bTime && !existingMarkers.some(m => m.text === user1Text)) {
+              const user1DisplayText = user1Type.toUpperCase().charAt(0);
+              const user1UniqueId = `${user1Type.toUpperCase().charAt(0)}1`;
+              if (currentTime === userMarkers.bTime && !existingMarkers.some(m => m.text === user1UniqueId)) {
                 markersToAdd.push({
                   time: currentBar.time,
                   position: 'aboveBar',
                   color: user1Type === 'buy' ? '#26a69a' : '#ef5350',
                   shape: 'circle',
-                  text: user1Text,
+                  text: user1DisplayText,
                   size: 3,
                   offsetY: -20
                 });
@@ -1594,14 +1595,15 @@
             // Check for User marker 2 at specific time
             if (userMarkers.showS && userMarkers.sTime !== undefined) {
               const user2Type = document.getElementById('sType')?.value || 'sell';
-              const user2Text = `${user2Type.toUpperCase().charAt(0)}2`;
-              if (currentTime === userMarkers.sTime && !existingMarkers.some(m => m.text === user2Text)) {
+              const user2DisplayText = user2Type.toUpperCase().charAt(0);
+              const user2UniqueId = `${user2Type.toUpperCase().charAt(0)}2`;
+              if (currentTime === userMarkers.sTime && !existingMarkers.some(m => m.text === user2UniqueId)) {
                 markersToAdd.push({
                   time: currentBar.time,
                   position: 'aboveBar',
                   color: user2Type === 'buy' ? '#26a69a' : '#ef5350',
                   shape: 'circle',
-                  text: user2Text,
+                  text: user2DisplayText,
                   size: 3,
                   offsetY: -20
                 });
@@ -1618,15 +1620,16 @@
               if (showMarker && markerType && markerTime && showMarker.checked) {
                 const time = parseInt(markerTime.value);
                 const type = markerType.value;
-                const markerText = `D${type.toUpperCase().charAt(0)}${i}`;
+                const displayText = `D${type.toUpperCase().charAt(0)}`;
+                const uniqueId = `D${type.toUpperCase().charAt(0)}${i}`;
                 
-                if (currentTime === time && !existingMarkers.some(m => m.text === markerText)) {
+                if (currentTime === time && !existingMarkers.some(m => m.text === uniqueId)) {
                   markersToAdd.push({
                     time: currentBar.time,
                     position: 'aboveBar',
                     color: type === 'buy' ? '#26a69a' : '#ef5350',
                     shape: 'circle',
-                    text: markerText,
+                    text: displayText,
                     size: 3,
                     offsetY: -20
                   });
@@ -1644,15 +1647,16 @@
               if (showMarker && markerType && markerTime && showMarker.checked) {
                 const time = parseInt(markerTime.value);
                 const type = markerType.value;
-                const markerText = `${type.toUpperCase().charAt(0)}${i}`;
+                const displayText = type.toUpperCase().charAt(0);
+                const uniqueId = `${type.toUpperCase().charAt(0)}${i}`;
                 
-                if (currentTime === time && !existingMarkers.some(m => m.text === markerText)) {
+                if (currentTime === time && !existingMarkers.some(m => m.text === uniqueId)) {
                   markersToAdd.push({
                     time: currentBar.time,
                     position: 'aboveBar',
                     color: type === 'buy' ? '#26a69a' : '#ef5350',
                     shape: 'circle',
-                    text: markerText,
+                    text: displayText,
                     size: 3,
                     offsetY: -20
                   });
@@ -1679,14 +1683,15 @@
               // Add first animated candle marker if enabled and not already present
               if (config.markers.showFirstCandle) {
                 const dev1Type = document.getElementById('firstCandleType')?.value || 'buy';
-                const dev1Text = `D${dev1Type.toUpperCase().charAt(0)}1`;
-                if (!existingMarkers.some(m => m.text === dev1Text)) {
+                const dev1DisplayText = `D${dev1Type.toUpperCase().charAt(0)}`;
+                const dev1UniqueId = `D${dev1Type.toUpperCase().charAt(0)}1`;
+                if (!existingMarkers.some(m => m.text === dev1UniqueId)) {
                   allMarkers.push({
                     time: animatedBars[0].time,
                     position: 'aboveBar',
                     color: dev1Type === 'buy' ? '#26a69a' : '#ef5350',
                     shape: 'circle',
-                    text: dev1Text,
+                    text: dev1DisplayText,
                     size: 3,
                     offsetY: -20  // Move marker higher above the candle
                   });
@@ -1696,14 +1701,15 @@
               // Add final animated candle marker if enabled and not already present
               if (config.markers.showFinalCandle) {
                 const dev2Type = document.getElementById('finalCandleType')?.value || 'sell';
-                const dev2Text = `D${dev2Type.toUpperCase().charAt(0)}2`;
-                if (!existingMarkers.some(m => m.text === dev2Text)) {
+                const dev2DisplayText = `D${dev2Type.toUpperCase().charAt(0)}`;
+                const dev2UniqueId = `D${dev2Type.toUpperCase().charAt(0)}2`;
+                if (!existingMarkers.some(m => m.text === dev2UniqueId)) {
                   allMarkers.push({
                     time: animatedBars[animatedBars.length - 1].time,
                     position: 'aboveBar',
                     color: dev2Type === 'buy' ? '#26a69a' : '#ef5350',
                     shape: 'circle',
-                    text: dev2Text,
+                    text: dev2DisplayText,
                     size: 3,
                     offsetY: -20  // Move marker higher above the candle
                   });
