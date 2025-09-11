@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DexFools - skye/SOL</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #000000;
+            color: #ffffff;
+            line-height: 1.4;
+            overflow-x: hidden;
+        }
+
+        /* Hide scrollbars but keep functionality */
+        * {
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* Internet Explorer 10+ */
+        }
+
+        *::-webkit-scrollbar {
+            display: none; /* WebKit */
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Left Sidebar */
+        .sidebar {
+            width: 280px;
+            background: #0a0a0a;
+            border-right: 1px solid #1a1a1a;
+            padding: 20px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            min-width: 200px;
+            max-width: 400px;
+        }
+
+        .sidebar-resize-handle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 4px;
+            height: 100%;
+            background: transparent;
+            cursor: ew-resize;
+            z-index: 1001;
+        }
+
+        .sidebar-resize-handle:hover {
+            background: #00d4aa;
+        }
+
+        .sidebar-logo {
+            font-size: 20px;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo-icon {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(45deg, #00d4aa, #ff6b6b);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: #000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo-icon::before {
+            content: "💎";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+        }
+
+        .search-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 12px 40px 12px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+
+        .nav-section {
+            margin-bottom: 30px;
+        }
+
+        .nav-title {
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            color: #ccc;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .nav-item:hover {
+            color: #fff;
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .blockchain-section {
+            margin-bottom: 30px;
+        }
+
+        .blockchain-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .blockchain-item {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .blockchain-item:hover {
+            background: #222;
+        }
+
+        .blockchain-icon {
+            width: 24px;
+            height: 24px;
+            margin: 0 auto 8px;
+            border-radius: 50%;
+        }
+
+        .blockchain-name {
+            font-size: 12px;
+            color: #ccc;
+        }
+
+        .watchlist-section {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .watchlist-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .watchlist-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .watchlist-content {
+            color: #666;
+            font-size: 12px;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            margin-right: 320px;
+            display: flex;
+            flex-direction: column;
+            max-width: calc(100vw - 280px - 320px);
+        }
+
+        /* Header */
+        .header {
+            background: #0a0a0a;
+            border-bottom: 1px solid #1a1a1a;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-logo {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .ad-container {
+            display: flex;
+            gap: 12px;
+        }
+
+        .ad-box {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 8px 12px;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .ad-token {
+            font-size: 12px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .ad-value {
+            font-size: 14px;
+            color: #00d4aa;
+            margin: 2px 0;
+        }
+
+        .ad-change {
+            font-size: 11px;
+            color: #00d4aa;
+        }
+
+        .ad-time {
+            font-size: 10px;
+            color: #666;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ccc;
+            font-size: 14px;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: #333;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-icons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .header-icon {
+            width: 32px;
+            height: 32px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #ccc;
+        }
+
+        /* Chart Section */
+        .chart-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0a0a0a;
+            position: relative;
+            z-index: 1;
+        }
+
+        .chart-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chart-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .timeframe-buttons {
+            display: flex;
+            gap: 4px;
+        }
+
+        .timeframe-btn {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #ccc;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .timeframe-btn:hover {
+            background: #222;
+        }
+
+        .timeframe-btn.active {
+            background: #00d4aa;
+            color: #000;
+            border-color: #00d4aa;
+        }
+
+        .chart-tools {
+            display: flex;
+            gap: 8px;
+        }
+
+        .chart-tool {
+            width: 32px;
+            height: 32px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #ccc;
+        }
+
+        .chart-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .token-pair {
+            font-size: 14px;
+            color: #fff;
+        }
+
+        .chart-container {
+            background: #0a0a0a;
+            position: relative;
+            height: 500px;
+            min-height: 200px;
+            max-height: 80vh;
+            overflow: hidden;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            margin: 16px 24px;
+            z-index: 2;
+        }
+
+        .resize-handle {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: #333;
+            cursor: ns-resize;
+            transition: background 0.2s;
+            z-index: 10;
+        }
+
+        .resize-handle:hover {
+            background: #00d4aa;
+        }
+
+        .resize-handle::after {
+            content: "⋮⋮";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #666;
+            font-size: 12px;
+            line-height: 1;
+        }
+
+        .chart-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #666;
+            font-size: 16px;
+        }
+
+        /* Transactions Section */
+        .transactions-section {
+            background: #0a0a0a;
+            border-top: 1px solid #1a1a1a;
+        }
+
+        .transactions-tabs {
+            display: flex;
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 14px;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab.active {
+            color: #fff;
+            border-bottom-color: #00d4aa;
+        }
+
+        .transactions-table {
+            padding: 16px 24px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th {
+            text-align: left;
+            padding: 8px 12px;
+            font-size: 12px;
+            color: #666;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .table td {
+            padding: 8px 12px;
+            font-size: 12px;
+            color: #ccc;
+        }
+
+        .table tr:hover {
+            background: #1a1a1a;
+        }
+
+        .txn-type {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .txn-buy {
+            background: #00d4aa;
+            color: #000;
+        }
+
+        .txn-sell {
+            background: #ff6b6b;
+            color: #fff;
+        }
+
+        /* Right Panel */
+        .right-panel {
+            width: 320px;
+            background: #0a0a0a;
+            border-left: 1px solid #1a1a1a;
+            padding: 20px;
+            position: fixed;
+            right: 0;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 10;
+            min-width: 250px;
+            max-width: 500px;
+        }
+
+        .right-panel-resize-handle {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: transparent;
+            cursor: ew-resize;
+            z-index: 11;
+        }
+
+        .right-panel-resize-handle:hover {
+            background: #00d4aa;
+        }
+
+        .token-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .token-avatar {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(45deg, #00d4aa, #0099cc);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .token-info h2 {
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+
+        .editable-token-name {
+            background: transparent;
+            border: 1px solid transparent;
+            color: #fff;
+            font-size: 18px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 100px;
+        }
+
+        .editable-token-name:hover {
+            background: #1a1a1a;
+            border-color: #333;
+        }
+
+        .editable-token-name:focus {
+            outline: none;
+            background: #1a1a1a;
+            border-color: #00d4aa;
+            cursor: text;
+        }
+
+        .token-symbol {
+            color: #00d4aa;
+            font-size: 14px;
+        }
+
+        .token-indicators {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .indicator {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 10px;
+            color: #ccc;
+        }
+
+        .network-info {
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+
+        .external-links {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .link-btn {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #ccc;
+            padding: 8px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .link-btn:hover {
+            background: #222;
+            color: #fff;
+        }
+
+        .price-section {
+            margin-bottom: 20px;
+        }
+
+        .price-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        .price-label {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .price-value {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .metrics-section {
+            margin-bottom: 20px;
+        }
+
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        .metric-label {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .metric-value {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .metric-change {
+            font-size: 12px;
+            margin-left: 8px;
+        }
+
+        .positive {
+            color: #00d4aa;
+        }
+
+        .negative {
+            color: #ff6b6b;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #1a1a1a;
+            border-radius: 2px;
+            margin-top: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 2px;
+        }
+
+        .progress-green {
+            background: #00d4aa;
+        }
+
+        .progress-red {
+            background: #ff6b6b;
+        }
+
+        .trading-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .trade-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .buy-btn {
+            background: #00d4aa;
+            color: #000;
+        }
+
+        .buy-btn:hover {
+            background: #00b894;
+        }
+
+        .sell-btn {
+            background: #ff6b6b;
+            color: #fff;
+        }
+
+        .sell-btn:hover {
+            background: #ff5252;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .action-btn {
+            flex: 1;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #ccc;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: #222;
+            color: #fff;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .right-panel {
+                width: 280px;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .right-panel {
+                width: 100%;
+                position: static;
+                height: auto;
+            }
+            
+            .container {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 12px 16px;
+            }
+            
+            .ad-container {
+                display: none;
+            }
+            
+            .chart-header {
+                padding: 12px 16px;
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+            
+            .transactions-table {
+                padding: 12px 16px;
+            }
+            
+            .table {
+                font-size: 10px;
+            }
+            
+            .right-panel {
+                padding: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .timeframe-buttons {
+                flex-wrap: wrap;
+            }
+            
+            .chart-tools {
+                flex-wrap: wrap;
+            }
+            
+            .trading-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Left Sidebar -->
+        <div class="sidebar" id="leftSidebar">
+            <div class="sidebar-resize-handle" id="leftResizeHandle"></div>
+            <div class="sidebar-logo">
+                <div class="logo-icon"></div>
+                DexFools
+            </div>
+            
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="Search">
+                <div class="search-icon">🔍</div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-title">Get the App!</div>
+                <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+                    <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 8px; text-align: center; flex: 1;">
+                        <div style="font-size: 16px;">🍎</div>
+                        <div style="font-size: 10px; color: #666;">iOS</div>
+                    </div>
+                    <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 8px; text-align: center; flex: 1;">
+                        <div style="font-size: 16px;">🤖</div>
+                        <div style="font-size: 10px; color: #666;">Android</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <a href="#" class="nav-item">
+                    <div class="nav-icon">⭐</div>
+                    Watchlist
+                </a>
+                <a href="#" class="nav-item">
+                    <div class="nav-icon">🔔</div>
+                    Alerts
+                </a>
+                <a href="#" class="nav-item">
+                    <div class="nav-icon">⊞</div>
+                    Multicharts
+                </a>
+                <a href="#" class="nav-item">
+                    <div class="nav-icon">🍃</div>
+                    New Pairs
+                </a>
+                <a href="#" class="nav-item">
+                    <div class="nav-icon">📈</div>
+                    Gainers & Losers
+                </a>
+                <a href="#" class="nav-item">
+                    <div class="nav-icon">💼</div>
+                    Portfolio
+                </a>
+                <a href="#" class="nav-item">
+                    <div class="nav-icon">📢</div>
+                    Advertise
+                </a>
+                <a href="#" class="nav-item">
+                    <div class="nav-icon">⋯</div>
+                    more ▾
+                </a>
+            </div>
+
+            <div class="blockchain-section">
+                <div class="nav-title">Blockchain Networks</div>
+                <div class="blockchain-grid">
+                    <div class="blockchain-item">
+                        <div class="blockchain-icon" style="background: #ffd700;">🌙</div>
+                        <div class="blockchain-name">Moonit</div>
+                    </div>
+                    <div class="blockchain-item">
+                        <div class="blockchain-icon" style="background: #9945ff;">S</div>
+                        <div class="blockchain-name">Solana</div>
+                    </div>
+                    <div class="blockchain-item">
+                        <div class="blockchain-icon" style="background: #627eea;">⟠</div>
+                        <div class="blockchain-name">Ethereum</div>
+                    </div>
+                    <div class="blockchain-item">
+                        <div class="blockchain-icon" style="background: #0052ff;">B</div>
+                        <div class="blockchain-name">Base</div>
+                    </div>
+                    <div class="blockchain-item">
+                        <div class="blockchain-icon" style="background: #f3ba2f;">B</div>
+                        <div class="blockchain-name">BSC</div>
+                    </div>
+                    <div class="blockchain-item">
+                        <div class="blockchain-icon" style="background: #8b5cf6;">P</div>
+                        <div class="blockchain-name">PulseChain</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="watchlist-section">
+                <div class="watchlist-header">
+                    <div class="watchlist-title">⭐ WATCHLIST</div>
+                    <div style="color: #666; font-size: 12px;">Main Watchlist ▾</div>
+                </div>
+                <div class="watchlist-content">Nothing in this list yet...</div>
+            </div>
+
+            <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid #1a1a1a;">
+                <div style="color: #666; font-size: 12px; margin-bottom: 8px;">anon</div>
+                <button style="background: #00d4aa; color: #000; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; width: 100%; margin-bottom: 12px;">Sign-in</button>
+                <div style="display: flex; gap: 8px; justify-content: center;">
+                    <div style="width: 32px; height: 32px; background: #1a1a1a; border: 1px solid #333; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer;">X</div>
+                    <div style="width: 32px; height: 32px; background: #1a1a1a; border: 1px solid #333; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer;">💬</div>
+                    <div style="width: 32px; height: 32px; background: #1a1a1a; border: 1px solid #333; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer;">⚙️</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <div class="header-left">
+                    <div class="ad-container">
+                        <div class="ad-box">
+                            <div class="ad-token">PEPE2.0</div>
+                            <div class="ad-value">0.000123</div>
+                            <div class="ad-change positive">+2,340%</div>
+                            <div class="ad-time">2h</div>
+                        </div>
+                        <div class="ad-box">
+                            <div class="ad-token">DOGEKILLER</div>
+                            <div class="ad-value">$0.0045</div>
+                            <div class="ad-change positive">+890%</div>
+                            <div class="ad-time">4h</div>
+                        </div>
+                        <div class="ad-box">
+                            <div class="ad-token">MOONSHOT</div>
+                            <div class="ad-value">$0.00089</div>
+                            <div class="ad-change negative">-67%</div>
+                            <div class="ad-time">1h</div>
+                        </div>
+                        <div class="ad-box">
+                            <div class="ad-token">DIAMONDHANDS</div>
+                            <div class="ad-value">$0.0012</div>
+                            <div class="ad-change positive">+1,500%</div>
+                            <div class="ad-time">6h</div>
+                        </div>
+                        <div class="ad-box">
+                            <div class="ad-token">SHIBAROCKET</div>
+                            <div class="ad-value">$0.000056</div>
+                            <div class="ad-change positive">+3,200%</div>
+                            <div class="ad-time">3h</div>
+                        </div>
+                        <div class="ad-box">
+                            <div class="ad-token">MEMECOIN</div>
+                            <div class="ad-value">$0.00078</div>
+                            <div class="ad-change negative">-45%</div>
+                            <div class="ad-time">5h</div>
+                        </div>
+                        <div class="ad-box">
+                            <div class="ad-token">LAMBO</div>
+                            <div class="ad-value">$0.0023</div>
+                            <div class="ad-change positive">+1,800%</div>
+                            <div class="ad-time">8h</div>
+                        </div>
+                        <div class="ad-box">
+                            <div class="ad-token">HODL</div>
+                            <div class="ad-value">$0.0015</div>
+                            <div class="ad-change positive">+650%</div>
+                            <div class="ad-time">12h</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="user-profile">
+                        <div class="user-avatar">SV</div>
+                        <span>Skye Valadez</span>
+                    </div>
+                    <div class="header-icons">
+                        <div class="header-icon">⚙️</div>
+                        <div class="header-icon">⋯</div>
+                        <div class="header-icon">✕</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart Section -->
+            <div class="chart-section">
+                <div class="chart-header">
+                    <div class="chart-controls">
+                        <div class="timeframe-buttons">
+                            <button class="timeframe-btn">1s</button>
+                            <button class="timeframe-btn">1m</button>
+                            <button class="timeframe-btn">5m</button>
+                            <button class="timeframe-btn active">15m</button>
+                            <button class="timeframe-btn">1h</button>
+                            <button class="timeframe-btn">4h</button>
+                            <button class="timeframe-btn">D</button>
+                        </div>
+                        <div class="chart-tools">
+                            <div class="chart-tool">📈</div>
+                            <div class="chart-tool">📊</div>
+                            <div class="chart-tool">✏️</div>
+                            <div class="chart-tool">📐</div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button style="background: #1a1a1a; border: 1px solid #333; color: #ccc; padding: 6px 12px; border-radius: 4px; font-size: 12px;">Price / MCap</button>
+                            <button style="background: #1a1a1a; border: 1px solid #333; color: #ccc; padding: 6px 12px; border-radius: 4px; font-size: 12px;">USD / SOL</button>
+                        </div>
+                        <button style="background: #1a1a1a; border: 1px solid #333; color: #ccc; padding: 6px 12px; border-radius: 4px; font-size: 12px;">Full</button>
+                    </div>
+                </div>
+                <div class="chart-container" id="chartContainer">
+                    <div class="chart-placeholder">📊 Chart Area - Replace with TradingView chart</div>
+                    <div class="resize-handle" id="resizeHandle"></div>
+                </div>
+            </div>
+
+            <!-- Transactions Section -->
+            <div class="transactions-section">
+                <div class="transactions-tabs">
+                    <button class="tab active">Transactions</button>
+                    <button class="tab">Top Traders</button>
+                    <button class="tab">KOLs</button>
+                    <button class="tab">Holders (1,912)</button>
+                    <button class="tab">Bubblemaps</button>
+                </div>
+                <div class="transactions-table">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>DATE</th>
+                                <th>TYPE</th>
+                                <th>USD</th>
+                                <th>SKYE</th>
+                                <th>SOL</th>
+                                <th>PRICE</th>
+                                <th>MAKER</th>
+                                <th>TXN</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>19:00:24</td>
+                                <td><span class="txn-type txn-sell">Sell</span></td>
+                                <td>$1,234</td>
+                                <td>1,800,000</td>
+                                <td>0.052937</td>
+                                <td>$0.0006831</td>
+                                <td>E3gCT...cuXE</td>
+                                <td>🔗</td>
+                            </tr>
+                            <tr>
+                                <td>18:59:15</td>
+                                <td><span class="txn-type txn-buy">Buy</span></td>
+                                <td>$856</td>
+                                <td>1,250,000</td>
+                                <td>0.036789</td>
+                                <td>$0.0006848</td>
+                                <td>F4hDT...bvXF</td>
+                                <td>🔗</td>
+                            </tr>
+                            <tr>
+                                <td>18:58:42</td>
+                                <td><span class="txn-type txn-sell">Sell</span></td>
+                                <td>$2,100</td>
+                                <td>3,100,000</td>
+                                <td>0.067432</td>
+                                <td>$0.0006774</td>
+                                <td>G5iEU...cwYG</td>
+                                <td>🔗</td>
+                            </tr>
+                            <tr>
+                                <td>18:57:33</td>
+                                <td><span class="txn-type txn-buy">Buy</span></td>
+                                <td>$1,567</td>
+                                <td>2,300,000</td>
+                                <td>0.052156</td>
+                                <td>$0.0006812</td>
+                                <td>H6jFV...dxZH</td>
+                                <td>🔗</td>
+                            </tr>
+                            <tr>
+                                <td>18:56:18</td>
+                                <td><span class="txn-type txn-sell">Sell</span></td>
+                                <td>$987</td>
+                                <td>1,450,000</td>
+                                <td>0.031234</td>
+                                <td>$0.0006809</td>
+                                <td>I7kGW...eyAI</td>
+                                <td>🔗</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel -->
+        <div class="right-panel" id="rightPanel">
+            <div class="right-panel-resize-handle" id="rightResizeHandle"></div>
+            <div class="token-profile">
+                <div class="token-info">
+                    <input type="text" class="editable-token-name" value="token" id="tokenNameInput">
+                    <div class="token-indicators">
+                        <div class="indicator">5h</div>
+                        <div class="indicator">#4</div>
+                        <div class="indicator">60</div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="external-links">
+                <a href="#" class="link-btn">Website</a>
+                <a href="#" class="link-btn">X Twitter</a>
+            </div>
+
+            <div class="price-section">
+                <div class="price-item">
+                    <div class="price-label">PRICE USD</div>
+                    <div class="price-value">$0.0006831</div>
+                </div>
+                <div class="price-item">
+                    <div class="price-label">PRICE</div>
+                    <div class="price-value">0.052937 SOL</div>
+                </div>
+            </div>
+
+            <div class="metrics-section">
+                <div class="metric-item">
+                    <div class="metric-label">LIQUIDITY</div>
+                    <div class="metric-value">$111K</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">FDV</div>
+                    <div class="metric-value">$669K</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">MKT CAP</div>
+                    <div class="metric-value">$669K</div>
+                </div>
+            </div>
+
+            <div class="metrics-section">
+                <div class="metric-item">
+                    <div class="metric-label">5M</div>
+                    <div class="metric-value">
+                        <span class="positive">6.84%</span>
+                    </div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">1H</div>
+                    <div class="metric-value">
+                        <span class="negative">-13.62%</span>
+                    </div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">6H</div>
+                    <div class="metric-value">
+                        <span class="positive">617%</span>
+                    </div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">24H</div>
+                    <div class="metric-value">
+                        <span class="positive">617%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="metrics-section">
+                <div class="metric-item">
+                    <div class="metric-label">TXNS</div>
+                    <div class="metric-value">28,002</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">BUYS</div>
+                    <div class="metric-value">16,937</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill progress-green" style="width: 60%;"></div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">SELLS</div>
+                    <div class="metric-value">11,065</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill progress-red" style="width: 40%;"></div>
+                </div>
+            </div>
+
+            <div class="metrics-section">
+                <div class="metric-item">
+                    <div class="metric-label">VOLUME</div>
+                    <div class="metric-value">$3.0M</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">BUY VOL</div>
+                    <div class="metric-value">$1.5M</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill progress-green" style="width: 50%;"></div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">SELL VOL</div>
+                    <div class="metric-value">$1.5M</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill progress-red" style="width: 50%;"></div>
+                </div>
+            </div>
+
+            <div class="metrics-section">
+                <div class="metric-item">
+                    <div class="metric-label">MAKERS</div>
+                    <div class="metric-value">4,660</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">BUYERS</div>
+                    <div class="metric-value">4,431</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill progress-green" style="width: 55%;"></div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">SELLERS</div>
+                    <div class="metric-value">3,500</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill progress-red" style="width: 45%;"></div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="action-btn">⭐ Watchlist</button>
+                <button class="action-btn">🔔 Alerts</button>
+            </div>
+
+            <div class="trading-buttons">
+                <button class="trade-btn buy-btn">↑ Buy</button>
+                <button class="trade-btn sell-btn">↓ Sell</button>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="#" style="color: #666; font-size: 12px; text-decoration: none;">Hide ad</a>
+            </div>
+
+            <div class="metrics-section" style="margin-top: 30px;">
+                <div class="metric-item">
+                    <div class="metric-label">Pair created</div>
+                    <div class="metric-value">5h 12m ago</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">Pooled skye</div>
+                    <div class="metric-value">82,431,198 $56K</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">Pooled SOL</div>
+                    <div class="metric-value">244.72 $56K</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">Pair</div>
+                    <div class="metric-value">E3gCT...cuXE 🔗</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Timeframe button functionality
+        document.querySelectorAll('.timeframe-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.timeframe-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Tab functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Mobile sidebar toggle (for responsive design)
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('open');
+        }
+
+        // Add mobile menu button if needed
+        if (window.innerWidth <= 1024) {
+            const header = document.querySelector('.header');
+            const menuBtn = document.createElement('button');
+            menuBtn.innerHTML = '☰';
+            menuBtn.style.cssText = 'background: #1a1a1a; border: 1px solid #333; color: #ccc; padding: 8px; border-radius: 4px; margin-right: 12px;';
+            menuBtn.onclick = toggleSidebar;
+            header.querySelector('.header-left').insertBefore(menuBtn, header.querySelector('.header-left').firstChild);
+        }
+
+        // Token name editing functionality
+        const tokenNameInput = document.getElementById('tokenNameInput');
+        const chartTokenPair = document.getElementById('chartTokenPair');
+
+        // Sync token names when either is changed
+        function syncTokenNames() {
+            const rightPanelName = tokenNameInput.value;
+            const chartName = chartTokenPair.value;
+            
+            // Extract just the token pair from the chart name (remove " on PumpSwap")
+            const chartTokenPairOnly = chartName.replace(' on PumpSwap', '');
+            
+            // Update the other field
+            if (event.target === tokenNameInput) {
+                chartTokenPair.value = rightPanelName + ' on PumpSwap';
+            } else if (event.target === chartTokenPair) {
+                tokenNameInput.value = chartTokenPairOnly;
+            }
+        }
+
+        // Add event listeners for token name editing
+        tokenNameInput.addEventListener('input', syncTokenNames);
+        chartTokenPair.addEventListener('input', syncTokenNames);
+
+        // Handle Enter key to finish editing
+        function handleEnterKey(event) {
+            if (event.key === 'Enter') {
+                event.target.blur();
+            }
+        }
+
+        tokenNameInput.addEventListener('keydown', handleEnterKey);
+        chartTokenPair.addEventListener('keydown', handleEnterKey);
+
+        // Add click-to-edit functionality
+        function makeEditable(element) {
+            element.addEventListener('click', function() {
+                this.focus();
+                this.select();
+            });
+        }
+
+        makeEditable(tokenNameInput);
+        makeEditable(chartTokenPair);
+
+        // Chart resizing functionality
+        const chartContainer = document.getElementById('chartContainer');
+        const resizeHandle = document.getElementById('resizeHandle');
+        let isResizing = false;
+        let startY = 0;
+        let startHeight = 0;
+
+        function startResize(e) {
+            isResizing = true;
+            startY = e.clientY;
+            startHeight = chartContainer.offsetHeight;
+            document.body.style.cursor = 'ns-resize';
+            document.body.style.userSelect = 'none';
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function doResize(e) {
+            if (!isResizing) return;
+            
+            const deltaY = e.clientY - startY;
+            const newHeight = startHeight + deltaY;
+            const minHeight = 200;
+            const maxHeight = window.innerHeight * 0.8;
+            
+            if (newHeight >= minHeight && newHeight <= maxHeight) {
+                chartContainer.style.height = newHeight + 'px';
+            }
+        }
+
+        function stopResize() {
+            if (isResizing) {
+                isResizing = false;
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+        }
+
+        resizeHandle.addEventListener('mousedown', startResize);
+        document.addEventListener('mousemove', doResize);
+        document.addEventListener('mouseup', stopResize);
+
+        // Double-click to reset size
+        resizeHandle.addEventListener('dblclick', function(e) {
+            e.preventDefault();
+            chartContainer.style.height = '500px';
+        });
+
+        // Sidebar resizing functionality
+        const leftSidebar = document.getElementById('leftSidebar');
+        const leftResizeHandle = document.getElementById('leftResizeHandle');
+        const rightPanel = document.getElementById('rightPanel');
+        const rightResizeHandle = document.getElementById('rightResizeHandle');
+        const mainContent = document.querySelector('.main-content');
+
+        let isLeftResizing = false;
+        let isRightResizing = false;
+        let startX = 0;
+        let startWidth = 0;
+
+        // Left sidebar resize
+        function startLeftResize(e) {
+            isLeftResizing = true;
+            startX = e.clientX;
+            startWidth = leftSidebar.offsetWidth;
+            document.body.style.cursor = 'ew-resize';
+            document.body.style.userSelect = 'none';
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function doLeftResize(e) {
+            if (!isLeftResizing) return;
+            
+            const deltaX = e.clientX - startX;
+            const newWidth = startWidth + deltaX;
+            const minWidth = 200;
+            const maxWidth = 400;
+            
+            if (newWidth >= minWidth && newWidth <= maxWidth) {
+                leftSidebar.style.width = newWidth + 'px';
+                mainContent.style.marginLeft = newWidth + 'px';
+                mainContent.style.maxWidth = `calc(100vw - ${newWidth}px - ${rightPanel.offsetWidth}px)`;
+            }
+        }
+
+        // Right panel resize
+        function startRightResize(e) {
+            isRightResizing = true;
+            startX = e.clientX;
+            startWidth = rightPanel.offsetWidth;
+            document.body.style.cursor = 'ew-resize';
+            document.body.style.userSelect = 'none';
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function doRightResize(e) {
+            if (!isRightResizing) return;
+            
+            const deltaX = startX - e.clientX; // Reverse direction for right panel
+            const newWidth = startWidth + deltaX;
+            const minWidth = 250;
+            const maxWidth = 500;
+            
+            if (newWidth >= minWidth && newWidth <= maxWidth) {
+                rightPanel.style.width = newWidth + 'px';
+                mainContent.style.marginRight = newWidth + 'px';
+                mainContent.style.maxWidth = `calc(100vw - ${leftSidebar.offsetWidth}px - ${newWidth}px)`;
+            }
+        }
+
+        function stopSidebarResize() {
+            if (isLeftResizing || isRightResizing) {
+                isLeftResizing = false;
+                isRightResizing = false;
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+        }
+
+        // Event listeners for left sidebar
+        leftResizeHandle.addEventListener('mousedown', startLeftResize);
+        
+        // Event listeners for right panel
+        rightResizeHandle.addEventListener('mousedown', startRightResize);
+        
+        // Global mouse events
+        document.addEventListener('mousemove', function(e) {
+            doLeftResize(e);
+            doRightResize(e);
+        });
+        document.addEventListener('mouseup', stopSidebarResize);
+
+        // Double-click to reset sidebar widths
+        leftResizeHandle.addEventListener('dblclick', function(e) {
+            e.preventDefault();
+            leftSidebar.style.width = '280px';
+            mainContent.style.marginLeft = '280px';
+        });
+
+        rightResizeHandle.addEventListener('dblclick', function(e) {
+            e.preventDefault();
+            rightPanel.style.width = '320px';
+            mainContent.style.marginRight = '320px';
+            mainContent.style.maxWidth = `calc(100vw - ${leftSidebar.offsetWidth}px - 320px)`;
+        });
+    </script>
+</body>
+</html>
