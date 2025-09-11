@@ -134,6 +134,35 @@
       box-shadow: 0 0 0 2px rgba(38, 166, 154, 0.2);
     }
     
+    /* Collapsible styles */
+    .collapsible-header {
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: color 0.2s ease;
+    }
+    
+    .collapsible-header:hover {
+      color: #26a69a;
+    }
+    
+    .collapsible-icon {
+      transition: transform 0.2s ease;
+      font-size: 12px;
+    }
+    
+    .collapsible-content {
+      overflow: hidden;
+      transition: max-height 0.3s ease, opacity 0.3s ease;
+    }
+    
+    .collapsible-content.collapsed {
+      max-height: 0;
+      opacity: 0;
+    }
+    
     /* Marker section styles */
     .marker-section {
       margin-bottom: 20px;
@@ -372,119 +401,123 @@
         </div>
       </div>
       
-      <div class="config-group">
-        <h4>Markers</h4>
-        
-        <!-- Dev Markers -->
-        <div class="marker-section">
-          <h5>Developer Markers</h5>
-          <div id="dev-markers">
-            <div class="marker-item">
-              <div class="config-item">
-                <label class="tooltip">Dev 1:
-                  <span class="tooltiptext">Developer marker 1. Shows a marker on the chart at the specified time. Can be Buy or Sell type.</span>
-                </label>
-                <input type="checkbox" id="showFirstCandle" checked>
+      <div class="config-group collapsible">
+        <h4 class="collapsible-header" onclick="toggleCollapsible('markers')">
+          <span class="collapsible-icon">▼</span>
+          Markers
+        </h4>
+        <div class="collapsible-content" id="markers-content" style="display: none;">
+          <!-- Dev Markers -->
+          <div class="marker-section">
+            <h5>Developer Markers</h5>
+            <div id="dev-markers">
+              <div class="marker-item">
+                <div class="config-item">
+                  <label class="tooltip">Dev 1:
+                    <span class="tooltiptext">Developer marker 1. Shows a marker on the chart at the specified time. Can be Buy or Sell type.</span>
+                  </label>
+                  <input type="checkbox" id="showFirstCandle" checked>
+                </div>
+                <div class="config-item">
+                  <label class="tooltip">Type:
+                    <span class="tooltiptext">Whether this marker represents a Buy (green) or Sell (red) action on the chart.</span>
+                  </label>
+                  <select id="firstCandleType">
+                    <option value="buy">Buy</option>
+                    <option value="sell">Sell</option>
+                  </select>
+                </div>
+                <div class="config-item">
+                  <label class="tooltip">Time:
+                    <span class="tooltiptext">Time in seconds when this marker will appear on the chart during the animation.</span>
+                  </label>
+                  <input type="number" id="firstCandleTime" value="1">
+                </div>
+                <button type="button" class="remove-marker" onclick="removeDevMarker(this)" style="display: none;">🗑️</button>
               </div>
-              <div class="config-item">
-                <label class="tooltip">Type:
-                  <span class="tooltiptext">Whether this marker represents a Buy (green) or Sell (red) action on the chart.</span>
-                </label>
-                <select id="firstCandleType">
-                  <option value="buy">Buy</option>
-                  <option value="sell">Sell</option>
-                </select>
+              <div class="marker-item">
+                <div class="config-item">
+                  <label class="tooltip">Dev 2:
+                    <span class="tooltiptext">Developer marker 2. Shows a marker on the chart at the specified time. Can be Buy or Sell type.</span>
+                  </label>
+                  <input type="checkbox" id="showFinalCandle" checked>
+                </div>
+                <div class="config-item">
+                  <label class="tooltip">Type:
+                    <span class="tooltiptext">Whether this marker represents a Buy (green) or Sell (red) action on the chart.</span>
+                  </label>
+                  <select id="finalCandleType">
+                    <option value="buy">Buy</option>
+                    <option value="sell" selected>Sell</option>
+                  </select>
+                </div>
+                <div class="config-item">
+                  <label class="tooltip">Time:
+                    <span class="tooltiptext">Time in seconds when this marker will appear on the chart during the animation.</span>
+                  </label>
+                  <input type="number" id="finalCandleTime" value="10">
+                </div>
+                <button type="button" class="remove-marker" onclick="removeDevMarker(this)" style="display: none;">🗑️</button>
               </div>
-              <div class="config-item">
-                <label class="tooltip">Time:
-                  <span class="tooltiptext">Time in seconds when this marker will appear on the chart during the animation.</span>
-                </label>
-                <input type="number" id="firstCandleTime" value="1">
-              </div>
-              <button type="button" class="remove-marker" onclick="removeDevMarker(this)" style="display: none;">🗑️</button>
             </div>
-            <div class="marker-item">
-              <div class="config-item">
-                <label class="tooltip">Dev 2:
-                  <span class="tooltiptext">Developer marker 2. Shows a marker on the chart at the specified time. Can be Buy or Sell type.</span>
-                </label>
-                <input type="checkbox" id="showFinalCandle" checked>
-              </div>
-              <div class="config-item">
-                <label class="tooltip">Type:
-                  <span class="tooltiptext">Whether this marker represents a Buy (green) or Sell (red) action on the chart.</span>
-                </label>
-                <select id="finalCandleType">
-                  <option value="buy">Buy</option>
-                  <option value="sell" selected>Sell</option>
-                </select>
-              </div>
-              <div class="config-item">
-                <label class="tooltip">Time:
-                  <span class="tooltiptext">Time in seconds when this marker will appear on the chart during the animation.</span>
-                </label>
-                <input type="number" id="finalCandleTime" value="10">
-              </div>
-              <button type="button" class="remove-marker" onclick="removeDevMarker(this)" style="display: none;">🗑️</button>
-            </div>
+            <button type="button" class="add-marker-btn" onclick="addDevMarker()">+ Add Dev Marker</button>
           </div>
-          <button type="button" class="add-marker-btn" onclick="addDevMarker()">+ Add Dev Marker</button>
-        </div>
-        
-        <!-- User Markers -->
-        <div class="marker-section">
-          <h5>User Markers</h5>
-          <div id="user-markers">
-            <div class="marker-item">
-              <div class="config-item">
-                <label class="tooltip">User 1:
-                  <span class="tooltiptext">User marker 1. Shows a marker on the chart at the specified time. Can be Buy or Sell type.</span>
-                </label>
-                <input type="checkbox" id="showB">
+          
+          <!-- User Markers -->
+          <div class="marker-section">
+            <h5>User Markers</h5>
+            <div id="user-markers">
+              <div class="marker-item">
+                <div class="config-item">
+                  <label class="tooltip">User 1:
+                    <span class="tooltiptext">User marker 1. Shows a marker on the chart at the specified time. Can be Buy or Sell type.</span>
+                  </label>
+                  <input type="checkbox" id="showB">
+                </div>
+                <div class="config-item">
+                  <label class="tooltip">Type:
+                    <span class="tooltiptext">Whether this marker represents a Buy (green) or Sell (red) action on the chart.</span>
+                  </label>
+                  <select id="bType">
+                    <option value="buy" selected>Buy</option>
+                    <option value="sell">Sell</option>
+                  </select>
+                </div>
+                <div class="config-item">
+                  <label class="tooltip">Time:
+                    <span class="tooltiptext">Time in seconds when this marker will appear on the chart during the animation.</span>
+                  </label>
+                  <input type="number" id="bTime" value="5">
+                </div>
+                <button type="button" class="remove-marker" onclick="removeUserMarker(this)" style="display: none;">🗑️</button>
               </div>
-              <div class="config-item">
-                <label class="tooltip">Type:
-                  <span class="tooltiptext">Whether this marker represents a Buy (green) or Sell (red) action on the chart.</span>
-                </label>
-                <select id="bType">
-                  <option value="buy" selected>Buy</option>
-                  <option value="sell">Sell</option>
-                </select>
+              <div class="marker-item">
+                <div class="config-item">
+                  <label class="tooltip">User 2:
+                    <span class="tooltiptext">User marker 2. Shows a marker on the chart at the specified time. Can be Buy or Sell type.</span>
+                  </label>
+                  <input type="checkbox" id="showS">
+                </div>
+                <div class="config-item">
+                  <label class="tooltip">Type:
+                    <span class="tooltiptext">Whether this marker represents a Buy (green) or Sell (red) action on the chart.</span>
+                  </label>
+                  <select id="sType">
+                    <option value="buy">Buy</option>
+                    <option value="sell" selected>Sell</option>
+                  </select>
+                </div>
+                <div class="config-item">
+                  <label class="tooltip">Time:
+                    <span class="tooltiptext">Time in seconds when this marker will appear on the chart during the animation.</span>
+                  </label>
+                  <input type="number" id="sTime" value="8">
+                </div>
+                <button type="button" class="remove-marker" onclick="removeUserMarker(this)" style="display: none;">🗑️</button>
               </div>
-              <div class="config-item">
-                <label class="tooltip">Time:
-                  <span class="tooltiptext">Time in seconds when this marker will appear on the chart during the animation.</span>
-                </label>
-                <input type="number" id="bTime" value="5">
-              </div>
-              <button type="button" class="remove-marker" onclick="removeUserMarker(this)" style="display: none;">🗑️</button>
             </div>
-            <div class="marker-item">
-              <div class="config-item">
-                <label class="tooltip">User 2:
-                  <span class="tooltiptext">User marker 2. Shows a marker on the chart at the specified time. Can be Buy or Sell type.</span>
-                </label>
-                <input type="checkbox" id="showS">
-              </div>
-              <div class="config-item">
-                <label class="tooltip">Type:
-                  <span class="tooltiptext">Whether this marker represents a Buy (green) or Sell (red) action on the chart.</span>
-                </label>
-                <select id="sType">
-                  <option value="buy">Buy</option>
-                  <option value="sell" selected>Sell</option>
-                </select>
-              </div>
-              <div class="config-item">
-                <label class="tooltip">Time:
-                  <span class="tooltiptext">Time in seconds when this marker will appear on the chart during the animation.</span>
-                </label>
-                <input type="number" id="sTime" value="8">
-              </div>
-              <button type="button" class="remove-marker" onclick="removeUserMarker(this)" style="display: none;">🗑️</button>
-            </div>
+            <button type="button" class="add-marker-btn" onclick="addUserMarker()">+ Add User Marker</button>
           </div>
-          <button type="button" class="add-marker-btn" onclick="addUserMarker()">+ Add User Marker</button>
         </div>
       </div>
     </div>
@@ -987,6 +1020,22 @@
       console.log('🎯 Pre-loaded ALL data and marks into datafeed complete');
     }
     
+
+    // Collapsible functionality
+    function toggleCollapsible(sectionId) {
+      const content = document.getElementById(sectionId + '-content');
+      const icon = document.querySelector(`#${sectionId}-content`).previousElementSibling.querySelector('.collapsible-icon');
+      
+      if (content.style.display === 'none') {
+        content.style.display = 'block';
+        icon.textContent = '▼';
+        content.classList.remove('collapsed');
+      } else {
+        content.style.display = 'none';
+        icon.textContent = '▶';
+        content.classList.add('collapsed');
+      }
+    }
 
     // Marker management functions
     function addDevMarker() {
