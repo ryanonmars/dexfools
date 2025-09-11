@@ -1540,7 +1540,7 @@
             // Check for Dev marker 1 at specific time
             if (config.markers.showFirstCandle && config.markers.firstCandleTime !== undefined) {
               const dev1Type = document.getElementById('firstCandleType')?.value || 'buy';
-              const dev1Text = `D${dev1Type.toUpperCase().charAt(0)}1`;
+              const dev1Text = `D${dev1Type.toUpperCase().charAt(0)}`;
               if (currentTime === config.markers.firstCandleTime && !existingMarkers.some(m => m.text === dev1Text)) {
                 markersToAdd.push({
                   time: currentBar.time,
@@ -1558,7 +1558,7 @@
             // Check for Dev marker 2 at specific time
             if (config.markers.showFinalCandle && config.markers.finalCandleTime !== undefined) {
               const dev2Type = document.getElementById('finalCandleType')?.value || 'sell';
-              const dev2Text = `D${dev2Type.toUpperCase().charAt(0)}2`;
+              const dev2Text = `D${dev2Type.toUpperCase().charAt(0)}`;
               if (currentTime === config.markers.finalCandleTime && !existingMarkers.some(m => m.text === dev2Text)) {
                 markersToAdd.push({
                   time: currentBar.time,
@@ -1576,7 +1576,7 @@
             // Check for User marker 1 at specific time
             if (userMarkers.showB && userMarkers.bTime !== undefined) {
               const user1Type = document.getElementById('bType')?.value || 'buy';
-              const user1Text = `${user1Type.toUpperCase().charAt(0)}1`;
+              const user1Text = `${user1Type.toUpperCase().charAt(0)}`;
               if (currentTime === userMarkers.bTime && !existingMarkers.some(m => m.text === user1Text)) {
                 markersToAdd.push({
                   time: currentBar.time,
@@ -1594,7 +1594,7 @@
             // Check for User marker 2 at specific time
             if (userMarkers.showS && userMarkers.sTime !== undefined) {
               const user2Type = document.getElementById('sType')?.value || 'sell';
-              const user2Text = `${user2Type.toUpperCase().charAt(0)}2`;
+              const user2Text = `${user2Type.toUpperCase().charAt(0)}`;
               if (currentTime === userMarkers.sTime && !existingMarkers.some(m => m.text === user2Text)) {
                 markersToAdd.push({
                   time: currentBar.time,
@@ -1618,7 +1618,7 @@
               if (showMarker && markerType && markerTime && showMarker.checked) {
                 const time = parseInt(markerTime.value);
                 const type = markerType.value;
-                const markerText = `D${type.toUpperCase().charAt(0)}${i}`;
+                const markerText = `D${type.toUpperCase().charAt(0)}`;
                 
                 if (currentTime === time && !existingMarkers.some(m => m.text === markerText)) {
                   markersToAdd.push({
@@ -1644,7 +1644,7 @@
               if (showMarker && markerType && markerTime && showMarker.checked) {
                 const time = parseInt(markerTime.value);
                 const type = markerType.value;
-                const markerText = `${type.toUpperCase().charAt(0)}${i}`;
+                const markerText = `${type.toUpperCase().charAt(0)}`;
                 
                 if (currentTime === time && !existingMarkers.some(m => m.text === markerText)) {
                   markersToAdd.push({
@@ -1679,7 +1679,7 @@
               // Add first animated candle marker if enabled and not already present
               if (config.markers.showFirstCandle) {
                 const dev1Type = document.getElementById('firstCandleType')?.value || 'buy';
-                const dev1Text = `D${dev1Type.toUpperCase().charAt(0)}1`;
+                const dev1Text = `D${dev1Type.toUpperCase().charAt(0)}`;
                 if (!existingMarkers.some(m => m.text === dev1Text)) {
                   allMarkers.push({
                     time: animatedBars[0].time,
@@ -1696,7 +1696,7 @@
               // Add final animated candle marker if enabled and not already present
               if (config.markers.showFinalCandle) {
                 const dev2Type = document.getElementById('finalCandleType')?.value || 'sell';
-                const dev2Text = `D${dev2Type.toUpperCase().charAt(0)}2`;
+                const dev2Text = `D${dev2Type.toUpperCase().charAt(0)}`;
                 if (!existingMarkers.some(m => m.text === dev2Text)) {
                   allMarkers.push({
                     time: animatedBars[animatedBars.length - 1].time,
