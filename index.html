@@ -1414,8 +1414,10 @@
               
               let close = open + change;
               
-              if (close < config.minMarketCap) {
-                close = config.minMarketCap;
+              // Only apply minimum if it's not lower than the final target
+              const effectiveMin = Math.min(config.minMarketCap, config.finalMarketCap);
+              if (close < effectiveMin) {
+                close = effectiveMin;
               }
               
               // Create realistic high/low with wicks
@@ -1548,8 +1550,10 @@
         
         // Only apply minimum if it's not lower than the final target
         const effectiveMin = Math.min(config.minMarketCap, config.finalMarketCap);
+        console.log(`🔍 Bar ${i}: close=${close}, effectiveMin=${effectiveMin}, finalMarketCap=${config.finalMarketCap}, minMarketCap=${config.minMarketCap}`);
         if (close < effectiveMin) {
           close = effectiveMin;
+          console.log(`🔍 Applied effectiveMin constraint: ${close}`);
         }
         
         // Balanced correction toward target
@@ -1608,7 +1612,7 @@
       // Add final action candle
       const actionTime = animationStartTime + ((totalBars - 1) * 60);
       const actionOpen = config.finalMarketCap;
-      const actionClose = config.minMarketCap;
+      const actionClose = config.finalMarketCap; // Use finalMarketCap, not minMarketCap
       const actionHigh = Math.max(actionOpen, actionClose);
       const actionLow = Math.min(actionOpen, actionClose);
 
