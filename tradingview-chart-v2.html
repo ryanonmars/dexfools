@@ -804,40 +804,6 @@
       }
     }
 
-    // Get config from form
-    function getConfig() {
-      return {
-        initialMarketCap: parseInt(document.getElementById('initialMarketCap').value),
-        finalMarketCap: parseInt(document.getElementById('finalMarketCap').value),
-        minMarketCap: parseInt(document.getElementById('minMarketCap').value),
-        rangeMarketCap: parseInt(document.getElementById('rangeMarketCap').value),
-        totalSeconds: parseInt(document.getElementById('totalSeconds').value),
-        speedMultiplier: parseFloat(document.getElementById('speedMultiplier').value),
-        seed: parseInt(document.getElementById('seed').value) || 1,
-        enableHistoricalData: document.getElementById('enableHistoricalData').checked,
-        preAnimationTime: document.getElementById('preAnimationTime').value,
-        finalAction: {
-          type: document.getElementById('finalActionType').value,
-          marketCap: parseInt(document.getElementById('finalActionMarketCap').value)
-        },
-        markers: {
-          showFirstCandle: document.getElementById('showFirstCandle').checked,
-          firstCandleType: document.getElementById('firstCandleType').value,
-          firstCandleTime: parseInt(document.getElementById('firstCandleTime').value),
-          showFinalCandle: document.getElementById('showFinalCandle').checked,
-          finalCandleType: document.getElementById('finalCandleType').value,
-          finalCandleTime: parseInt(document.getElementById('finalCandleTime').value),
-          userMarkers: {
-            showB: document.getElementById('showB').checked,
-            bType: document.getElementById('bType').value,
-            bTime: parseInt(document.getElementById('bTime').value),
-            showS: document.getElementById('showS').checked,
-            sType: document.getElementById('sType').value,
-            sTime: parseInt(document.getElementById('sTime').value)
-          }
-        }
-      };
-    }
 
     // Add marks to data before animation starts
     function addMarksToData(animatedBars, config) {
@@ -1266,7 +1232,9 @@
       }
       
       isAnimating = true;
+      console.log('🔍 About to call getConfig()...');
       const config = getConfig();
+      console.log('🔍 getConfig() returned:', config);
       
       console.log('🎬 Starting TradingView Advanced Chart animation with config:', config);
       
@@ -1304,6 +1272,10 @@
     
     // Separate function to start the actual animation data generation
     function startAnimationData(config) {
+      // Debug the config being passed
+      console.log('🔍 Config passed to startAnimationData:', config);
+      console.log('🔍 Speed multiplier in config:', config.speedMultiplier);
+      
       // Generate data EXACTLY like the working index.html version
       const totalBars = config.totalSeconds;
       const rng = new SeededRandom(config.seed);
@@ -1450,6 +1422,43 @@
       // Clear any existing data before starting
       globalDatafeed.currentData = [];
       
+      // Calculate animation speed based on speed multiplier
+      const baseSpeed = 1000; // 1 second base speed
+      
+      console.log(`🔍 DEBUGGING SPEED MULTIPLIER:`);
+      console.log(`🔍 Raw value from input: "${document.getElementById('speedMultiplier').value}"`);
+      console.log(`🔍 Parsed value: ${config.speedMultiplier}`);
+      console.log(`🔍 Type: ${typeof config.speedMultiplier}`);
+      console.log(`🔍 Is NaN: ${isNaN(config.speedMultiplier)}`);
+      console.log(`🔍 Is finite: ${isFinite(config.speedMultiplier)}`);
+      
+      // Force a valid speed multiplier
+      if (isNaN(config.speedMultiplier) || config.speedMultiplier <= 0 || !isFinite(config.speedMultiplier)) {
+        console.error(`❌ Invalid speed multiplier: ${config.speedMultiplier}, forcing to 1.0`);
+        config.speedMultiplier = 1.0;
+      }
+      
+      const animationSpeed = baseSpeed / config.speedMultiplier;
+      console.log(`🚀 Final speed multiplier: ${config.speedMultiplier}`);
+      console.log(`🚀 Base speed: ${baseSpeed}ms`);
+      console.log(`🚀 Calculated animation speed: ${animationSpeed}ms per bar`);
+      console.log(`🚀 This means each bar will show for ${animationSpeed}ms`);
+      
+      // Additional validation and force minimum speed
+      let finalAnimationSpeed = animationSpeed;
+      if (animationSpeed < 50) {
+        console.error(`❌ Animation speed too fast: ${animationSpeed}ms - this will cause instant animation!`);
+        console.error(`❌ Forcing minimum speed of 100ms`);
+        finalAnimationSpeed = 100;
+        console.log(`🚀 Forced speed: ${finalAnimationSpeed}ms per bar`);
+      }
+      
+      // Show speed info on the page for debugging
+      document.getElementById('animation-status').textContent = `Speed: ${finalAnimationSpeed}ms per bar (${config.speedMultiplier}x multiplier)`;
+      document.getElementById('animation-status').style.color = '#ff9800';
+      
+      console.log(`🚀 Using finalAnimationSpeed: ${finalAnimationSpeed}ms for setTimeout`);
+      
       function showNextBar() {
         if (current < animatedBars.length) {
           try {
@@ -1509,7 +1518,11 @@
             current++;
             
             if (current < animatedBars.length) {
-              setTimeout(showNextBar, 1000); // 1 second per bar
+              // Recalculate speed each time to ensure we have the right value
+              const currentSpeed = baseSpeed / config.speedMultiplier;
+              const actualSpeed = currentSpeed < 50 ? 100 : currentSpeed;
+              console.log(`⏱️ Setting timeout for next bar in ${actualSpeed}ms (speed multiplier: ${config.speedMultiplier})`);
+              setTimeout(showNextBar, actualSpeed);
             } else {
               console.log('✅ Animation complete');
               document.getElementById('animation-status').textContent = 'Animation complete!';
@@ -1529,30 +1542,70 @@
     // Remove the broken addMarksToData function - markers are handled in the animation loop
 
     function getConfig() {
-      return {
-        initialMarketCap: parseInt(document.getElementById('initialMarketCap').value),
-        finalMarketCap: parseInt(document.getElementById('finalMarketCap').value),
-        minMarketCap: parseInt(document.getElementById('minMarketCap').value),
-        rangeMarketCap: parseInt(document.getElementById('rangeMarketCap').value),
-        totalSeconds: parseInt(document.getElementById('totalSeconds').value),
-        seed: parseInt(document.getElementById('seed').value) || 1,
-        markers: {
-          showFirstCandle: document.getElementById('showFirstCandle').checked,
-          firstCandleType: document.getElementById('firstCandleType').value,
-          firstCandleTime: parseInt(document.getElementById('firstCandleTime').value),
-          showFinalCandle: document.getElementById('showFinalCandle').checked,
-          finalCandleType: document.getElementById('finalCandleType').value,
-          finalCandleTime: parseInt(document.getElementById('finalCandleTime').value),
-          userMarkers: {
-            showB: document.getElementById('showB').checked,
-            bTime: parseInt(document.getElementById('bTime').value),
-            bType: document.getElementById('bType').value,
-            showS: document.getElementById('showS').checked,
-            sTime: parseInt(document.getElementById('sTime').value),
-            sType: document.getElementById('sType').value
+      try {
+        const speedMultiplierValue = document.getElementById('speedMultiplier').value;
+        const parsedSpeedMultiplier = parseFloat(speedMultiplierValue);
+        
+        console.log('🔍 getConfig() debugging:');
+        console.log('🔍 Raw speedMultiplier value:', speedMultiplierValue);
+        console.log('🔍 Parsed speedMultiplier:', parsedSpeedMultiplier);
+        console.log('🔍 Is NaN:', isNaN(parsedSpeedMultiplier));
+        
+        return {
+          initialMarketCap: parseInt(document.getElementById('initialMarketCap').value),
+          finalMarketCap: parseInt(document.getElementById('finalMarketCap').value),
+          minMarketCap: parseInt(document.getElementById('minMarketCap').value),
+          rangeMarketCap: parseInt(document.getElementById('rangeMarketCap').value),
+          totalSeconds: parseInt(document.getElementById('totalSeconds').value),
+          speedMultiplier: parsedSpeedMultiplier || 1.0,
+          seed: parseInt(document.getElementById('seed').value) || 1,
+          markers: {
+            showFirstCandle: document.getElementById('showFirstCandle').checked,
+            firstCandleType: document.getElementById('firstCandleType').value,
+            firstCandleTime: parseInt(document.getElementById('firstCandleTime').value),
+            showFinalCandle: document.getElementById('showFinalCandle').checked,
+            finalCandleType: document.getElementById('finalCandleType').value,
+            finalCandleTime: parseInt(document.getElementById('finalCandleTime').value),
+            userMarkers: {
+              showB: document.getElementById('showB').checked,
+              bTime: parseInt(document.getElementById('bTime').value),
+              bType: document.getElementById('bType').value,
+              showS: document.getElementById('showS').checked,
+              sTime: parseInt(document.getElementById('sTime').value),
+              sType: document.getElementById('sType').value
+            }
           }
-        }
-      };
+        };
+      } catch (error) {
+        console.error('❌ Error in getConfig():', error);
+        console.error('❌ Error stack:', error.stack);
+        // Return a default config if there's an error
+        return {
+          initialMarketCap: 10000,
+          finalMarketCap: 50000,
+          minMarketCap: 5000,
+          rangeMarketCap: 2000,
+          totalSeconds: 10,
+          speedMultiplier: 1.0,
+          seed: 1,
+          markers: {
+            showFirstCandle: true,
+            firstCandleType: 'buy',
+            firstCandleTime: 1,
+            showFinalCandle: true,
+            finalCandleType: 'sell',
+            finalCandleTime: 10,
+            userMarkers: {
+              showB: false,
+              bTime: 5,
+              bType: 'buy',
+              showS: false,
+              sTime: 8,
+              sType: 'sell'
+            }
+          }
+        };
+      }
     }
     
     // Test function to manually test realtime callback
