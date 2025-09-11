@@ -1521,10 +1521,10 @@
         const open = lastClose;
         
         // Calculate where we should be at this point in the animation
-        const targetPrice = config.initialMarketCap + (progressPerBar * (i + 1));
+        const targetPrice = config.initialMarketCap + (progressPerBar * i);
         
         // Random trading with balanced trend and variation (EXACT copy from working version)
-        const progressRatio = (i + 1) / (totalBars - 1);
+        const progressRatio = i / (totalBars - 1);
         const trendStrength = 0.03 + (progressRatio * 0.12);
         const randomStrength = 0.7;
         
@@ -1546,14 +1546,16 @@
         
         let close = open + change;
         
-        if (close < config.minMarketCap) {
-          close = config.minMarketCap;
+        // Only apply minimum if it's not lower than the final target
+        const effectiveMin = Math.min(config.minMarketCap, config.finalMarketCap);
+        if (close < effectiveMin) {
+          close = effectiveMin;
         }
         
         // Balanced correction toward target
         const totalDistance = Math.abs(config.finalMarketCap - config.initialMarketCap);
         const currentProgress = Math.abs(close - config.initialMarketCap) / totalDistance;
-        const expectedProgress = (i + 1) / (totalBars - 1);
+        const expectedProgress = i / (totalBars - 1);
         const progressDeviation = Math.abs(currentProgress - expectedProgress);
         
         if (progressDeviation > 0.4) {
