@@ -118,6 +118,118 @@
       width: 50px;
     }
     
+    /* Marker section styles */
+    .marker-section {
+      margin-bottom: 20px;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 12px;
+      background: #222;
+    }
+    
+    .marker-section h5 {
+      margin: 0 0 12px 0;
+      color: #26a69a;
+      font-size: 13px;
+      font-weight: bold;
+    }
+    
+    .marker-item {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 10px;
+      padding: 8px;
+      background: #1a1a1a;
+      border-radius: 6px;
+      border: 1px solid #333;
+    }
+    
+    .marker-item .config-item {
+      margin-bottom: 0;
+      flex: 0 0 auto;
+    }
+    
+    .marker-item .config-item label {
+      font-size: 11px;
+      margin-right: 4px;
+    }
+    
+    .marker-item .config-item input, 
+    .marker-item .config-item select {
+      width: 60px;
+      font-size: 11px;
+      padding: 4px 6px;
+    }
+    
+    .remove-marker {
+      width: 24px;
+      height: 24px;
+      background: #ef5350;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    
+    .remove-marker:hover {
+      background: #d32f2f;
+      opacity: 1;
+      transform: scale(1.1);
+    }
+    
+    .add-marker-btn {
+      background: #26a69a;
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+      width: 100%;
+    }
+    
+    .add-marker-btn:hover {
+      background: #2dd4aa;
+    }
+    
+    /* Tooltip styles */
+    .tooltip {
+      position: relative;
+      display: inline-block;
+    }
+    
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 200px;
+      background-color: #000;
+      color: #fff;
+      text-align: left;
+      border-radius: 6px;
+      padding: 8px;
+      position: absolute;
+      z-index: 1;
+      bottom: 125%;
+      left: 50%;
+      margin-left: -100px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      font-size: 11px;
+      line-height: 1.3;
+      border: 1px solid #333;
+    }
+    
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+      opacity: 1;
+    }
+    
     #apply-config {
       width: 100%;
       padding: 15px 24px;
@@ -238,37 +350,117 @@
       
       <div class="config-group">
         <h4>Markers</h4>
-        <div class="config-item">
-          <label>Dev Buy:</label>
-          <input type="checkbox" id="showFirstCandle" checked>
+        
+        <!-- Dev Markers -->
+        <div class="marker-section">
+          <h5>Developer Markers</h5>
+          <div id="dev-markers">
+            <div class="marker-item">
+              <div class="config-item">
+                <label class="tooltip">Dev 1:
+                  <span class="tooltiptext">Developer marker 1. Shows a marker on the chart at the specified time. Can be Buy or Sell type.</span>
+                </label>
+                <input type="checkbox" id="showFirstCandle" checked>
+              </div>
+              <div class="config-item">
+                <label class="tooltip">Type:
+                  <span class="tooltiptext">Whether this marker represents a Buy (green) or Sell (red) action on the chart.</span>
+                </label>
+                <select id="firstCandleType">
+                  <option value="buy">Buy</option>
+                  <option value="sell">Sell</option>
+                </select>
+              </div>
+              <div class="config-item">
+                <label class="tooltip">Time:
+                  <span class="tooltiptext">Time in seconds when this marker will appear on the chart during the animation.</span>
+                </label>
+                <input type="number" id="firstCandleTime" value="1">
+              </div>
+              <button type="button" class="remove-marker" onclick="removeDevMarker(this)" style="display: none;">🗑️</button>
+            </div>
+            <div class="marker-item">
+              <div class="config-item">
+                <label class="tooltip">Dev 2:
+                  <span class="tooltiptext">Developer marker 2. Shows a marker on the chart at the specified time. Can be Buy or Sell type.</span>
+                </label>
+                <input type="checkbox" id="showFinalCandle" checked>
+              </div>
+              <div class="config-item">
+                <label class="tooltip">Type:
+                  <span class="tooltiptext">Whether this marker represents a Buy (green) or Sell (red) action on the chart.</span>
+                </label>
+                <select id="finalCandleType">
+                  <option value="buy">Buy</option>
+                  <option value="sell" selected>Sell</option>
+                </select>
+              </div>
+              <div class="config-item">
+                <label class="tooltip">Time:
+                  <span class="tooltiptext">Time in seconds when this marker will appear on the chart during the animation.</span>
+                </label>
+                <input type="number" id="finalCandleTime" value="10">
+              </div>
+              <button type="button" class="remove-marker" onclick="removeDevMarker(this)" style="display: none;">🗑️</button>
+            </div>
+          </div>
+          <button type="button" class="add-marker-btn" onclick="addDevMarker()">+ Add Dev Marker</button>
         </div>
-        <div class="config-item">
-          <label>Dev Buy Time:</label>
-          <input type="number" id="firstCandleTime" value="1">
-        </div>
-        <div class="config-item">
-          <label>Dev Sell:</label>
-          <input type="checkbox" id="showFinalCandle" checked>
-        </div>
-        <div class="config-item">
-          <label>Dev Sell Time:</label>
-          <input type="number" id="finalCandleTime" value="10">
-        </div>
-        <div class="config-item">
-          <label>User Buy:</label>
-          <input type="checkbox" id="showB">
-        </div>
-        <div class="config-item">
-          <label>User Buy Time:</label>
-          <input type="number" id="bTime" value="5">
-        </div>
-        <div class="config-item">
-          <label>User Sell:</label>
-          <input type="checkbox" id="showS">
-        </div>
-        <div class="config-item">
-          <label>User Sell Time:</label>
-          <input type="number" id="sTime" value="8">
+        
+        <!-- User Markers -->
+        <div class="marker-section">
+          <h5>User Markers</h5>
+          <div id="user-markers">
+            <div class="marker-item">
+              <div class="config-item">
+                <label class="tooltip">User 1:
+                  <span class="tooltiptext">User marker 1. Shows a marker on the chart at the specified time. Can be Buy or Sell type.</span>
+                </label>
+                <input type="checkbox" id="showB">
+              </div>
+              <div class="config-item">
+                <label class="tooltip">Type:
+                  <span class="tooltiptext">Whether this marker represents a Buy (green) or Sell (red) action on the chart.</span>
+                </label>
+                <select id="bType">
+                  <option value="buy" selected>Buy</option>
+                  <option value="sell">Sell</option>
+                </select>
+              </div>
+              <div class="config-item">
+                <label class="tooltip">Time:
+                  <span class="tooltiptext">Time in seconds when this marker will appear on the chart during the animation.</span>
+                </label>
+                <input type="number" id="bTime" value="5">
+              </div>
+              <button type="button" class="remove-marker" onclick="removeUserMarker(this)" style="display: none;">🗑️</button>
+            </div>
+            <div class="marker-item">
+              <div class="config-item">
+                <label class="tooltip">User 2:
+                  <span class="tooltiptext">User marker 2. Shows a marker on the chart at the specified time. Can be Buy or Sell type.</span>
+                </label>
+                <input type="checkbox" id="showS">
+              </div>
+              <div class="config-item">
+                <label class="tooltip">Type:
+                  <span class="tooltiptext">Whether this marker represents a Buy (green) or Sell (red) action on the chart.</span>
+                </label>
+                <select id="sType">
+                  <option value="buy">Buy</option>
+                  <option value="sell" selected>Sell</option>
+                </select>
+              </div>
+              <div class="config-item">
+                <label class="tooltip">Time:
+                  <span class="tooltiptext">Time in seconds when this marker will appear on the chart during the animation.</span>
+                </label>
+                <input type="number" id="sTime" value="8">
+              </div>
+              <button type="button" class="remove-marker" onclick="removeUserMarker(this)" style="display: none;">🗑️</button>
+            </div>
+          </div>
+          <button type="button" class="add-marker-btn" onclick="addUserMarker()">+ Add User Marker</button>
         </div>
       </div>
     </div>
@@ -458,17 +650,120 @@
         },
         markers: {
           showFirstCandle: document.getElementById('showFirstCandle').checked,
+          firstCandleType: document.getElementById('firstCandleType').value,
           firstCandleTime: parseInt(document.getElementById('firstCandleTime').value),
           showFinalCandle: document.getElementById('showFinalCandle').checked,
+          finalCandleType: document.getElementById('finalCandleType').value,
           finalCandleTime: parseInt(document.getElementById('finalCandleTime').value),
           userMarkers: {
             showB: document.getElementById('showB').checked,
+            bType: document.getElementById('bType').value,
             bTime: parseInt(document.getElementById('bTime').value),
             showS: document.getElementById('showS').checked,
+            sType: document.getElementById('sType').value,
             sTime: parseInt(document.getElementById('sTime').value)
           }
         }
       };
+    }
+
+    // Marker management functions
+    function addDevMarker() {
+      const devMarkers = document.getElementById('dev-markers');
+      const markerCount = devMarkers.children.length;
+      const newMarker = document.createElement('div');
+      newMarker.className = 'marker-item';
+      newMarker.innerHTML = `
+        <div class="config-item">
+          <label class="tooltip">Dev ${markerCount + 1}:
+            <span class="tooltiptext">Developer marker ${markerCount + 1}. Shows a marker on the chart at the specified time. Can be Buy or Sell type.</span>
+          </label>
+          <input type="checkbox" id="showDev${markerCount + 1}" checked>
+        </div>
+        <div class="config-item">
+          <label class="tooltip">Type:
+            <span class="tooltiptext">Whether this marker represents a Buy (green) or Sell (red) action on the chart.</span>
+          </label>
+          <select id="dev${markerCount + 1}Type">
+            <option value="buy">Buy</option>
+            <option value="sell">Sell</option>
+          </select>
+        </div>
+        <div class="config-item">
+          <label class="tooltip">Time:
+            <span class="tooltiptext">Time in seconds when this marker will appear on the chart during the animation.</span>
+          </label>
+          <input type="number" id="dev${markerCount + 1}Time" value="${markerCount + 1}">
+        </div>
+        <button type="button" class="remove-marker" onclick="removeDevMarker(this)">🗑️</button>
+      `;
+      devMarkers.appendChild(newMarker);
+      updateRemoveButtons();
+    }
+    
+    function removeDevMarker(button) {
+      button.parentElement.remove();
+      updateRemoveButtons();
+    }
+    
+    function addUserMarker() {
+      const userMarkers = document.getElementById('user-markers');
+      const markerCount = userMarkers.children.length;
+      const newMarker = document.createElement('div');
+      newMarker.className = 'marker-item';
+      newMarker.innerHTML = `
+        <div class="config-item">
+          <label class="tooltip">User ${markerCount + 1}:
+            <span class="tooltiptext">User marker ${markerCount + 1}. Shows a marker on the chart at the specified time. Can be Buy or Sell type.</span>
+          </label>
+          <input type="checkbox" id="showUser${markerCount + 1}">
+        </div>
+        <div class="config-item">
+          <label class="tooltip">Type:
+            <span class="tooltiptext">Whether this marker represents a Buy (green) or Sell (red) action on the chart.</span>
+          </label>
+          <select id="user${markerCount + 1}Type">
+            <option value="buy" selected>Buy</option>
+            <option value="sell">Sell</option>
+          </select>
+        </div>
+        <div class="config-item">
+          <label class="tooltip">Time:
+            <span class="tooltiptext">Time in seconds when this marker will appear on the chart during the animation.</span>
+          </label>
+          <input type="number" id="user${markerCount + 1}Time" value="${markerCount + 1}">
+        </div>
+        <button type="button" class="remove-marker" onclick="removeUserMarker(this)">🗑️</button>
+      `;
+      userMarkers.appendChild(newMarker);
+      updateRemoveButtons();
+    }
+    
+    function removeUserMarker(button) {
+      button.parentElement.remove();
+      updateRemoveButtons();
+    }
+    
+    function updateRemoveButtons() {
+      // Show remove buttons only if there are more than 1 markers
+      const devMarkers = document.querySelectorAll('#dev-markers .marker-item');
+      const userMarkers = document.querySelectorAll('#user-markers .marker-item');
+      
+      devMarkers.forEach((marker, index) => {
+        const removeBtn = marker.querySelector('.remove-marker');
+        if (removeBtn) {
+          const shouldShow = devMarkers.length > 1;
+          removeBtn.style.display = shouldShow ? 'flex' : 'none';
+        }
+      });
+      
+      userMarkers.forEach((marker, index) => {
+        const removeBtn = marker.querySelector('.remove-marker');
+        if (removeBtn) {
+          const shouldShow = userMarkers.length > 1;
+          removeBtn.style.display = shouldShow ? 'flex' : 'none';
+        }
+      });
     }
 
     // Initialize TradingView Advanced Chart
@@ -518,7 +813,15 @@
 
     // Start animation function
     function startAnimation() {
-      if (isAnimating) return;
+      // Stop any existing animation first
+      if (isAnimating) {
+        console.log('🛑 Stopping existing animation...');
+        isAnimating = false;
+        if (currentAnimation) {
+          clearTimeout(currentAnimation);
+          currentAnimation = null;
+        }
+      }
       
       if (!tvWidget || !globalDatafeed) {
         console.error('❌ TradingView widget or datafeed not available');
@@ -532,9 +835,21 @@
       document.getElementById('animation-status').textContent = 'Generating animation data...';
       document.getElementById('animation-status').style.color = '#26a69a';
       
-      // Clear existing data
+      // Clear existing data and reset chart
       globalDatafeed.clearData();
       
+      // Force chart refresh by recreating it
+      console.log('🔄 Recreating chart for new animation...');
+      initTradingView();
+      
+      // Wait for chart to be ready before starting animation
+      setTimeout(() => {
+        startAnimationData(config);
+      }, 500);
+    }
+    
+    // Separate function to start the actual animation data generation
+    function startAnimationData(config) {
       // Generate data
       const totalBars = config.totalSeconds;
       const preAnimationSeconds = config.enableHistoricalData ? parseTimeToSeconds(config.preAnimationTime) : 0;
@@ -681,16 +996,16 @@
           
           // Log marker checks for debugging
           if (config.markers.showFirstCandle && currentTime === config.markers.firstCandleTime) {
-            console.log(`🎯 Dev Buy marker triggered at time: ${currentTime}s`);
+            console.log(`🎯 Dev 1 (${config.markers.firstCandleType}) marker triggered at time: ${currentTime}s`);
           }
           if (config.markers.showFinalCandle && currentTime === config.markers.finalCandleTime) {
-            console.log(`🎯 Dev Sell marker triggered at time: ${currentTime}s`);
+            console.log(`🎯 Dev 2 (${config.markers.finalCandleType}) marker triggered at time: ${currentTime}s`);
           }
           if (config.markers.userMarkers.showB && currentTime === config.markers.userMarkers.bTime) {
-            console.log(`🎯 User Buy marker triggered at time: ${currentTime}s`);
+            console.log(`🎯 User 1 (${config.markers.userMarkers.bType}) marker triggered at time: ${currentTime}s`);
           }
           if (config.markers.userMarkers.showS && currentTime === config.markers.userMarkers.sTime) {
-            console.log(`🎯 User Sell marker triggered at time: ${currentTime}s`);
+            console.log(`🎯 User 2 (${config.markers.userMarkers.sType}) marker triggered at time: ${currentTime}s`);
           }
           
           currentIndex++;
@@ -722,6 +1037,7 @@
     // Initialize when DOM is ready
     document.addEventListener('DOMContentLoaded', () => {
       setTimeout(initTradingView, 100);
+      updateRemoveButtons(); // Hide trash cans initially
     });
   </script>
 </body>
