@@ -502,7 +502,10 @@
     </div>
     
     <div style="padding: 20px; border-top: 1px solid #333;">
-      <button class="apply-button" onclick="applyAndStart()">Apply & Start</button>
+      <button class="apply-button" id="applyButton" onclick="applyAndStart()">Apply & Start</button>
+      <div id="animationStatus" style="margin-top: 10px; font-size: 12px; color: #888; text-align: center;">
+        Ready to start animation
+      </div>
     </div>
   </div>
 
@@ -517,204 +520,6 @@
     let devMarkerCount = 2;
     let userMarkerCount = 2;
 
-    // Custom Datafeed for TradingView
-    class CustomDatafeed {
-      constructor() {
-        this.symbolInfo = {
-          ticker: 'CUSTOM',
-          name: 'Custom Token',
-          description: 'Custom animated token',
-          type: 'crypto',
-          session: '24x7',
-          timezone: 'UTC',
-          exchange: 'Custom',
-          minmov: 1,
-          pricescale: 100,
-          has_intraday: true,
-          has_weekly_and_monthly: false,
-          has_seconds: true,
-          has_daily: true,
-          supported_resolutions: ['1S', '5S', '10S', '15S', '30S', '1', '5', '15', '30', '60', '240', '1D'],
-          volume_precision: 0,
-          data_status: 'streaming',
-          visible_plots_set: 'ohlcv',
-          intraday_multipliers: ['1S', '5S', '10S', '15S', '30S', '1', '5', '15', '30', '60', '240'],
-          seconds_multipliers: ['1S', '5S', '10S', '15S', '30S'],
-          format: 'price'
-        };
-        this.currentData = [];
-        this.realtimeCallback = null;
-        
-        // Add some initial data to prevent the "no data" message
-        this.addInitialData();
-      }
-
-      onReady(callback) {
-        console.log('Datafeed onReady called');
-        setTimeout(() => {
-          const config = {
-            supported_resolutions: ['1S', '5S', '10S', '15S', '30S', '1', '5', '15', '30', '60', '240', '1D'],
-            supports_marks: true,
-            supports_timescale_marks: true,
-            supports_time: true
-          };
-          console.log('Sending config to TradingView:', config);
-          callback(config);
-        }, 0);
-      }
-
-      addInitialData() {
-        // Add some initial data to prevent "no data" message
-        const now = Math.floor(Date.now() / 1000);
-        const initialPrice = 10000;
-        
-        for (let i = 0; i < 10; i++) {
-          this.currentData.push({
-            time: now - (10 - i),
-            open: initialPrice + i * 10,
-            high: initialPrice + i * 10 + 50,
-            low: initialPrice + i * 10 - 50,
-            close: initialPrice + (i + 1) * 10,
-            volume: 1000 + i * 100
-          });
-        }
-        console.log('Added initial data:', this.currentData.length, 'bars');
-        console.log('Sample data:', this.currentData[0]);
-      }
-
-      searchSymbols(userInput, exchange, symbolType, onResultReadyCallback) {
-        console.log('searchSymbols called with:', userInput, exchange, symbolType);
-        onResultReadyCallback([]);
-      }
-
-      resolveSymbol(symbolName, onSymbolResolvedCallback, onResolveErrorCallback) {
-        console.log('Datafeed resolveSymbol called for:', symbolName);
-        setTimeout(() => {
-          const symbolInfo = {
-            ticker: this.symbolInfo.ticker,
-            name: this.symbolInfo.name,
-            description: this.symbolInfo.description,
-            type: this.symbolInfo.type,
-            session: this.symbolInfo.session,
-            timezone: this.symbolInfo.timezone,
-            exchange: this.symbolInfo.exchange,
-            minmov: this.symbolInfo.minmov,
-            pricescale: this.symbolInfo.pricescale,
-            has_intraday: this.symbolInfo.has_intraday,
-            has_weekly_and_monthly: this.symbolInfo.has_weekly_and_monthly,
-            has_seconds: this.symbolInfo.has_seconds,
-            has_daily: this.symbolInfo.has_daily,
-            supported_resolutions: this.symbolInfo.supported_resolutions,
-            volume_precision: this.symbolInfo.volume_precision,
-            data_status: this.symbolInfo.data_status,
-            visible_plots_set: this.symbolInfo.visible_plots_set,
-            intraday_multipliers: this.symbolInfo.intraday_multipliers,
-            seconds_multipliers: this.symbolInfo.seconds_multipliers,
-            format: this.symbolInfo.format
-          };
-          console.log('Resolving symbol with info:', symbolInfo);
-          onSymbolResolvedCallback(symbolInfo);
-        }, 0);
-      }
-
-      getBars(symbolInfo, resolution, periodParams, onHistoryCallback, onErrorCallback) {
-        console.log('🔥 getBars called with resolution:', resolution, 'periodParams:', periodParams, 'data length:', this.currentData.length);
-        console.log('Supported resolutions:', this.symbolInfo.supported_resolutions);
-        
-        // Always provide data, even if empty
-        setTimeout(() => {
-          try {
-            if (this.currentData.length > 0) {
-              // Convert our data format to TradingView format
-              const tvData = this.currentData.map(bar => ({
-                time: bar.time * 1000, // TradingView expects milliseconds
-                open: bar.open,
-                high: bar.high,
-                low: bar.low,
-                close: bar.close,
-                volume: bar.volume
-              }));
-              console.log('✅ Sending', tvData.length, 'bars to TradingView');
-              onHistoryCallback(tvData, { noData: false });
-            } else {
-              console.log('📊 No data available, sending empty response');
-              onHistoryCallback([], { noData: true });
-            }
-          } catch (error) {
-            console.error('❌ Error in getBars:', error);
-            onErrorCallback?.(error);
-          }
-        }, 0);
-      }
-
-      subscribeBars(symbolInfo, resolution, onRealtimeCallback, subscribeUID, onResetCacheNeededCallback) {
-        console.log('subscribeBars called with resolution:', resolution);
-        
-        // Check if resolution is supported
-        if (!this.symbolInfo.supported_resolutions.includes(resolution)) {
-          console.error('Unsupported resolution requested in subscribeBars:', resolution);
-          return;
-        }
-        
-        this.realtimeCallback = onRealtimeCallback;
-        
-        try {
-          // If we have data, send it immediately
-          if (this.currentData.length > 0) {
-            console.log('Sending initial data on subscribe');
-            const tvData = this.currentData.map(bar => ({
-              time: bar.time * 1000,
-              open: bar.open,
-              high: bar.high,
-              low: bar.low,
-              close: bar.close,
-              volume: bar.volume
-            }));
-            onRealtimeCallback(tvData[tvData.length - 1]);
-          }
-        } catch (error) {
-          console.error('Error in subscribeBars:', error);
-        }
-      }
-
-      unsubscribeBars(subscribeUID) {
-        this.realtimeCallback = null;
-      }
-
-      getTimescaleMarks(symbolInfo, from, to, onDataCallback, resolution) {
-        // Return empty array for now - can be implemented later for custom marks
-        onDataCallback([]);
-      }
-
-      getServerTime(callback) {
-        // Return current server time
-        callback(Math.floor(Date.now() / 1000));
-      }
-
-      updateData(newData) {
-        console.log('updateData called with', newData.length, 'bars');
-        this.currentData = newData;
-        if (this.realtimeCallback && newData.length > 0) {
-          try {
-            const latestBar = newData[newData.length - 1];
-            // Convert to TradingView format
-            const tvBar = {
-              time: latestBar.time * 1000, // Convert to milliseconds
-              open: latestBar.open,
-              high: latestBar.high,
-              low: latestBar.low,
-              close: latestBar.close,
-              volume: latestBar.volume
-            };
-            console.log('Sending real-time update:', tvBar);
-            this.realtimeCallback(tvBar);
-          } catch (error) {
-            console.error('Error in updateData:', error);
-          }
-        }
-      }
-    }
-
     // Global datafeed reference
     let globalDatafeed;
 
@@ -725,13 +530,12 @@
       tvWidget = new TradingView.widget({
         fullscreen: false,
         symbol: 'CUSTOM',
-        interval: '1S',
         container: 'chart-container',
         datafeed: globalDatafeed,
         library_path: 'charting_library-master/charting_library/',
         locale: 'en',
         theme: 'dark',
-        default_resolution: '1S',
+        default_resolution: '1',
         disabled_features: [
           'volume_force_overlay',
           'create_volume_indicator_by_default',
@@ -804,82 +608,76 @@
 
       tvWidget.onChartReady(() => {
         console.log('TradingView chart ready');
-        // Remove any existing studies to ensure single pane
-        tvWidget.chart().removeAllStudies();
-        console.log('Removed all studies');
         
-        // Debug: Log the current resolution
-        console.log('Current widget resolution:', tvWidget.chart().resolution());
-        
-        // Force widget to fill container and handle resolution
-        setTimeout(() => {
-          try {
-            const chartContainer = document.getElementById('chart-container');
-            if (chartContainer) {
-              // Force all child elements to fill container
-              const allElements = chartContainer.querySelectorAll('*');
-              allElements.forEach(el => {
-                if (el.style) {
-                  el.style.width = '100%';
-                  el.style.height = '100%';
-                }
-              });
-              console.log('Forced widget sizing');
-              
-              // Debug: Check what methods are available on tvWidget
-              console.log('Available tvWidget methods:', Object.getOwnPropertyNames(tvWidget));
-              console.log('tvWidget.chart methods:', Object.getOwnPropertyNames(tvWidget.chart()));
-              
-              // Try to find and click the "Switch to 1S" button
-              const allButtons = chartContainer.querySelectorAll('button');
-              console.log('Found buttons:', allButtons.length);
-              allButtons.forEach((btn, index) => {
-                console.log(`Button ${index}:`, btn.textContent, btn.className);
-                if (btn.textContent.includes('Switch to 1S') || btn.textContent.includes('1S')) {
-                  console.log('Clicking button:', btn.textContent);
-                  btn.click();
-                }
-              });
-              
-              // Try different methods to set resolution
-              try {
-                if (tvWidget.chart().setResolution) {
-                  tvWidget.chart().setResolution('1S');
-                  console.log('Set resolution via chart.setResolution');
-                } else if (tvWidget.setResolution) {
-                  tvWidget.setResolution('1S');
-                  console.log('Set resolution via tvWidget.setResolution');
-                } else {
-                  console.log('No setResolution method found');
-                }
-              } catch (e) {
-                console.log('Could not set resolution programmatically:', e);
-              }
-              
-              // Try to manually trigger data loading
-              setTimeout(() => {
-                console.log('Attempting to manually trigger data loading...');
-                try {
-                  // Force a refresh of the chart
-                  if (tvWidget.chart().resetData) {
-                    tvWidget.chart().resetData();
-                    console.log('Reset chart data');
+        try {
+          // Remove any existing studies to ensure single pane
+          if (tvWidget.chart && typeof tvWidget.chart().removeAllStudies === 'function') {
+            tvWidget.chart().removeAllStudies();
+            console.log('Removed all studies');
+          }
+          
+          // Debug: Log the current resolution
+          if (tvWidget.chart && typeof tvWidget.chart().resolution === 'function') {
+            console.log('Current widget resolution:', tvWidget.chart().resolution());
+          }
+          
+          // Force widget to fill container and handle resolution
+          setTimeout(() => {
+            try {
+              const chartContainer = document.getElementById('chart-container');
+              if (chartContainer) {
+                // Force all child elements to fill container
+                const allElements = chartContainer.querySelectorAll('*');
+                allElements.forEach(el => {
+                  if (el.style) {
+                    el.style.width = '100%';
+                    el.style.height = '100%';
                   }
-                  
-                  // Try to update the datafeed directly
-                  if (globalDatafeed && globalDatafeed.currentData.length > 0) {
-                    console.log('Manually updating datafeed with', globalDatafeed.currentData.length, 'bars');
-                    globalDatafeed.updateData(globalDatafeed.currentData);
+                });
+                console.log('Forced widget sizing');
+                
+                // Try different methods to set resolution
+                try {
+                  if (tvWidget.chart && typeof tvWidget.chart().setResolution === 'function') {
+                    tvWidget.chart().setResolution('1');
+                    console.log('Set resolution via chart.setResolution to 1');
+                  } else if (tvWidget.setResolution) {
+                    tvWidget.setResolution('1');
+                    console.log('Set resolution via tvWidget.setResolution to 1');
+                  } else {
+                    console.log('No setResolution method found');
                   }
                 } catch (e) {
-                  console.log('Error manually triggering data loading:', e);
+                  console.log('Could not set resolution programmatically:', e);
                 }
-              }, 2000);
+                
+                // Try to manually trigger data loading
+                setTimeout(() => {
+                  console.log('Attempting to manually trigger data loading...');
+                  try {
+                    // Force a refresh of the chart
+                    if (tvWidget.chart && typeof tvWidget.chart().resetData === 'function') {
+                      tvWidget.chart().resetData();
+                      console.log('Reset chart data');
+                    }
+                    
+                    // Try to update the datafeed directly
+                    if (globalDatafeed && globalDatafeed.currentData.length > 0) {
+                      console.log('Manually updating datafeed with', globalDatafeed.currentData.length, 'bars');
+                      globalDatafeed.updateData(globalDatafeed.currentData);
+                    }
+                  } catch (e) {
+                    console.log('Error manually triggering data loading:', e);
+                  }
+                }, 2000);
+              }
+            } catch (e) {
+              console.log('Error forcing widget size:', e);
             }
-          } catch (e) {
-            console.log('Error forcing widget size:', e);
-          }
-        }, 1000);
+          }, 1000);
+        } catch (e) {
+          console.error('Error in chart ready callback:', e);
+        }
       });
     }
 
@@ -1008,6 +806,13 @@
         stopAnimation();
       }
       
+      // Check if chart is ready
+      if (!tvWidget || !tvWidget.chart) {
+        console.error('❌ Chart not ready! Please wait for chart to load.');
+        alert('Chart is not ready yet. Please wait a moment and try again.');
+        return;
+      }
+      
       // Get configuration from form
       const config = {
         initialMarketCap: parseInt(document.getElementById('initialMarketCap').value),
@@ -1038,7 +843,7 @@
         }
       };
 
-      console.log('Starting animation with config:', config);
+      console.log('🎬 Starting animation with config:', config);
       startAnimation(config);
     }
 
@@ -1047,6 +852,12 @@
       isAnimating = true;
       currentBarIndex = 0;
       animationData = [];
+
+      // Update UI
+      document.getElementById('applyButton').textContent = 'Stop Animation';
+      document.getElementById('applyButton').onclick = stopAnimation;
+      document.getElementById('animationStatus').textContent = 'Generating animation data...';
+      document.getElementById('animationStatus').style.color = '#4CAF50';
 
       // Initialize seeded random generator
       const rng = new SeededRandom(config.seed);
@@ -1148,16 +959,42 @@
       let currentData = [...historicalData];
       
       console.log('Starting animation with', animationData.length, 'bars');
+      document.getElementById('animationStatus').textContent = `Starting animation with ${animationData.length} bars...`;
       
       // Set initial data
       if (globalDatafeed) {
+        console.log('Setting initial data for animation:', currentData.length, 'bars');
         globalDatafeed.updateData(currentData);
+        
+        // Force chart refresh
+        setTimeout(() => {
+          if (tvWidget && tvWidget.chart) {
+            try {
+              if (tvWidget.chart().resetData) {
+                tvWidget.chart().resetData();
+                console.log('Reset chart data for animation');
+              }
+            } catch (e) {
+              console.log('Could not reset chart data:', e);
+            }
+          }
+        }, 500);
+      } else {
+        console.error('❌ No globalDatafeed available!');
+        document.getElementById('animationStatus').textContent = 'Error: No datafeed available';
+        document.getElementById('animationStatus').style.color = '#f44336';
+        return;
       }
 
       // Animate the data
       const animate = () => {
         if (currentBarIndex < animationData.length && isAnimating) {
           currentData.push(animationData[currentBarIndex]);
+          
+          const progress = Math.round(((currentBarIndex + 1) / animationData.length) * 100);
+          document.getElementById('animationStatus').textContent = `Animating... ${currentBarIndex + 1}/${animationData.length} (${progress}%)`;
+          
+          console.log(`Animation step ${currentBarIndex + 1}/${animationData.length}: Adding bar at time ${animationData[currentBarIndex].time}`);
           
           // Update datafeed with new data
           if (globalDatafeed) {
@@ -1172,6 +1009,10 @@
         } else {
           isAnimating = false;
           console.log('Animation completed');
+          document.getElementById('animationStatus').textContent = 'Animation completed!';
+          document.getElementById('animationStatus').style.color = '#4CAF50';
+          document.getElementById('applyButton').textContent = 'Apply & Start';
+          document.getElementById('applyButton').onclick = applyAndStart;
         }
       };
 
@@ -1246,6 +1087,11 @@
     // Stop animation
     function stopAnimation() {
       isAnimating = false;
+      console.log('Animation stopped by user');
+      document.getElementById('animationStatus').textContent = 'Animation stopped';
+      document.getElementById('animationStatus').style.color = '#ff9800';
+      document.getElementById('applyButton').textContent = 'Apply & Start';
+      document.getElementById('applyButton').onclick = applyAndStart;
     }
   </script>
 </body>
