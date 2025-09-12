@@ -777,7 +777,7 @@
         }
 
         .config-item input, .config-item select {
-            width: 80px;
+            width: 100px;
             padding: 4px 6px;
             background: #2a2a2a;
             border: 1px solid #444;
@@ -791,7 +791,7 @@
         }
 
         .config-item input[type="number"] {
-            width: 50px;
+            width: 100px;
         }
 
         .config-item input[type="text"] {
@@ -879,7 +879,7 @@
 
         .marker-item .config-item input, 
         .marker-item .config-item select {
-            width: 60px;
+            width: 80px;
             font-size: 11px;
             padding: 4px 6px;
         }
@@ -1671,7 +1671,7 @@
                 <h4>Token Information</h4>
                 <div class="config-item">
                     <label>Token Name:</label>
-                    <input type="text" id="tokenName" value="Custom animated token" placeholder="Enter token name">
+                    <input type="text" id="tokenName" value="token" placeholder="Enter token name">
                 </div>
             </div>
             
@@ -1679,15 +1679,15 @@
                 <h4>Market Cap Settings</h4>
                 <div class="config-item">
                     <label>Initial MC:</label>
-                    <input type="number" id="initialMarketCap" value="10000">
+                    <input type="number" id="initialMarketCap" value="3000">
                 </div>
                 <div class="config-item">
                     <label>Final MC:</label>
-                    <input type="number" id="finalMarketCap" value="50000">
+                    <input type="number" id="finalMarketCap" value="15000">
                 </div>
                 <div class="config-item">
                     <label>Min MC:</label>
-                    <input type="number" id="minMarketCap" value="5000">
+                    <input type="number" id="minMarketCap" value="1500">
                 </div>
                 <div class="config-item">
                     <label>Range MC:</label>
@@ -2075,7 +2075,7 @@
                         </div>
                         <div class="token-price-display">
                             <span class="token-price-label">Price:</span>
-                            <span class="token-price-value" id="chartTokenPrice">0.0006690 SOL</span>
+                            <span class="token-price-value" id="chartTokenPrice">0.00000002 SOL</span>
                         </div>
                         <button style="background: #1a1a1a; border: 1px solid #333; color: #ccc; padding: 6px 12px; border-radius: 4px; font-size: 12px;">Price / MCap</button>
                     </div>
@@ -2193,26 +2193,26 @@
             <div class="price-section">
                 <div class="price-item">
                     <div class="price-label">PRICE USD</div>
-                    <div class="price-value">$0.0006690</div>
+                    <div class="price-value">$0.0000030</div>
                 </div>
                 <div class="price-item">
                     <div class="price-label">PRICE</div>
-                    <div class="price-value">0.0006690 SOL</div>
+                    <div class="price-value">0.00000002 SOL</div>
                 </div>
             </div>
 
             <div class="metrics-section">
                 <div class="metric-item">
                     <div class="metric-label">LIQUIDITY</div>
-                    <div class="metric-value">$111K</div>
+                    <div class="metric-value">$3K</div>
                 </div>
                 <div class="metric-item">
                     <div class="metric-label">FDV</div>
-                    <div class="metric-value">$669K</div>
+                    <div class="metric-value">$3K</div>
                 </div>
                 <div class="metric-item">
                     <div class="metric-label">MKT CAP</div>
-                        <input type="text" class="metric-value editable-metric" id="marketCapInput" value="$669.00K" data-base-value="669000">
+                        <input type="text" class="metric-value editable-metric" id="marketCapInput" value="$3.00K" data-base-value="3000">
                 </div>
             </div>
 
@@ -2446,6 +2446,32 @@
 
         // Initialize token displays
         updateTokenDisplay();
+        
+        // Link config panel token name to site token name
+        const configTokenName = document.getElementById('tokenName');
+        if (configTokenName && tokenNameInput) {
+            // Update site token name when config token name changes
+            configTokenName.addEventListener('input', function() {
+                tokenNameInput.value = this.value;
+                updateTokenDisplay();
+                
+                // Update chart widget if it exists
+                if (tvWidget) {
+                    console.log('🔄 Updating chart symbol to:', this.value);
+                    tvWidget.setSymbol(this.value, '1', () => {
+                        console.log('✅ Chart symbol updated to:', this.value);
+                    });
+                }
+            });
+            
+            // Update config token name when site token name changes
+            tokenNameInput.addEventListener('input', function() {
+                configTokenName.value = this.value;
+            });
+            
+            // Initialize config token name with site token name value
+            configTokenName.value = tokenNameInput.value;
+        }
 
         // Market cap editing functionality
         const TOKEN_SUPPLY = 1000000000; // 1B tokens
@@ -2465,7 +2491,7 @@
             if (!isNaN(parsed) && parsed < 1000) {
                 return parsed * 1000;
             }
-            return isNaN(parsed) ? 669000 : parsed; // Default to 669K if invalid
+            return isNaN(parsed) ? 3000 : parsed; // Default to 3K if invalid
         }
 
         function formatMarketCap(value) {
@@ -2493,17 +2519,17 @@
                 priceUsd.textContent = `$${pricePerToken.toFixed(6)}`;
             }
             
-            // Update SOL price (assuming 1 SOL = $100 for simplicity)
+            // Update SOL price (assuming 1 SOL = $239 for current rate)
         const priceSol = document.querySelectorAll('.price-value')[1];
         if (priceSol) {
-            const solPrice = pricePerToken / 100; // Convert USD to SOL
+            const solPrice = pricePerToken / 239; // Convert USD to SOL
             priceSol.textContent = `${solPrice.toFixed(7)} SOL`;
         }
         
         // Update chart token price display
         const chartTokenPrice = document.getElementById('chartTokenPrice');
         if (chartTokenPrice) {
-            const solPrice = pricePerToken / 100; // Convert USD to SOL
+            const solPrice = pricePerToken / 239; // Convert USD to SOL
             chartTokenPrice.textContent = `${solPrice.toFixed(7)} SOL`;
         }
             
@@ -2585,13 +2611,13 @@
             }, interval);
         }
 
-        // Start the animation after page loads
-        setTimeout(startTransactionAnimation, 1000);
+        // Start the animation after page loads (disabled - now driven by chart)
+        // setTimeout(startTransactionAnimation, 1000);
 
         // Metrics animation
         function animateMetrics() {
             // Get base market cap value
-            const baseMarketCap = marketCapInput ? parseFloat(marketCapInput.getAttribute('data-base-value')) || 669000 : 669000;
+            const baseMarketCap = marketCapInput ? parseFloat(marketCapInput.getAttribute('data-base-value')) || 3000 : 3000;
             const basePrice = calculatePriceFromMarketCap(baseMarketCap);
             
             // Price animation based on market cap fluctuations
@@ -2611,7 +2637,7 @@
             const priceSol = document.querySelectorAll('.price-value')[1];
             if (priceSol) {
                 const currentUsdPrice = parseFloat(priceUsd.textContent.replace('$', ''));
-                const solPrice = currentUsdPrice / 100; // Convert USD to SOL
+                const solPrice = currentUsdPrice / 239; // Convert USD to SOL
                 priceSol.textContent = `${solPrice.toFixed(7)} SOL`;
             }
             
@@ -2619,7 +2645,7 @@
             const chartTokenPrice = document.getElementById('chartTokenPrice');
             if (chartTokenPrice) {
                 const currentUsdPrice = parseFloat(priceUsd.textContent.replace('$', ''));
-                const solPrice = currentUsdPrice / 100; // Convert USD to SOL
+                const solPrice = currentUsdPrice / 239; // Convert USD to SOL
                 chartTokenPrice.textContent = `${solPrice.toFixed(7)} SOL`;
             }
 
@@ -2751,14 +2777,94 @@
             }, interval);
         }
 
-        // Start metrics animation after page loads
-        setTimeout(startMetricsAnimation, 3000);
+        // Start metrics animation after page loads (disabled - now driven by chart)
+        // setTimeout(startMetricsAnimation, 3000);
 
         // Chart Generation Variables (from index.html)
         let tvWidget = null;
         let globalDatafeed = null;
         let isAnimating = false;
         let currentAnimation = null;
+        
+        // Function to update fakeDEX data based on chart price
+        function updateFakeDEXDataFromChart(currentPrice) {
+            if (!currentPrice) return;
+            
+            // The chart price is actually the market cap, so we need to calculate the token price
+            const marketCap = currentPrice; // Chart price is market cap
+            const tokenPrice = marketCap / 1000000000; // Market cap / 1B tokens = token price
+            const solPrice = tokenPrice / 239; // Convert USD to SOL (SOL = $239)
+            
+            // Update market cap display
+            if (marketCapInput) {
+                marketCapInput.value = `$${(marketCap / 1000).toFixed(2)}K`;
+                marketCapInput.setAttribute('data-base-value', marketCap);
+            }
+            
+            // Update price displays
+            const priceUsd = document.querySelector('.price-value');
+            if (priceUsd) {
+                priceUsd.textContent = `$${tokenPrice.toFixed(7)}`;
+            }
+            
+            const priceSol = document.querySelectorAll('.price-value')[1];
+            if (priceSol) {
+                priceSol.textContent = `${solPrice.toFixed(7)} SOL`;
+            }
+            
+            // Update chart token price display
+            const chartTokenPrice = document.getElementById('chartTokenPrice');
+            if (chartTokenPrice) {
+                chartTokenPrice.textContent = `${solPrice.toFixed(7)} SOL`;
+            }
+            
+            // Update FDV to match market cap
+            const fdv = document.querySelectorAll('.metric-value')[1];
+            if (fdv) {
+                fdv.textContent = formatMarketCap(marketCap);
+            }
+            
+            console.log('📊 Updated fakeDEX data from chart - Market Cap:', marketCap, 'Token Price:', tokenPrice, 'SOL Price:', solPrice);
+        }
+        
+        // Function to set final data after animation completes
+        function setFinalData() {
+            const config = getConfig();
+            const finalActionMC = config.finalActionMarketCap;
+            const tokenPrice = finalActionMC / 1000000000;
+            const solPrice = tokenPrice / 239;
+            
+            // Update market cap display
+            if (marketCapInput) {
+                marketCapInput.value = `$${(finalActionMC / 1000).toFixed(2)}K`;
+                marketCapInput.setAttribute('data-base-value', finalActionMC);
+            }
+            
+            // Update price displays
+            const priceUsd = document.querySelector('.price-value');
+            if (priceUsd) {
+                priceUsd.textContent = `$${tokenPrice.toFixed(7)}`;
+            }
+            
+            const priceSol = document.querySelectorAll('.price-value')[1];
+            if (priceSol) {
+                priceSol.textContent = `${solPrice.toFixed(7)} SOL`;
+            }
+            
+            // Update chart token price display
+            const chartTokenPrice = document.getElementById('chartTokenPrice');
+            if (chartTokenPrice) {
+                chartTokenPrice.textContent = `${solPrice.toFixed(7)} SOL`;
+            }
+            
+            // Update FDV to match market cap
+            const fdv = document.querySelectorAll('.metric-value')[1];
+            if (fdv) {
+                fdv.textContent = formatMarketCap(finalActionMC);
+            }
+            
+            console.log('🎯 Set final data - Final Action MC:', finalActionMC, 'Token Price:', tokenPrice, 'SOL Price:', solPrice);
+        }
 
         // Seeded random number generator
         class SeededRandom {
@@ -2844,8 +2950,70 @@
                 initTradingView();
             }, 1000);
             
-            // Initialize market cap input
+            // Initialize market cap input first
             marketCapInput = document.getElementById('marketCapInput');
+            
+        // Initialize prices on page load
+        setTimeout(() => {
+            console.log('💰 Initializing prices...');
+            updatePricesFromMarketCap();
+        }, 500);
+        
+        // Link config panel market cap to site market cap display
+        const configInitialMC = document.getElementById('initialMarketCap');
+        const configFinalMC = document.getElementById('finalMarketCap');
+        const configMinMC = document.getElementById('minMarketCap');
+        
+        if (configInitialMC && marketCapInput) {
+            // Update site market cap when config initial market cap changes
+            configInitialMC.addEventListener('input', function() {
+                const value = parseInt(this.value);
+                if (!isNaN(value)) {
+                    marketCapInput.value = `$${(value / 1000).toFixed(2)}K`;
+                    marketCapInput.setAttribute('data-base-value', value);
+                    updatePricesFromMarketCap();
+                    
+                    // Update chart data if animation is running
+                    if (isAnimating && globalDatafeed) {
+                        console.log('🔄 Updating chart data with new market cap:', value);
+                        globalDatafeed.clearData();
+                        const config = getConfig();
+                        startAnimationData(config);
+                    }
+                }
+            });
+            
+            // Initialize site market cap with config value
+            const initialValue = parseInt(configInitialMC.value);
+            if (!isNaN(initialValue)) {
+                marketCapInput.value = `$${(initialValue / 1000).toFixed(2)}K`;
+                marketCapInput.setAttribute('data-base-value', initialValue);
+            }
+        }
+        
+        // Add listeners for final and min market cap changes
+        if (configFinalMC) {
+            configFinalMC.addEventListener('input', function() {
+                if (isAnimating && globalDatafeed) {
+                    console.log('🔄 Updating chart with new final market cap:', this.value);
+                    globalDatafeed.clearData();
+                    const config = getConfig();
+                    startAnimationData(config);
+                }
+            });
+        }
+        
+        if (configMinMC) {
+            configMinMC.addEventListener('input', function() {
+                if (isAnimating && globalDatafeed) {
+                    console.log('🔄 Updating chart with new min market cap:', this.value);
+                    globalDatafeed.clearData();
+                    const config = getConfig();
+                    startAnimationData(config);
+                }
+            });
+        }
+            
             if (marketCapInput) {
                 // Set up event listeners
                 marketCapInput.addEventListener('input', handleMarketCapChange);
@@ -3039,6 +3207,9 @@
             isAnimating = true;
             const config = getConfig();
             console.log('🎬 Starting TradingView Advanced Chart animation with config:', config);
+            
+            // Start transaction animation when chart starts
+            startTransactionAnimation();
             
             document.getElementById('animation-status').textContent = 'Resetting chart and generating animation data...';
             document.getElementById('animation-status').style.color = '#26a69a';
@@ -3364,6 +3535,9 @@
 
             addBar(bar) {
                 this.currentData.push(bar);
+                
+                // Update fakeDEX data based on chart price
+                updateFakeDEXDataFromChart(bar.close);
                 
                 if (this.onRealtimeCallback) {
                     const tvBar = {
@@ -3749,6 +3923,9 @@
                         
                         console.log(`📊 Calling realtime callback with bar:`, tvBar);
                         
+                        // Update fakeDEX data based on chart price
+                        updateFakeDEXDataFromChart(currentBar.close);
+                        
                         if (globalDatafeed.onRealtimeCallback) {
                             try {
                                 globalDatafeed.onRealtimeCallback(tvBar);
@@ -3771,6 +3948,9 @@
                             console.log('✅ Animation complete');
                             document.getElementById('animation-status').textContent = 'Animation complete!';
                             document.getElementById('animation-status').style.color = '#26a69a';
+                            
+                            // Set final data to use final action market cap
+                            setFinalData();
                         }
                     } catch (error) {
                         console.error('Animation error:', error);
