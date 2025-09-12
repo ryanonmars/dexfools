@@ -1812,6 +1812,23 @@
                 </h4>
             </div>
             
+            <div class="config-group">
+                <h4 style="display: flex; align-items: center; gap: 10px;">
+                    Export Blank Chart
+                    <button id="exportBlankChart" style="
+                        background: none; 
+                        border: none; 
+                        cursor: pointer; 
+                        font-size: 18px; 
+                        padding: 2px;
+                        color: #666;
+                        transition: color 0.2s;
+                    " title="Export blank chart for background use">
+                        📤
+                    </button>
+                </h4>
+            </div>
+            
             <div class="config-group collapsible">
                 <h4 class="collapsible-header" onclick="toggleCollapsible('markers')">
                     <span class="collapsible-icon">▼</span>
@@ -3550,6 +3567,14 @@
                         toggleCustomTheme();
                     });
                 }
+                
+                // Initialize export blank chart button
+                const exportBtn = document.getElementById('exportBlankChart');
+                if (exportBtn) {
+                    exportBtn.addEventListener('click', function() {
+                        exportBlankChart();
+                    });
+                }
             }, 2000);
             
         // Initialize prices on page load
@@ -4401,6 +4426,80 @@
                 shouldApplyCustomStyling = false;
             } catch (error) {
                 console.error('Error resetting chart to defaults:', error);
+            }
+        }
+
+        // Function to export blank chart
+        function exportBlankChart() {
+            if (!tvWidget) {
+                alert('Chart not ready. Please wait for the chart to load.');
+                return;
+            }
+
+            try {
+                // First, start the animation to ensure we have data
+                if (typeof startAnimation === 'function') {
+                    startAnimation();
+                }
+                
+                // Wait for animation to start and data to load
+                setTimeout(() => {
+                    // Stop the animation after 2 seconds
+                    setTimeout(() => {
+                        if (typeof stopAnimation === 'function') {
+                            stopAnimation();
+                        }
+                        
+                        // Wait a bit more for chart to stabilize, then hide candles
+                        setTimeout(() => {
+                            const blankOverrides = {
+                                // Hide candles by making them invisible
+                                'mainSeriesProperties.candleStyle.upColor': 'rgba(0,0,0,0)',
+                                'mainSeriesProperties.candleStyle.downColor': 'rgba(0,0,0,0)',
+                                'mainSeriesProperties.candleStyle.borderUpColor': 'rgba(0,0,0,0)',
+                                'mainSeriesProperties.candleStyle.borderDownColor': 'rgba(0,0,0,0)',
+                                'mainSeriesProperties.candleStyle.wickUpColor': 'rgba(0,0,0,0)',
+                                'mainSeriesProperties.candleStyle.wickDownColor': 'rgba(0,0,0,0)',
+                                'mainSeriesProperties.candleStyle.drawWick': false,
+                                'mainSeriesProperties.candleStyle.drawBorder': false,
+                                'mainSeriesProperties.candleStyle.drawBody': false,
+                                
+                                // Hide price line
+                                'mainSeriesProperties.showPriceLine': false,
+                                
+                                // Clean background and grid
+                                'paneProperties.background': '#1e1e1e',
+                                'paneProperties.backgroundType': 'solid',
+                                'paneProperties.vertGridProperties.color': '#2a2a2a',
+                                'paneProperties.horzGridProperties.color': '#2a2a2a',
+                                
+                                // Clean scales
+                                'scalesProperties.textColor': '#d1d4dc',
+                                'scalesProperties.lineColor': '#2a2a2a',
+                                'scalesProperties.showSeriesLastValue': false,
+                                'scalesProperties.showStudyLastValue': false,
+                                
+                                // Hide legend info
+                                'paneProperties.legendProperties.showBarChange': false,
+                                'paneProperties.legendProperties.showVolume': false,
+                                'paneProperties.legendProperties.showSeriesOHLC': false,
+                                'paneProperties.legendProperties.showLastDayChange': false
+                            };
+
+                            // Apply blank chart styling
+                            tvWidget.applyOverrides(blankOverrides);
+                            
+                            // Show success message
+                            alert('Chart is now in blank mode! You can manually screenshot it.');
+                            
+                        }, 1000); // Wait 1 second after stopping animation
+                        
+                    }, 2000); // Stop animation after 2 seconds
+                }, 500); // Wait 500ms for animation to start
+                
+            } catch (error) {
+                console.error('Error creating blank chart:', error);
+                alert('Error creating blank chart: ' + error.message);
             }
         }
 
