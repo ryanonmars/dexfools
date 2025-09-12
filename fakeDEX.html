@@ -1769,16 +1769,6 @@
             </div>
             
             <div class="config-group">
-                <h4>Chart Theme</h4>
-                <div class="config-item">
-                    <label>
-                        <input type="checkbox" id="blackTheme" style="margin-right: 8px;">
-                        🎨 Black Theme (Dark background, visible candles)
-                    </label>
-                </div>
-            </div>
-            
-            <div class="config-group">
                 <h4>Historical Data</h4>
                 <div class="config-item">
                     <label>Enable:</label>
@@ -1803,6 +1793,23 @@
                     <label>Target MC:</label>
                     <input type="text" id="finalActionMarketCap" value="5K" placeholder="e.g., 10K, 1.5M, 2B">
                 </div>
+            </div>
+            
+            <div class="config-group">
+                <h4 style="display: flex; align-items: center; gap: 10px;">
+                    Invisible Chart
+                    <button id="customThemeToggle" style="
+                        background: none; 
+                        border: none; 
+                        cursor: pointer; 
+                        font-size: 18px; 
+                        padding: 2px;
+                        color: #666;
+                        transition: color 0.2s;
+                    " title="Toggle invisible chart mode">
+                        👁️
+                    </button>
+                </h4>
             </div>
             
             <div class="config-group collapsible">
@@ -1927,8 +1934,8 @@
         </div>
         
         <div class="config-button-container">
-            <button id="apply-config">Apply Styling & Start Animation</button>
-            <div id="animation-status">Chart ready - click "Apply Styling & Start" to begin</div>
+            <button id="apply-config">Apply & Start Animation</button>
+            <div id="animation-status">Chart ready - click "Apply & Start" to begin</div>
         </div>
     </div>
 
@@ -3496,8 +3503,13 @@
                         toggleConfigPanel();
                     }
                     
-                    // Apply custom chart overrides first
-                    applyChartOverrides();
+                    // Apply custom chart overrides only if toggle is enabled
+                    const toggle = document.getElementById('customThemeToggle');
+                    if (toggle && toggle.getAttribute('data-enabled') === 'true') {
+                        applyChartOverrides();
+                    } else {
+                        resetChartToDefaults();
+                    }
                     
                     // Update button text to show delay
                     applyConfigBtn.textContent = 'Starting in 2 seconds...';
@@ -3514,7 +3526,7 @@
                     setTimeout(() => {
                         startAnimation();
                         // Reset button after animation starts
-                        applyConfigBtn.textContent = 'Apply Styling & Start Animation';
+                        applyConfigBtn.textContent = 'Apply & Start Animation';
                         applyConfigBtn.disabled = false;
                     }, 2000);
                 });
@@ -3529,6 +3541,16 @@
             
             // Initialize market cap input first
             marketCapInput = document.getElementById('marketCapInput');
+            
+            // Initialize theme toggle - wait for DOM to be ready
+            setTimeout(() => {
+                const themeToggle = document.getElementById('customThemeToggle');
+                if (themeToggle) {
+                    themeToggle.addEventListener('click', function() {
+                        toggleCustomTheme();
+                    });
+                }
+            }, 2000);
             
         // Initialize prices on page load
         setTimeout(() => {
@@ -4280,79 +4302,145 @@
         // Global flag to track if custom styling should be applied
         let shouldApplyCustomStyling = false;
 
-        // Function to apply custom chart overrides
-        function applyChartOverrides() {
-            if (!tvWidget) {
-                console.warn('⚠️ TradingView widget not available for overrides');
+        // Test function for debugging
+        window.testToggle = function() {
+            console.log('🧪 Test toggle function called');
+            console.log('📊 TV Widget:', !!tvWidget);
+            console.log('📊 Toggle element:', !!document.getElementById('customThemeToggle'));
+            console.log('📊 shouldApplyCustomStyling:', shouldApplyCustomStyling);
+            
+            if (tvWidget) {
+                console.log('🧪 Testing applyChartOverrides...');
+                applyChartOverrides();
+            } else {
+                console.log('❌ No TV Widget available for testing');
+            }
+        };
+
+        // Function to toggle custom theme
+        window.toggleCustomTheme = function() {
+            const toggle = document.getElementById('customThemeToggle');
+            if (!toggle) {
                 return;
             }
 
-            console.log('🎨 Applying custom chart overrides...');
+            // Toggle the state
+            const isEnabled = toggle.getAttribute('data-enabled') === 'true';
+            
+            if (!isEnabled) {
+                // Enable invisible mode
+                toggle.setAttribute('data-enabled', 'true');
+                toggle.textContent = '🙈'; // Closed eye
+                toggle.style.color = '#00d4aa';
+                shouldApplyCustomStyling = true;
+                if (tvWidget) {
+                    applyChartOverrides();
+                }
+            } else {
+                // Disable invisible mode
+                toggle.setAttribute('data-enabled', 'false');
+                toggle.textContent = '👁️'; // Open eye
+                toggle.style.color = '#666';
+                shouldApplyCustomStyling = false;
+                if (tvWidget) {
+                    resetChartToDefaults();
+                }
+            }
+        };
+
+        // Function to reset chart to default settings
+        function resetChartToDefaults() {
+            if (!tvWidget) {
+                return;
+            }
+            
+            const defaultOverrides = {
+                // Reset all custom styling to default values
+                'paneProperties.background': undefined,
+                'paneProperties.backgroundType': undefined,
+                'paneProperties.vertGridProperties.color': undefined,
+                'paneProperties.vertGridProperties.style': undefined,
+                'paneProperties.horzGridProperties.color': undefined,
+                'paneProperties.horzGridProperties.style': undefined,
+                'paneProperties.gridLinesMode': undefined,
+                'paneProperties.separatorColor': undefined,
+                'paneProperties.legendProperties.showLastDayChange': undefined,
+                'paneProperties.legendProperties.showSeriesTitle': undefined,
+                'paneProperties.legendProperties.showSeriesOHLC': undefined,
+                'paneProperties.legendProperties.showBarChange': undefined,
+                'paneProperties.legendProperties.showVolume': undefined,
+                'paneProperties.legendProperties.showBackground': undefined,
+                'paneProperties.legendProperties.backgroundTransparency': undefined,
+                'scalesProperties.textColor': undefined,
+                'scalesProperties.lineColor': undefined,
+                'scalesProperties.showSeriesLastValue': undefined,
+                'scalesProperties.showStudyLastValue': undefined,
+                'scalesProperties.showBidAsk': undefined,
+                'mainSeriesProperties.candleStyle.upColor': undefined,
+                'mainSeriesProperties.candleStyle.downColor': undefined,
+                'mainSeriesProperties.candleStyle.borderUpColor': undefined,
+                'mainSeriesProperties.candleStyle.borderDownColor': undefined,
+                'mainSeriesProperties.candleStyle.wickUpColor': undefined,
+                'mainSeriesProperties.candleStyle.wickDownColor': undefined,
+                'mainSeriesProperties.candleStyle.drawWick': undefined,
+                'mainSeriesProperties.candleStyle.drawBorder': undefined,
+                'mainSeriesProperties.candleStyle.drawBody': undefined,
+                'mainSeriesProperties.showPriceLine': undefined,
+                'mainSeriesProperties.priceLineWidth': undefined,
+                'mainSeriesProperties.priceLineColor': undefined,
+                'mainSeriesProperties.showVolume': undefined,
+                'mainSeriesProperties.volumeStyle.upColor': undefined,
+                'mainSeriesProperties.volumeStyle.downColor': undefined,
+                'mainSeriesProperties.volumeStyle.borderUpColor': undefined,
+                'mainSeriesProperties.volumeStyle.borderDownColor': undefined,
+                'mainSeriesProperties.visible': undefined
+            };
+
+            try {
+                tvWidget.applyOverrides(defaultOverrides);
+                shouldApplyCustomStyling = false;
+            } catch (error) {
+                console.error('Error resetting chart to defaults:', error);
+            }
+        }
+
+        // Function to apply custom chart overrides
+        function applyChartOverrides() {
+            if (!tvWidget) {
+                return;
+            }
             
             const customOverrides = {
-                // Pane Properties - Chart Background
-                'paneProperties.background': '#000000',
+                // Dark theme with proper colors
+                'paneProperties.background': '#000000', // Black background
                 'paneProperties.backgroundType': 'solid',
                 
-                // Grid Lines
-                'paneProperties.vertGridProperties.color': '#333333',
-                'paneProperties.vertGridProperties.style': 1,
-                'paneProperties.horzGridProperties.color': '#333333',
-                'paneProperties.horzGridProperties.style': 1,
-                'paneProperties.gridLinesMode': 1,
+                // Hide grid lines - correct TradingView API properties
+                'paneProperties.vertGridProperties.color': 'rgba(0, 0, 0, 0)', // Transparent vertical grid lines
+                'paneProperties.horzGridProperties.color': 'rgba(0, 0, 0, 0)', // Transparent horizontal grid lines
                 
-                // Pane Separator
-                'paneProperties.separatorColor': '#333333',
-                
-                // Legend Properties
-                'paneProperties.legendProperties.showLastDayChange': true,
-                'paneProperties.legendProperties.showSeriesTitle': true,
-                'paneProperties.legendProperties.showSeriesOHLC': true,
-                'paneProperties.legendProperties.showBarChange': true,
-                'paneProperties.legendProperties.showVolume': true,
-                'paneProperties.legendProperties.showBackground': true,
-                'paneProperties.legendProperties.backgroundTransparency': 80,
-                
-                // Price Scale Properties
-                'scalesProperties.textColor': '#d1d4dc',
-                'scalesProperties.lineColor': '#333333',
-                'scalesProperties.showSeriesLastValue': true,
-                'scalesProperties.showStudyLastValue': true,
-                'scalesProperties.showBidAsk': true,
-                
-                // Main Series Properties - Candle Style
-                'mainSeriesProperties.candleStyle.upColor': '#00d4aa',
-                'mainSeriesProperties.candleStyle.downColor': '#ff6b6b',
+                // Green/red candle theme
+                'mainSeriesProperties.candleStyle.upColor': '#00d4aa', // Teal green
+                'mainSeriesProperties.candleStyle.downColor': '#ff6b6b', // Red
                 'mainSeriesProperties.candleStyle.borderUpColor': '#00d4aa',
                 'mainSeriesProperties.candleStyle.borderDownColor': '#ff6b6b',
                 'mainSeriesProperties.candleStyle.wickUpColor': '#00d4aa',
                 'mainSeriesProperties.candleStyle.wickDownColor': '#ff6b6b',
-                'mainSeriesProperties.candleStyle.drawWick': true,
-                'mainSeriesProperties.candleStyle.drawBorder': true,
-                'mainSeriesProperties.candleStyle.drawBody': true,
                 
-                // Price Line
-                'mainSeriesProperties.showPriceLine': true,
-                'mainSeriesProperties.priceLineWidth': 1,
-                'mainSeriesProperties.priceLineColor': '#00d4aa',
-                
-                // Volume
-                'mainSeriesProperties.showVolume': true,
-                'mainSeriesProperties.volumeStyle.upColor': '#00d4aa',
-                'mainSeriesProperties.volumeStyle.downColor': '#ff6b6b',
-                'mainSeriesProperties.volumeStyle.borderUpColor': '#00d4aa',
-                'mainSeriesProperties.volumeStyle.borderDownColor': '#ff6b6b',
-                
-                // Series Visibility
-                'mainSeriesProperties.visible': true
+                // Hide status lines as requested
+                'paneProperties.legendProperties.showBarChange': false, // Hide bar change values
+                'paneProperties.legendProperties.showVolume': false, // Hide volume
+                'scalesProperties.showSeriesLastValue': false, // Hide chart values
+                'scalesProperties.showStudyLastValue': false, // Hide study values
+                'paneProperties.legendProperties.showSeriesOHLC': false, // Hide OHLC values
+                'paneProperties.legendProperties.showLastDayChange': false // Hide day change
             };
 
             try {
                 tvWidget.applyOverrides(customOverrides);
-                shouldApplyCustomStyling = true; // Set flag to maintain styling
-                console.log('✅ Chart overrides applied successfully');
+                shouldApplyCustomStyling = true;
             } catch (error) {
-                console.error('❌ Error applying chart overrides:', error);
+                console.error('Error applying chart overrides:', error);
             }
         }
 
@@ -4463,12 +4551,15 @@
                     loadingMessage.style.display = 'none';
                 }
                 
-                // Apply custom styling if flag is set (after chart recreation during animation)
-                if (shouldApplyCustomStyling) {
+                // Apply custom styling if flag is set AND toggle is checked (after chart recreation during animation)
+                const toggle = document.getElementById('customThemeToggle');
+                if (shouldApplyCustomStyling && toggle && toggle.getAttribute('data-enabled') === 'true') {
                     console.log('🎨 Re-applying custom styling after chart recreation...');
                     setTimeout(() => {
                         applyChartOverrides();
                     }, 500); // Small delay to ensure chart is fully ready
+                } else {
+                    console.log('🔄 Skipping custom styling - toggle not checked or flag not set');
                 }
                 
                 // Debug chart container after ready
@@ -4500,11 +4591,14 @@
                                 console.log('✅ Chart refresh commands sent');
                                 
                                 // Re-apply custom styling after symbol change if needed
-                                if (shouldApplyCustomStyling) {
+                                const toggle = document.getElementById('customThemeToggle');
+                                if (shouldApplyCustomStyling && toggle && toggle.getAttribute('data-enabled') === 'true') {
                                     console.log('🎨 Re-applying custom styling after symbol change...');
                                     setTimeout(() => {
                                         applyChartOverrides();
                                     }, 200);
+                                } else {
+                                    console.log('🔄 Skipping custom styling after symbol change - toggle not checked');
                                 }
                             } catch (e) {
                                 console.log('❌ Chart refresh failed:', e.message);
@@ -4513,7 +4607,7 @@
                     });
                 }, 1000);
                 
-                document.getElementById('animation-status').textContent = 'Chart ready - Position as needed, then click "Apply Styling & Start"';
+                document.getElementById('animation-status').textContent = 'Chart ready - Position as needed, then click "Apply & Start"';
                 document.getElementById('animation-status').style.color = '#26a69a';
                 
                 window.chartWidget = tvWidget;
