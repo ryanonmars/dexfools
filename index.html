@@ -1379,40 +1379,49 @@
             const historicalStartTime = animationStartTime - preAnimationSeconds;
             
             // historicalBars already declared above
-            let historicalPrice = config.initialMarketCap * (0.1 + rng.next() * 1.8);
+            // Start historical price very close to initial market cap to avoid huge jumps
+            let historicalPrice = config.initialMarketCap * (0.95 + rng.next() * 0.1); // 95-105% of initial MC
             let momentum = 0;
             let trend = 0;
             let lastTrendChange = 0;
             
-            // Generate historical data in 1-minute intervals using sophisticated algorithm
+            // Generate historical data in 1-minute intervals using conservative algorithm
             const historicalMinutes = Math.floor(preAnimationSeconds / 60);
             for (let i = 0; i < historicalMinutes; i++) {
               const time = historicalStartTime + (i * 60); // 1 minute intervals
               const open = historicalPrice;
               
-              // Use the same sophisticated algorithm as animation data
+              // Much more conservative algorithm for historical data
               const progressRatio = i / (historicalMinutes - 1);
-              const trendStrength = 0.01 + (progressRatio * 0.05); // Weaker trend for historical data
-              const randomStrength = 0.8; // More random for historical data
+              const trendStrength = 0.005 + (progressRatio * 0.01); // Very weak trend
+              const randomStrength = 0.3; // Much less random for historical data
               
-              // Random target price for historical data (around initial market cap)
-              const targetPrice = config.initialMarketCap * (0.8 + rng.next() * 0.4);
+              // Target price stays very close to initial market cap
+              const targetPrice = config.initialMarketCap * (0.98 + progressRatio * 0.04); // 98-102% range
               const trendComponent = (targetPrice - open) * trendStrength;
               const randomComponent = (rng.next() - 0.5) * config.rangeMarketCap * randomStrength;
               
-              const randomDirectionChance = 0.4; // More random direction changes for historical data
+              const randomDirectionChance = 0.2; // Less random direction changes
               const trendDirection = rng.next() < randomDirectionChance ? (rng.next() - 0.5) * 2 : 1;
               
-              const volatility = 0.6 + rng.next() * 0.6; // More volatile for historical data
-              const momentum = rng.next() < 0.3 ? (rng.next() - 0.5) * 0.4 : 0; // More momentum changes
+              const volatility = 0.2 + rng.next() * 0.3; // Much less volatile for historical data
+              const momentum = rng.next() < 0.1 ? (rng.next() - 0.5) * 0.1 : 0; // Very little momentum
               
               let change = (trendComponent * trendDirection) + (randomComponent + momentum) * volatility;
               
-              // Add some mean reversion to keep price around initial market cap
-              const meanReversion = (config.initialMarketCap - historicalPrice) * 0.02;
+              // Strong mean reversion to keep price very close to initial market cap
+              const meanReversion = (config.initialMarketCap - historicalPrice) * 0.05;
               change += meanReversion;
               
               let close = open + change;
+              
+              // Keep price within a tight range around initial market cap
+              const maxDeviation = config.initialMarketCap * 0.05; // Max 5% deviation
+              if (close > config.initialMarketCap + maxDeviation) {
+                close = config.initialMarketCap + maxDeviation;
+              } else if (close < config.initialMarketCap - maxDeviation) {
+                close = config.initialMarketCap - maxDeviation;
+              }
               
               // Only apply minimum if it's not lower than the final target
               const effectiveMin = Math.min(config.minMarketCap, config.finalMarketCap);
@@ -1424,9 +1433,9 @@
               let high = Math.max(open, close);
               let low = Math.min(open, close);
               
-              // Add wicks 30% of the time for more realistic trading
-              if (rng.next() < 0.3) {
-                const wickSize = Math.abs(change) * (0.2 + rng.next() * 0.8);
+              // Add wicks 20% of the time for more realistic trading
+              if (rng.next() < 0.2) {
+                const wickSize = Math.abs(change) * (0.1 + rng.next() * 0.3);
                 if (close > open) {
                   high = Math.max(open, close) + rng.next() * wickSize;
                 } else {
@@ -1446,10 +1455,18 @@
               historicalPrice = close;
             }
             
-            // Ensure last historical candle ends at initial market cap
+            // Ensure last historical candle ends very close to initial market cap
             if (historicalBars.length > 0) {
               const lastBar = historicalBars[historicalBars.length - 1];
-              lastBar.close = config.initialMarketCap;
+              const currentPrice = lastBar.close;
+              const targetPrice = config.initialMarketCap;
+              const priceDifference = targetPrice - currentPrice;
+              
+              // Make a small adjustment toward target (max 2% of initial MC)
+              const maxAdjustment = config.initialMarketCap * 0.02;
+              const adjustment = Math.max(-maxAdjustment, Math.min(maxAdjustment, priceDifference));
+              
+              lastBar.close = currentPrice + adjustment;
               lastBar.high = Math.max(lastBar.high, lastBar.open, lastBar.close);
               lastBar.low = Math.min(lastBar.low, lastBar.open, lastBar.close);
             }
@@ -1623,6 +1640,7 @@
       });
 
       console.log(`Generated ${animatedBars.length} bars for animation`);
+      console.log(`Expected bars: ${totalBars}, Generated bars: ${animatedBars.length}`);
       console.log(`Bar times:`, animatedBars.map((bar, i) => `Bar ${i}: time ${bar.time}`));
       
       // Update status
@@ -1678,6 +1696,7 @@
       console.log(`🚀 Using finalAnimationSpeed: ${finalAnimationSpeed}ms for setTimeout`);
       
       function showNextBar() {
+        console.log(`🔄 Animation loop: current=${current}, animatedBars.length=${animatedBars.length}`);
         if (current < animatedBars.length) {
           try {
             liveBars.push(animatedBars[current]);
@@ -1747,6 +1766,7 @@
               setTimeout(showNextBar, actualSpeed);
             } else {
               console.log('✅ Animation complete');
+              console.log(`✅ Final stats: current=${current}, animatedBars.length=${animatedBars.length}, totalBars=${totalBars}`);
               document.getElementById('animation-status').textContent = 'Animation complete!';
               document.getElementById('animation-status').style.color = '#26a69a';
             }
@@ -1772,6 +1792,14 @@
         console.log('🔍 Raw speedMultiplier value:', speedMultiplierValue);
         console.log('🔍 Parsed speedMultiplier:', parsedSpeedMultiplier);
         console.log('🔍 Is NaN:', isNaN(parsedSpeedMultiplier));
+        
+        // Debug totalSeconds specifically
+        const totalSecondsValue = document.getElementById('totalSeconds').value;
+        const parsedTotalSeconds = parseInt(totalSecondsValue);
+        console.log('🔍 totalSeconds debugging:');
+        console.log('🔍 Raw totalSeconds value:', totalSecondsValue);
+        console.log('🔍 Parsed totalSeconds:', parsedTotalSeconds);
+        console.log('🔍 Is NaN:', isNaN(parsedTotalSeconds));
         
     return {
       tokenName: document.getElementById('tokenName').value || 'Custom animated token',
@@ -1805,6 +1833,7 @@
       } catch (error) {
         console.error('❌ Error in getConfig():', error);
         console.error('❌ Error stack:', error.stack);
+        console.error('❌ This is why you are getting 10 seconds instead of 120!');
         // Return a default config if there's an error
         return {
           initialMarketCap: 10000,
