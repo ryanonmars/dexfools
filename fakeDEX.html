@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DexFools - skye/SOL</title>
+    
+    <!-- TradingView Advanced Chart Library -->
+    <script type="text/javascript" src="charting_library.standalone.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -445,8 +449,7 @@
             position: relative;
             width: 100%;
             max-width: 100%;
-            height: 0;
-            padding-bottom: 56.25%; /* 16:9 aspect ratio (9/16 = 0.5625) */
+            height: 500px; /* Fixed height instead of aspect ratio */
             margin: 16px 0;
             overflow: hidden;
             border: 1px solid #1a1a1a;
@@ -492,6 +495,326 @@
             justify-content: center;
             color: #666;
             font-size: 16px;
+        }
+
+        /* Config Panel Styles */
+        #config-panel {
+            position: fixed;
+            top: 0;
+            left: -400px;
+            width: 400px;
+            height: 100vh;
+            background: #1a1a1a;
+            border-right: 1px solid #333;
+            color: #d1d4dc;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            z-index: 2000;
+            transition: left 0.3s ease;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #config-panel.open {
+            left: 0;
+        }
+
+        .config-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .config-button-container {
+            flex-shrink: 0;
+            padding: 20px;
+            border-top: 1px solid #333;
+            background: #1a1a1a;
+        }
+
+        #config-panel h3 {
+            margin: 0 0 15px 0;
+            color: #26a69a;
+            font-size: 16px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .config-group {
+            margin-bottom: 20px;
+        }
+
+        .config-group h4 {
+            margin: 0 0 10px 0;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .config-item {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .config-item label {
+            flex: 1;
+            margin-right: 10px;
+        }
+
+        .config-item input, .config-item select {
+            width: 80px;
+            padding: 4px 6px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: #d1d4dc;
+            font-size: 11px;
+        }
+
+        .config-item input[type="checkbox"] {
+            width: auto;
+        }
+
+        .config-item input[type="number"] {
+            width: 50px;
+        }
+
+        .config-item input[type="text"] {
+            width: 120px;
+            padding: 4px 8px;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: #d1d4dc;
+            font-size: 12px;
+        }
+
+        .config-item input[type="text"]:focus {
+            outline: none;
+            border-color: #26a69a;
+            box-shadow: 0 0 0 2px rgba(38, 166, 154, 0.2);
+        }
+
+        /* Collapsible styles */
+        .collapsible-header {
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.2s ease;
+        }
+
+        .collapsible-header:hover {
+            color: #26a69a;
+        }
+
+        .collapsible-icon {
+            transition: transform 0.2s ease;
+            font-size: 12px;
+        }
+
+        .collapsible-content {
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+        }
+
+        .collapsible-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+        }
+
+        /* Marker section styles */
+        .marker-section {
+            margin-bottom: 20px;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 12px;
+            background: #222;
+        }
+
+        .marker-section h5 {
+            margin: 0 0 12px 0;
+            color: #26a69a;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .marker-item {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 8px;
+            background: #1a1a1a;
+            border-radius: 6px;
+            border: 1px solid #333;
+        }
+
+        .marker-item .config-item {
+            margin-bottom: 0;
+            flex: 0 0 auto;
+        }
+
+        .marker-item .config-item label {
+            font-size: 11px;
+            margin-right: 4px;
+        }
+
+        .marker-item .config-item input, 
+        .marker-item .config-item select {
+            width: 60px;
+            font-size: 11px;
+            padding: 4px 6px;
+        }
+
+        .remove-marker {
+            width: 24px;
+            height: 24px;
+            background: #ef5350;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .remove-marker:hover {
+            background: #d32f2f;
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .add-marker-btn {
+            background: #26a69a;
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            width: 100%;
+        }
+
+        .add-marker-btn:hover {
+            background: #2dd4aa;
+        }
+
+        /* Tooltip styles */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #000;
+            color: #fff;
+            text-align: left;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 11px;
+            line-height: 1.3;
+            border: 1px solid #333;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        #apply-config {
+            width: 100%;
+            padding: 15px 24px;
+            background: #26a69a;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(38, 166, 154, 0.3);
+        }
+
+        #apply-config:hover {
+            background: #2bbbad;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(38, 166, 154, 0.4);
+        }
+
+        #apply-config:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        #animation-status {
+            margin-top: 10px;
+            padding: 10px;
+            background: #333;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 12px;
+            color: #d1d4dc;
+        }
+
+        #tv_chart_container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: #000;
+            min-height: 400px;
+        }
+
+        /* Config Toggle Button */
+        .config-toggle-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 2001;
+            background: #26a69a;
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+        }
+
+        .config-toggle-btn:hover {
+            background: #2bbbad;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        .config-toggle-btn.open {
+            background: #ef5350;
+        }
+
+        .config-toggle-btn.open:hover {
+            background: #d32f2f;
         }
 
         /* Transactions Section */
@@ -1149,6 +1472,216 @@
     </style>
 </head>
 <body>
+    <!-- Config Toggle Button -->
+    <button class="config-toggle-btn" id="configToggleBtn">⚙️ Config</button>
+
+    <!-- Config Panel -->
+    <div id="config-panel">
+        <div class="config-content">
+            <h3>Chart Configuration</h3>
+            
+            <div class="config-group">
+                <h4>Token Information</h4>
+                <div class="config-item">
+                    <label>Token Name:</label>
+                    <input type="text" id="tokenName" value="Custom animated token" placeholder="Enter token name">
+                </div>
+            </div>
+            
+            <div class="config-group">
+                <h4>Market Cap Settings</h4>
+                <div class="config-item">
+                    <label>Initial MC:</label>
+                    <input type="number" id="initialMarketCap" value="10000">
+                </div>
+                <div class="config-item">
+                    <label>Final MC:</label>
+                    <input type="number" id="finalMarketCap" value="50000">
+                </div>
+                <div class="config-item">
+                    <label>Min MC:</label>
+                    <input type="number" id="minMarketCap" value="5000">
+                </div>
+                <div class="config-item">
+                    <label>Range MC:</label>
+                    <input type="number" id="rangeMarketCap" value="2000">
+                </div>
+            </div>
+            
+            <div class="config-group">
+                <h4>Animation Timing</h4>
+                <div class="config-item">
+                    <label>Duration (s):</label>
+                    <input type="number" id="totalSeconds" value="10">
+                </div>
+                <div class="config-item">
+                    <label>Speed Multiplier:</label>
+                    <input type="number" id="speedMultiplier" value="1" step="0.1">
+                </div>
+            </div>
+            
+            <div class="config-group">
+                <h4>Randomness Control</h4>
+                <div class="config-item">
+                    <label>Seed:</label>
+                    <input type="number" id="seed" value="1">
+                </div>
+            </div>
+            
+            <div class="config-group">
+                <h4>Historical Data</h4>
+                <div class="config-item">
+                    <label>Enable:</label>
+                    <input type="checkbox" id="enableHistoricalData">
+                </div>
+                <div class="config-item">
+                    <label>Time:</label>
+                    <input type="text" id="preAnimationTime" value="1h" placeholder="e.g., 2h, 60s">
+                </div>
+            </div>
+            
+            <div class="config-group">
+                <h4>Final Action</h4>
+                <div class="config-item">
+                    <label>Type:</label>
+                    <select id="finalActionType">
+                        <option value="dump">Dump</option>
+                        <option value="pump">Pump</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <label>Target MC:</label>
+                    <input type="number" id="finalActionMarketCap" value="5000">
+                </div>
+            </div>
+            
+            <div class="config-group collapsible">
+                <h4 class="collapsible-header" onclick="toggleCollapsible('markers')">
+                    <span class="collapsible-icon">▼</span>
+                    Markers
+                </h4>
+                <div class="collapsible-content" id="markers-content" style="display: none;">
+                    <!-- Dev Markers -->
+                    <div class="marker-section">
+                        <h5>Developer Markers</h5>
+                        <div id="dev-markers">
+                            <div class="marker-item">
+                                <div class="config-item">
+                                    <label class="tooltip">Dev 1:
+                                        <span class="tooltiptext">Developer marker 1. Shows a marker on the chart at the specified time. Can be Buy or Sell type.</span>
+                                    </label>
+                                    <input type="checkbox" id="showFirstCandle" checked>
+                                </div>
+                                <div class="config-item">
+                                    <label class="tooltip">Type:
+                                        <span class="tooltiptext">Whether this marker represents a Buy (green) or Sell (red) action on the chart.</span>
+                                    </label>
+                                    <select id="firstCandleType">
+                                        <option value="buy">Buy</option>
+                                        <option value="sell">Sell</option>
+                                    </select>
+                                </div>
+                                <div class="config-item">
+                                    <label class="tooltip">Time:
+                                        <span class="tooltiptext">Time in seconds when this marker will appear on the chart during the animation.</span>
+                                    </label>
+                                    <input type="number" id="firstCandleTime" value="1">
+                                </div>
+                                <button type="button" class="remove-marker" onclick="removeDevMarker(this)" style="display: none;">🗑️</button>
+                            </div>
+                            <div class="marker-item">
+                                <div class="config-item">
+                                    <label class="tooltip">Dev 2:
+                                        <span class="tooltiptext">Developer marker 2. Shows a marker on the chart at the specified time. Can be Buy or Sell type.</span>
+                                    </label>
+                                    <input type="checkbox" id="showFinalCandle" checked>
+                                </div>
+                                <div class="config-item">
+                                    <label class="tooltip">Type:
+                                        <span class="tooltiptext">Whether this marker represents a Buy (green) or Sell (red) action on the chart.</span>
+                                    </label>
+                                    <select id="finalCandleType">
+                                        <option value="buy">Buy</option>
+                                        <option value="sell" selected>Sell</option>
+                                    </select>
+                                </div>
+                                <div class="config-item">
+                                    <label class="tooltip">Time:
+                                        <span class="tooltiptext">Time in seconds when this marker will appear on the chart during the animation.</span>
+                                    </label>
+                                    <input type="number" id="finalCandleTime" value="10">
+                                </div>
+                                <button type="button" class="remove-marker" onclick="removeDevMarker(this)" style="display: none;">🗑️</button>
+                            </div>
+                        </div>
+                        <button type="button" class="add-marker-btn" onclick="addDevMarker()">+ Add Dev Marker</button>
+                    </div>
+                    
+                    <!-- User Markers -->
+                    <div class="marker-section">
+                        <h5>User Markers</h5>
+                        <div id="user-markers">
+                            <div class="marker-item">
+                                <div class="config-item">
+                                    <label class="tooltip">User 1:
+                                        <span class="tooltiptext">User marker 1. Shows a marker on the chart at the specified time. Can be Buy or Sell type.</span>
+                                    </label>
+                                    <input type="checkbox" id="showB">
+                                </div>
+                                <div class="config-item">
+                                    <label class="tooltip">Type:
+                                        <span class="tooltiptext">Whether this marker represents a Buy (green) or Sell (red) action on the chart.</span>
+                                    </label>
+                                    <select id="bType">
+                                        <option value="buy" selected>Buy</option>
+                                        <option value="sell">Sell</option>
+                                    </select>
+                                </div>
+                                <div class="config-item">
+                                    <label class="tooltip">Time:
+                                        <span class="tooltiptext">Time in seconds when this marker will appear on the chart during the animation.</span>
+                                    </label>
+                                    <input type="number" id="bTime" value="5">
+                                </div>
+                                <button type="button" class="remove-marker" onclick="removeUserMarker(this)" style="display: none;">🗑️</button>
+                            </div>
+                            <div class="marker-item">
+                                <div class="config-item">
+                                    <label class="tooltip">User 2:
+                                        <span class="tooltiptext">User marker 2. Shows a marker on the chart at the specified time. Can be Buy or Sell type.</span>
+                                    </label>
+                                    <input type="checkbox" id="showS">
+                                </div>
+                                <div class="config-item">
+                                    <label class="tooltip">Type:
+                                        <span class="tooltiptext">Whether this marker represents a Buy (green) or Sell (red) action on the chart.</span>
+                                    </label>
+                                    <select id="sType">
+                                        <option value="buy">Buy</option>
+                                        <option value="sell" selected>Sell</option>
+                                    </select>
+                                </div>
+                                <div class="config-item">
+                                    <label class="tooltip">Time:
+                                        <span class="tooltiptext">Time in seconds when this marker will appear on the chart during the animation.</span>
+                                    </label>
+                                    <input type="number" id="sTime" value="8">
+                                </div>
+                                <button type="button" class="remove-marker" onclick="removeUserMarker(this)" style="display: none;">🗑️</button>
+                            </div>
+                        </div>
+                        <button type="button" class="add-marker-btn" onclick="addUserMarker()">+ Add User Marker</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="config-button-container">
+            <button id="apply-config">Apply & Start Animation</button>
+            <div id="animation-status">Chart ready - click "Apply & Start" to begin</div>
+        </div>
+    </div>
+
     <div class="container">
         <!-- Left Sidebar -->
         <div class="sidebar" id="leftSidebar">
@@ -1356,7 +1889,11 @@
                     </div>
                 </div>
                 <div class="chart-container" id="chartContainer">
-                    <div class="chart-placeholder">📊 Chart Area - Replace with TradingView chart</div>
+                    <div id="tv_chart_container">
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #666; font-size: 16px; z-index: 1;">
+                            📊 Loading TradingView Chart...
+                        </div>
+                    </div>
                     <div class="resize-handle" id="resizeHandle"></div>
                 </div>
             </div>
@@ -2009,6 +2546,43 @@
         // Start metrics animation after page loads
         setTimeout(startMetricsAnimation, 3000);
 
+        // Chart Generation Variables (from index.html)
+        let tvWidget = null;
+        let globalDatafeed = null;
+        let isAnimating = false;
+        let currentAnimation = null;
+
+        // Seeded random number generator
+        class SeededRandom {
+            constructor(seed) {
+                this.seed = seed;
+            }
+            
+            next() {
+                this.seed = (this.seed * 1664525 + 1013904223) % Math.pow(2, 32);
+                return this.seed / Math.pow(2, 32);
+            }
+            
+            range(min, max) {
+                return min + this.next() * (max - min);
+            }
+        }
+
+        // Config Panel Toggle Functionality
+        function toggleConfigPanel() {
+            const configPanel = document.getElementById('config-panel');
+            const toggleBtn = document.getElementById('configToggleBtn');
+            
+            configPanel.classList.toggle('open');
+            toggleBtn.classList.toggle('open');
+            
+            if (configPanel.classList.contains('open')) {
+                toggleBtn.textContent = '✕ Close';
+            } else {
+                toggleBtn.textContent = '⚙️ Config';
+            }
+        }
+
         // Initialize everything on page load
         document.addEventListener('DOMContentLoaded', function() {
             // Hide close button
@@ -2016,6 +2590,25 @@
             if (closeBtn) {
                 closeBtn.style.display = 'none';
             }
+
+            // Config panel toggle
+            const configToggleBtn = document.getElementById('configToggleBtn');
+            if (configToggleBtn) {
+                configToggleBtn.addEventListener('click', toggleConfigPanel);
+            }
+
+            // Apply config button
+            const applyConfigBtn = document.getElementById('apply-config');
+            if (applyConfigBtn) {
+                applyConfigBtn.addEventListener('click', startAnimation);
+            }
+
+            // Initialize chart on page load
+            setTimeout(() => {
+                console.log('🚀 Initializing chart on page load...');
+                globalDatafeed = new CustomDatafeed();
+                initTradingView();
+            }, 1000);
             
             // Initialize market cap input
             marketCapInput = document.getElementById('marketCapInput');
@@ -2193,6 +2786,879 @@
                 rightPanel.style.width = '320px';
                 mainContent.style.marginRight = '320px';
                 mainContent.style.maxWidth = `calc(100vw - ${leftSidebar.offsetWidth}px - 320px)`;
+            });
+        }
+
+        // Chart Generation Functions (from index.html)
+        function startAnimation() {
+            console.log('🎬 startAnimation function called!');
+            // Stop any existing animation first
+            if (isAnimating) {
+                console.log('🛑 Stopping existing animation...');
+                isAnimating = false;
+                if (currentAnimation) {
+                    clearTimeout(currentAnimation);
+                    currentAnimation = null;
+                }
+            }
+            
+            isAnimating = true;
+            const config = getConfig();
+            console.log('🎬 Starting TradingView Advanced Chart animation with config:', config);
+            
+            document.getElementById('animation-status').textContent = 'Resetting chart and generating animation data...';
+            document.getElementById('animation-status').style.color = '#26a69a';
+            
+            // COMPLETE CHART RESET - Recreate the entire chart widget
+            console.log('🔄 Performing complete chart reset...');
+            
+            // Remove the old chart completely
+            if (tvWidget) {
+                console.log('🔄 Removing old chart widget...');
+                tvWidget.remove();
+                tvWidget = null;
+            }
+            
+            // Pre-load historical data first
+            let historicalBars = [];
+            if (config.enableHistoricalData) {
+                const preAnimationSeconds = parseTimeToSeconds(config.preAnimationTime);
+                if (preAnimationSeconds > 0) {
+                    console.log(`📈 Pre-loading ${preAnimationSeconds} seconds of historical data...`);
+                    
+                    // Generate historical data immediately
+                    const rng = new SeededRandom(config.seed);
+                    const currentTime = Math.floor(Date.now() / 1000);
+                    const animationStartTime = currentTime;
+                    const historicalStartTime = animationStartTime - preAnimationSeconds;
+                    
+                    let historicalPrice = config.initialMarketCap * (0.95 + rng.next() * 0.1);
+                    let momentum = 0;
+                    let trend = 0;
+                    let lastTrendChange = 0;
+                    
+                    const historicalMinutes = Math.floor(preAnimationSeconds / 60);
+                    for (let i = 0; i < historicalMinutes; i++) {
+                        const time = historicalStartTime + (i * 60);
+                        const open = historicalPrice;
+                        
+                        const progressRatio = i / (historicalMinutes - 1);
+                        const trendStrength = 0.005 + (progressRatio * 0.01);
+                        const randomStrength = 0.3;
+                        
+                        const targetPrice = config.initialMarketCap * (0.98 + progressRatio * 0.04);
+                        const trendComponent = (targetPrice - open) * trendStrength;
+                        const randomComponent = (rng.next() - 0.5) * config.rangeMarketCap * randomStrength;
+                        
+                        const randomDirectionChance = 0.2;
+                        const trendDirection = rng.next() < randomDirectionChance ? (rng.next() - 0.5) * 2 : 1;
+                        
+                        const volatility = 0.2 + rng.next() * 0.3;
+                        const momentum = rng.next() < 0.1 ? (rng.next() - 0.5) * 0.1 : 0;
+                        
+                        let change = (trendComponent * trendDirection) + (randomComponent + momentum) * volatility;
+                        
+                        const meanReversion = (config.initialMarketCap - historicalPrice) * 0.05;
+                        change += meanReversion;
+                        
+                        let close = open + change;
+                        
+                        const maxDeviation = config.initialMarketCap * 0.05;
+                        if (close > config.initialMarketCap + maxDeviation) {
+                            close = config.initialMarketCap + maxDeviation;
+                        } else if (close < config.initialMarketCap - maxDeviation) {
+                            close = config.initialMarketCap - maxDeviation;
+                        }
+                        
+                        const effectiveMin = Math.min(config.minMarketCap, config.finalMarketCap);
+                        if (close < effectiveMin) {
+                            close = effectiveMin;
+                        }
+                        
+                        let high = Math.max(open, close);
+                        let low = Math.min(open, close);
+                        
+                        if (rng.next() < 0.2) {
+                            const wickSize = Math.abs(change) * (0.1 + rng.next() * 0.3);
+                            if (close > open) {
+                                high = Math.max(open, close) + rng.next() * wickSize;
+                            } else {
+                                low = Math.min(open, close) - rng.next() * wickSize;
+                            }
+                        }
+                        
+                        historicalBars.push({
+                            time: time,
+                            open: open,
+                            high: high,
+                            low: low,
+                            close: close,
+                            volume: 1000 + rng.next() * 2000
+                        });
+                        
+                        historicalPrice = close;
+                    }
+                    
+                    if (historicalBars.length > 0) {
+                        const lastBar = historicalBars[historicalBars.length - 1];
+                        const currentPrice = lastBar.close;
+                        const targetPrice = config.initialMarketCap;
+                        const priceDifference = targetPrice - currentPrice;
+                        
+                        const maxAdjustment = config.initialMarketCap * 0.02;
+                        const adjustment = Math.max(-maxAdjustment, Math.min(maxAdjustment, priceDifference));
+                        
+                        lastBar.close = currentPrice + adjustment;
+                        lastBar.high = Math.max(lastBar.high, lastBar.open, lastBar.close);
+                        lastBar.low = Math.min(lastBar.low, lastBar.open, lastBar.close);
+                        
+                        lastBar.time = animationStartTime - 60;
+                        console.log(`📈 Last historical bar ends at: ${lastBar.time}, Animation starts at: ${animationStartTime}`);
+                    }
+                    
+                    console.log(`📈 Generated ${historicalBars.length} historical bars`);
+                }
+            }
+            
+            // Create datafeed with historical data already loaded
+            globalDatafeed = new CustomDatafeed();
+            globalDatafeed.currentData = [...historicalBars];
+            console.log('🔄 Datafeed created with historical data:', globalDatafeed.currentData.length, 'bars');
+            
+            // Recreate the chart widget
+            console.log('🔄 Creating fresh chart widget...');
+            initTradingView();
+            
+            // Wait for chart to be ready, then start animation
+            setTimeout(() => {
+                console.log('🚀 Fresh chart ready, starting animation');
+                startAnimationData(config);
+            }, 1000);
+        }
+
+        function getConfig() {
+            try {
+                const speedMultiplierValue = document.getElementById('speedMultiplier').value;
+                const parsedSpeedMultiplier = parseFloat(speedMultiplierValue);
+                
+                return {
+                    tokenName: document.getElementById('tokenName').value || 'Custom animated token',
+                    initialMarketCap: parseInt(document.getElementById('initialMarketCap').value),
+                    finalMarketCap: parseInt(document.getElementById('finalMarketCap').value),
+                    minMarketCap: parseInt(document.getElementById('minMarketCap').value),
+                    finalActionMarketCap: parseInt(document.getElementById('finalActionMarketCap').value),
+                    rangeMarketCap: parseInt(document.getElementById('rangeMarketCap').value),
+                    totalSeconds: parseInt(document.getElementById('totalSeconds').value),
+                    speedMultiplier: parsedSpeedMultiplier || 1.0,
+                    seed: parseInt(document.getElementById('seed').value) || 1,
+                    enableHistoricalData: document.getElementById('enableHistoricalData').checked,
+                    preAnimationTime: document.getElementById('preAnimationTime').value,
+                    markers: {
+                        showFirstCandle: document.getElementById('showFirstCandle').checked,
+                        firstCandleType: document.getElementById('firstCandleType').value,
+                        firstCandleTime: parseInt(document.getElementById('firstCandleTime').value),
+                        showFinalCandle: document.getElementById('showFinalCandle').checked,
+                        finalCandleType: document.getElementById('finalCandleType').value,
+                        finalCandleTime: parseInt(document.getElementById('finalCandleTime').value),
+                        userMarkers: {
+                            showB: document.getElementById('showB').checked,
+                            bTime: parseInt(document.getElementById('bTime').value),
+                            bType: document.getElementById('bType').value,
+                            showS: document.getElementById('showS').checked,
+                            sTime: parseInt(document.getElementById('sTime').value),
+                            sType: document.getElementById('sType').value
+                        }
+                    }
+                };
+            } catch (error) {
+                console.error('❌ Error in getConfig():', error);
+                return {
+                    initialMarketCap: 10000,
+                    finalMarketCap: 50000,
+                    minMarketCap: 5000,
+                    rangeMarketCap: 2000,
+                    totalSeconds: 10,
+                    speedMultiplier: 1.0,
+                    seed: 1,
+                    enableHistoricalData: false,
+                    preAnimationTime: '1h',
+                    markers: {
+                        showFirstCandle: true,
+                        firstCandleType: 'buy',
+                        firstCandleTime: 1,
+                        showFinalCandle: true,
+                        finalCandleType: 'sell',
+                        finalCandleTime: 10,
+                        userMarkers: {
+                            showB: false,
+                            bTime: 5,
+                            bType: 'buy',
+                            showS: false,
+                            sTime: 8,
+                            sType: 'sell'
+                        }
+                    }
+                };
+            }
+        }
+
+        function parseTimeToSeconds(timeString) {
+            const timeStr = timeString.toLowerCase().trim();
+            const match = timeStr.match(/^(\d+)([smhd])$/);
+            
+            if (!match) {
+                console.warn(`Invalid time format: ${timeString}. Using default 1 hour.`);
+                return 3600;
+            }
+            
+            const value = parseInt(match[1]);
+            const unit = match[2];
+            
+            switch (unit) {
+                case 's': return value;
+                case 'm': return value * 60;
+                case 'h': return value * 3600;
+                case 'd': return value * 86400;
+                default: return 3600;
+            }
+        }
+
+        // Custom Datafeed for TradingView Advanced Chart
+        class CustomDatafeed {
+            constructor() {
+                this.currentData = [];
+                this.animationIndex = 0;
+                this.onRealtimeCallback = null;
+            }
+
+            onReady(callback) {
+                console.log('📡 TradingView Advanced Chart onReady called');
+                setTimeout(() => callback({
+                    supported_resolutions: ['1', '5', '15', '30', '60', '240', '1D'],
+                    supports_marks: true,
+                    supports_timescale_marks: true,
+                    supports_time: true,
+                }), 0);
+            }
+
+            searchSymbols(userInput, exchange, symbolType, onResultReadyCallback) {
+                console.log('🔍 searchSymbols called');
+                onResultReadyCallback([]);
+            }
+
+            resolveSymbol(symbolName, onSymbolResolvedCallback, onResolveErrorCallback) {
+                console.log('🔗 resolveSymbol called for:', symbolName);
+                
+                const tokenName = document.getElementById('tokenName')?.value || 'Custom animated token';
+                
+                const symbolInfo = {
+                    ticker: '',
+                    name: tokenName,
+                    description: tokenName,
+                    type: 'crypto',
+                    session: '24x7',
+                    timezone: 'UTC',
+                    exchange: '',
+                    minmov: 1,
+                    pricescale: 100,
+                    has_intraday: true,
+                    has_weekly_and_monthly: false,
+                    supported_resolutions: ['1S', '5S', '15S', '30S', '1', '5', '15', '30', '60', '240', '1D'],
+                    volume_precision: 0,
+                    data_status: 'streaming',
+                };
+
+                console.log('🔗 Sending symbolInfo to TradingView:', symbolInfo);
+                setTimeout(() => onSymbolResolvedCallback(symbolInfo), 0);
+            }
+
+            getBars(symbolInfo, resolution, periodParams, onHistoryCallback, onErrorCallback) {
+                console.log('📊 getBars called with:', { 
+                    resolution, 
+                    periodParams, 
+                    dataLength: this.currentData.length,
+                    from: new Date(periodParams.from * 1000).toISOString(),
+                    to: new Date(periodParams.to * 1000).toISOString()
+                });
+                
+                try {
+                    if (this.currentData.length > 0) {
+                        const fromTime = periodParams.from;
+                        const toTime = periodParams.to;
+                        
+                        const filteredBars = this.currentData.filter(bar => {
+                            const barTime = bar.time;
+                            return barTime >= fromTime && barTime <= toTime;
+                        });
+                        
+                        console.log('📊 Filtered to', filteredBars.length, 'bars in range');
+                        
+                        const tvData = filteredBars.map(bar => ({
+                            time: bar.time * 1000,
+                            open: bar.open,
+                            high: bar.high,
+                            low: bar.low,
+                            close: bar.close,
+                            volume: bar.volume || 1000
+                        }));
+
+                        console.log('✅ Sending', tvData.length, 'bars to TradingView');
+                        setTimeout(() => {
+                            onHistoryCallback(tvData, { noData: false });
+                        }, 0);
+                    } else {
+                        console.log('📊 No data available, sending empty response');
+                        setTimeout(() => onHistoryCallback([], { noData: true }), 0);
+                    }
+                } catch (error) {
+                    console.error('❌ Error in getBars:', error);
+                    if (onErrorCallback) {
+                        onErrorCallback(error);
+                    }
+                }
+            }
+
+            subscribeBars(symbolInfo, resolution, onRealtimeCallback, subscribeUID, onResetCacheNeededCallback) {
+                console.log('📡 subscribeBars called with:', { symbolInfo, resolution, subscribeUID });
+                this.onRealtimeCallback = onRealtimeCallback;
+                console.log('📡 Realtime callback stored:', !!this.onRealtimeCallback);
+            }
+
+            unsubscribeBars(subscribeUID) {
+                console.log('📡 unsubscribeBars called');
+            }
+
+            addBar(bar) {
+                this.currentData.push(bar);
+                
+                if (this.onRealtimeCallback) {
+                    const tvBar = {
+                        time: bar.time * 1000,
+                        open: bar.open,
+                        high: bar.high,
+                        low: bar.low,
+                        close: bar.close,
+                        volume: bar.volume || 1000
+                    };
+                    
+                    console.log('📊 Sending real-time bar:', tvBar);
+                    this.onRealtimeCallback(tvBar);
+                }
+            }
+
+            clearData() {
+                this.currentData = [];
+                this.animationIndex = 0;
+            }
+
+            getMarks(symbolInfo, from, to, onDataCallback, resolution) {
+                console.log('🎯 getMarks called:', { symbolInfo, from, to, resolution });
+                const marks = this.getCurrentMarks(from, to);
+                console.log('🎯 Returning marks:', marks.length, marks);
+                onDataCallback(marks);
+            }
+
+            getCurrentMarks(from, to) {
+                const marks = [];
+                
+                if (!this.currentData || this.currentData.length === 0) {
+                    return marks;
+                }
+
+                for (let i = 0; i < this.currentData.length; i++) {
+                    const bar = this.currentData[i];
+                    const barTime = bar.time;
+                    
+                    if (barTime >= from && barTime <= to) {
+                        if (bar.mark) {
+                            marks.push({
+                                id: bar.mark.id,
+                                time: barTime,
+                                color: bar.mark.color,
+                                text: bar.mark.text,
+                                minSize: 14,
+                                shape: bar.mark.shape || 'circle'
+                            });
+                        }
+                    }
+                }
+
+                marks.sort((a, b) => a.time - b.time);
+                return marks;
+            }
+
+            addMark(barTime, markData) {
+                console.log('🎯 addMark called:', { barTime, markData, currentDataLength: this.currentData.length });
+                
+                for (let i = 0; i < this.currentData.length; i++) {
+                    if (this.currentData[i].time === barTime) {
+                        this.currentData[i].mark = markData;
+                        console.log('🎯 Mark added to bar at index', i, 'time', barTime);
+                        break;
+                    }
+                }
+            }
+
+            getTimescaleMarks(symbolInfo, from, to, onDataCallback, resolution) {
+                console.log('📅 getTimescaleMarks called:', { symbolInfo, from, to, resolution });
+                onDataCallback([]);
+            }
+        }
+
+        function initTradingView() {
+            if (tvWidget) {
+                tvWidget.remove();
+                tvWidget = null;
+            }
+
+            console.log('🚀 Initializing TradingView Advanced Chart...');
+            
+            const container = document.getElementById('tv_chart_container');
+            console.log('🚀 Chart container found:', !!container);
+            console.log('🚀 Container dimensions:', container ? {
+                width: container.offsetWidth,
+                height: container.offsetHeight,
+                visible: container.offsetParent !== null
+            } : 'Container not found');
+            
+            // Check if TradingView is available
+            if (typeof TradingView === 'undefined') {
+                console.error('❌ TradingView library not loaded!');
+                document.getElementById('animation-status').textContent = 'Error: TradingView library not loaded!';
+                document.getElementById('animation-status').style.color = '#ff6b6b';
+                return;
+            }
+            
+            console.log('✅ TradingView library loaded successfully');
+
+            const currentTokenName = document.getElementById('tokenName')?.value || 'Custom animated token';
+            console.log('🚀 Creating widget with name:', currentTokenName);
+            
+            tvWidget = new TradingView.widget({
+                symbol: currentTokenName,
+                interval: '1',
+                container: 'tv_chart_container',
+                datafeed: globalDatafeed,
+                library_path: '',
+                locale: 'en',
+                disabled_features: [
+                    'save_chart_properties_to_local_storage',
+                    'use_localstorage_for_settings',
+                    'right_bar_stays_on_scroll',
+                    'study_templates',
+                    'timeframes_toolbar',
+                    'scales_context_menu',
+                    'pane_context_menu',
+                    'create_volume_indicator_by_default',
+                    'header_symbol_search',
+                    'header_compare',
+                    'header_screenshot',
+                    'header_widget',
+                    'header_saveload',
+                    'header_settings',
+                    'header_chart_type',
+                    'header_resolutions',
+                    'header_snapshot_trading_drawing_tools',
+                    'header_indicators',
+                    'header_fullscreen_button',
+                    'header_undo_redo',
+                    'header_interval_dialog_button',
+                    'show_interval_dialog_on_key_press',
+                    'header_chart_type_dialog_button',
+                    'show_chart_type_dialog_on_key_press',
+                    'header_symbol_search_dialog_button',
+                    'show_symbol_search_dialog_on_key_press',
+                    'header_resolutions_dialog_button',
+                    'show_resolutions_dialog_on_key_press',
+                    'header_screenshot_dialog_button',
+                    'show_screenshot_dialog_on_key_press',
+                    'header_widget_dialog_button',
+                    'show_widget_dialog_on_key_press',
+                    'header_saveload_dialog_button',
+                    'show_saveload_dialog_on_key_press',
+                    'header_settings_dialog_button',
+                    'show_settings_dialog_on_key_press',
+                    'header_indicators_dialog_button',
+                    'show_indicators_dialog_on_key_press',
+                    'header_fullscreen_button_dialog_button',
+                    'show_fullscreen_button_dialog_on_key_press',
+                    'header_undo_redo_dialog_button',
+                    'show_undo_redo_dialog_on_key_press'
+                ],
+                enabled_features: [
+                    'move_logo_to_main_pane'
+                ],
+                fullscreen: false,
+                autosize: true,
+                theme: 'dark',
+                overrides: {
+                    'paneProperties.background': '#000000',
+                    'paneProperties.vertGridProperties.color': '#333333',
+                    'paneProperties.horzGridProperties.color': '#333333'
+                },
+                studies_overrides: {},
+                custom_css_url: null
+            });
+
+            tvWidget.onChartReady(() => {
+                console.log('✅ TradingView Advanced Chart ready');
+                
+                // Hide loading message
+                const loadingMessage = document.querySelector('#tv_chart_container > div');
+                if (loadingMessage) {
+                    loadingMessage.style.display = 'none';
+                }
+                
+                // Debug chart container after ready
+                const chartContainer = document.getElementById('tv_chart_container');
+                console.log('📊 Chart container after ready:', {
+                    exists: !!chartContainer,
+                    width: chartContainer?.offsetWidth,
+                    height: chartContainer?.offsetHeight,
+                    visible: chartContainer?.offsetParent !== null,
+                    children: chartContainer?.children?.length || 0
+                });
+                
+                const currentTokenName = document.getElementById('tokenName')?.value || 'Custom animated token';
+                console.log('🔄 Updating chart name to:', currentTokenName);
+                
+                setTimeout(() => {
+                    tvWidget.setSymbol(currentTokenName, '1', () => {
+                        console.log('✅ setSymbol callback executed');
+                        
+                        setTimeout(() => {
+                            try {
+                                tvWidget.chart().executeActionById('timeScaleReset');
+                                tvWidget.chart().executeActionById('chartReset');
+                                tvWidget.chart().executeActionById('dataReset');
+                                console.log('✅ Chart refresh commands sent');
+                            } catch (e) {
+                                console.log('❌ Chart refresh failed:', e.message);
+                            }
+                        }, 100);
+                    });
+                }, 1000);
+                
+                document.getElementById('animation-status').textContent = 'Chart ready - Position as needed, then click "Apply & Start"';
+                document.getElementById('animation-status').style.color = '#26a69a';
+                
+                window.chartWidget = tvWidget;
+                
+                console.log('📊 Chart ready - position as needed for marketing material');
+            });
+        }
+
+        function startAnimationData(config) {
+            console.log('🔍 Config passed to startAnimationData:', config);
+            
+            const totalBars = config.totalSeconds;
+            const rng = new SeededRandom(config.seed);
+            
+            let animationStartTime;
+            if (config.enableHistoricalData && globalDatafeed.currentData.length > 0) {
+                const lastHistoricalBar = globalDatafeed.currentData[globalDatafeed.currentData.length - 1];
+                animationStartTime = lastHistoricalBar.time + 60;
+                console.log(`📈 Animation starting after historical data at time: ${animationStartTime}`);
+            } else {
+                animationStartTime = Math.floor(Date.now() / 1000);
+                console.log(`📈 Animation starting at current time: ${animationStartTime}`);
+            }
+            
+            console.log(`Generating ${totalBars} bars for animation...`);
+            
+            const animatedBars = [];
+            let lastClose = config.initialMarketCap;
+            
+            const totalChange = config.finalMarketCap - config.initialMarketCap;
+            const progressPerBar = totalChange / (totalBars - 1);
+            
+            for (let i = 0; i < totalBars - 2; i++) {
+                const time = animationStartTime + (i * 60);
+                const open = lastClose;
+                
+                const targetPrice = config.initialMarketCap + (progressPerBar * i);
+                
+                const progressRatio = i / (totalBars - 1);
+                const trendStrength = 0.03 + (progressRatio * 0.12);
+                const randomStrength = 0.7;
+                
+                const trendComponent = (targetPrice - open) * trendStrength;
+                const randomComponent = (rng.next() - 0.5) * config.rangeMarketCap * randomStrength;
+                
+                const randomDirectionChance = 0.3;
+                const trendDirection = rng.next() < randomDirectionChance ? (rng.next() - 0.5) * 2 : 1;
+                
+                const volatility = 0.8 + rng.next() * 0.4;
+                const momentum = rng.next() < 0.25 ? (rng.next() - 0.5) * 0.3 : 0;
+                
+                let change = (trendComponent * trendDirection) + (randomComponent + momentum) * volatility;
+                
+                if (i === 0) {
+                    change = Math.abs(change);
+                }
+                
+                let close = open + change;
+                
+                const effectiveMin = Math.min(config.minMarketCap, config.finalMarketCap);
+                if (close < effectiveMin) {
+                    close = effectiveMin;
+                }
+                
+                const totalDistance = Math.abs(config.finalMarketCap - config.initialMarketCap);
+                const currentProgress = Math.abs(close - config.initialMarketCap) / totalDistance;
+                const expectedProgress = i / (totalBars - 1);
+                const progressDeviation = Math.abs(currentProgress - expectedProgress);
+                
+                if (progressDeviation > 0.4) {
+                    const correctionStrength = 0.01 + (progressRatio * 0.03);
+                    const correction = (targetPrice - close) * correctionStrength;
+                    close = close + correction;
+                }
+                
+                let high = Math.max(open, close);
+                let low = Math.min(open, close);
+                
+                if (rng.next() < 0.2) {
+                    const wickSize = Math.abs(change) * (0.3 + rng.next() * 0.7);
+                    if (close > open) {
+                        high = Math.max(open, close) + rng.next() * wickSize;
+                    } else {
+                        low = Math.min(open, close) - rng.next() * wickSize;
+                    }
+                }
+                
+                const bar = {
+                    time: time,
+                    open: open,
+                    high: high,
+                    low: low,
+                    close: close
+                };
+
+                animatedBars.push(bar);
+                lastClose = close;
+            }
+
+            const finalTime = animationStartTime + ((totalBars - 2) * 60);
+            const finalOpen = lastClose;
+            const finalClose = config.finalMarketCap;
+            const finalHigh = Math.max(finalOpen, finalClose);
+            const finalLow = Math.min(finalOpen, finalClose);
+
+            animatedBars.push({
+                time: finalTime,
+                open: finalOpen,
+                high: finalHigh,
+                low: finalLow,
+                close: finalClose
+            });
+
+            const actionTime = animationStartTime + ((totalBars - 1) * 60);
+            const actionOpen = config.finalMarketCap;
+            const actionClose = config.finalActionMarketCap;
+            const actionHigh = Math.max(actionOpen, actionClose);
+            const actionLow = Math.min(actionOpen, actionClose);
+
+            animatedBars.push({
+                time: actionTime,
+                open: actionOpen,
+                high: actionHigh,
+                low: actionLow,
+                close: actionClose
+            });
+
+            console.log(`Generated ${animatedBars.length} bars for animation`);
+            
+            document.getElementById('animation-status').textContent = 'Starting animation...';
+            document.getElementById('animation-status').style.color = '#26a69a';
+            
+            startAnimationLoop(animatedBars, config);
+        }
+
+        function startAnimationLoop(animatedBars, config) {
+            let current = 0;
+            const liveBars = [];
+            
+            console.log(`📈 Datafeed has ${globalDatafeed.currentData.length} bars (including historical data)`);
+            
+            const baseSpeed = 1000;
+            const animationSpeed = baseSpeed / config.speedMultiplier;
+            
+            let finalAnimationSpeed = animationSpeed;
+            if (animationSpeed < 50) {
+                finalAnimationSpeed = 100;
+            }
+            
+            document.getElementById('animation-status').textContent = `Speed: ${finalAnimationSpeed}ms per bar (${config.speedMultiplier}x multiplier)`;
+            document.getElementById('animation-status').style.color = '#ff9800';
+            
+            function showNextBar() {
+                console.log(`🔄 Animation loop: current=${current}, animatedBars.length=${animatedBars.length}`);
+                if (current < animatedBars.length) {
+                    try {
+                        liveBars.push(animatedBars[current]);
+                        
+                        const existingHistoricalData = globalDatafeed.currentData.filter(bar => 
+                            animatedBars.length === 0 || bar.time < animatedBars[0].time
+                        );
+                        globalDatafeed.currentData = [...existingHistoricalData, ...liveBars];
+                        
+                        const currentBar = liveBars[liveBars.length - 1];
+                        const tvBar = {
+                            time: currentBar.time * 1000,
+                            open: currentBar.open,
+                            high: currentBar.high,
+                            low: currentBar.low,
+                            close: currentBar.close,
+                            volume: currentBar.volume || 1000
+                        };
+                        
+                        console.log(`📊 Calling realtime callback with bar:`, tvBar);
+                        
+                        if (globalDatafeed.onRealtimeCallback) {
+                            try {
+                                globalDatafeed.onRealtimeCallback(tvBar);
+                                console.log(`📊 Realtime callback called successfully`);
+                            } catch (error) {
+                                console.error(`❌ Error calling realtime callback:`, error);
+                            }
+                        } else {
+                            console.error(`❌ No realtime callback available!`);
+                        }
+                        
+                        current++;
+                        
+                        if (current < animatedBars.length) {
+                            const currentSpeed = baseSpeed / config.speedMultiplier;
+                            const actualSpeed = currentSpeed < 50 ? 100 : currentSpeed;
+                            console.log(`⏱️ Setting timeout for next bar in ${actualSpeed}ms (speed multiplier: ${config.speedMultiplier})`);
+                            setTimeout(showNextBar, actualSpeed);
+                        } else {
+                            console.log('✅ Animation complete');
+                            document.getElementById('animation-status').textContent = 'Animation complete!';
+                            document.getElementById('animation-status').style.color = '#26a69a';
+                        }
+                    } catch (error) {
+                        console.error('Animation error:', error);
+                    }
+                }
+            }
+            
+            console.log('🚀 Starting animation loop...');
+            showNextBar();
+        }
+
+        // Collapsible functionality
+        function toggleCollapsible(sectionId) {
+            const content = document.getElementById(sectionId + '-content');
+            const icon = document.querySelector(`#${sectionId}-content`).previousElementSibling.querySelector('.collapsible-icon');
+            
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                icon.textContent = '▼';
+                content.classList.remove('collapsed');
+            } else {
+                content.style.display = 'none';
+                icon.textContent = '▶';
+                content.classList.add('collapsed');
+            }
+        }
+
+        // Marker management functions
+        function addDevMarker() {
+            const devMarkers = document.getElementById('dev-markers');
+            const markerCount = devMarkers.children.length;
+            const newMarker = document.createElement('div');
+            newMarker.className = 'marker-item';
+            newMarker.innerHTML = `
+                <div class="config-item">
+                    <label class="tooltip">Dev ${markerCount + 1}:
+                        <span class="tooltiptext">Developer marker ${markerCount + 1}. Shows a marker on the chart at the specified time. Can be Buy or Sell type.</span>
+                    </label>
+                    <input type="checkbox" id="showDev${markerCount + 1}" checked>
+                </div>
+                <div class="config-item">
+                    <label class="tooltip">Type:
+                        <span class="tooltiptext">Whether this marker represents a Buy (green) or Sell (red) action on the chart.</span>
+                    </label>
+                    <select id="dev${markerCount + 1}Type">
+                        <option value="buy">Buy</option>
+                        <option value="sell">Sell</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <label class="tooltip">Time:
+                        <span class="tooltiptext">Time in seconds when this marker will appear on the chart during the animation.</span>
+                    </label>
+                    <input type="number" id="dev${markerCount + 1}Time" value="${markerCount + 1}">
+                </div>
+                <button type="button" class="remove-marker" onclick="removeDevMarker(this)">🗑️</button>
+            `;
+            devMarkers.appendChild(newMarker);
+            updateRemoveButtons();
+        }
+        
+        function removeDevMarker(button) {
+            button.parentElement.remove();
+            updateRemoveButtons();
+        }
+        
+        function addUserMarker() {
+            const userMarkers = document.getElementById('user-markers');
+            const markerCount = userMarkers.children.length;
+            const newMarker = document.createElement('div');
+            newMarker.className = 'marker-item';
+            newMarker.innerHTML = `
+                <div class="config-item">
+                    <label class="tooltip">User ${markerCount + 1}:
+                        <span class="tooltiptext">User marker ${markerCount + 1}. Shows a marker on the chart at the specified time. Can be Buy or Sell type.</span>
+                    </label>
+                    <input type="checkbox" id="showUser${markerCount + 1}">
+                </div>
+                <div class="config-item">
+                    <label class="tooltip">Type:
+                        <span class="tooltiptext">Whether this marker represents a Buy (green) or Sell (red) action on the chart.</span>
+                    </label>
+                    <select id="user${markerCount + 1}Type">
+                        <option value="buy" selected>Buy</option>
+                        <option value="sell">Sell</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <label class="tooltip">Time:
+                        <span class="tooltiptext">Time in seconds when this marker will appear on the chart during the animation.</span>
+                    </label>
+                    <input type="number" id="user${markerCount + 1}Time" value="${markerCount + 1}">
+                </div>
+                <button type="button" class="remove-marker" onclick="removeUserMarker(this)">🗑️</button>
+            `;
+            userMarkers.appendChild(newMarker);
+            updateRemoveButtons();
+        }
+        
+        function removeUserMarker(button) {
+            button.parentElement.remove();
+            updateRemoveButtons();
+        }
+        
+        function updateRemoveButtons() {
+            const devMarkers = document.querySelectorAll('#dev-markers .marker-item');
+            const userMarkers = document.querySelectorAll('#user-markers .marker-item');
+            
+            devMarkers.forEach((marker, index) => {
+                const removeBtn = marker.querySelector('.remove-marker');
+                if (removeBtn) {
+                    const shouldShow = devMarkers.length > 1;
+                    removeBtn.style.display = shouldShow ? 'flex' : 'none';
+                }
+            });
+            
+            userMarkers.forEach((marker, index) => {
+                const removeBtn = marker.querySelector('.remove-marker');
+                if (removeBtn) {
+                    const shouldShow = userMarkers.length > 1;
+                    removeBtn.style.display = shouldShow ? 'flex' : 'none';
+                }
             });
         }
     </script>
