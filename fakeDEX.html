@@ -2785,10 +2785,11 @@
         let globalDatafeed = null;
         let isAnimating = false;
         let currentAnimation = null;
+        let animationComplete = false;
         
         // Function to update fakeDEX data based on chart price
         function updateFakeDEXDataFromChart(currentPrice) {
-            if (!currentPrice) return;
+            if (!currentPrice || !isAnimating || animationComplete) return;
             
             // The chart price is actually the market cap, so we need to calculate the token price
             const marketCap = currentPrice; // Chart price is market cap
@@ -2833,6 +2834,10 @@
             const finalActionMC = config.finalActionMarketCap;
             const tokenPrice = finalActionMC / 1000000000;
             const solPrice = tokenPrice / 239;
+            
+            // Mark animation as complete to stop data updates
+            animationComplete = true;
+            isAnimating = false;
             
             // Update market cap display
             if (marketCapInput) {
@@ -2969,16 +2974,11 @@
             configInitialMC.addEventListener('input', function() {
                 const value = parseInt(this.value);
                 if (!isNaN(value)) {
-                    marketCapInput.value = `$${(value / 1000).toFixed(2)}K`;
-                    marketCapInput.setAttribute('data-base-value', value);
-                    updatePricesFromMarketCap();
-                    
-                    // Update chart data if animation is running
-                    if (isAnimating && globalDatafeed) {
-                        console.log('🔄 Updating chart data with new market cap:', value);
-                        globalDatafeed.clearData();
-                        const config = getConfig();
-                        startAnimationData(config);
+                    // Only update if animation is not running
+                    if (!isAnimating) {
+                        marketCapInput.value = `$${(value / 1000).toFixed(2)}K`;
+                        marketCapInput.setAttribute('data-base-value', value);
+                        updatePricesFromMarketCap();
                     }
                 }
             });
@@ -2994,22 +2994,18 @@
         // Add listeners for final and min market cap changes
         if (configFinalMC) {
             configFinalMC.addEventListener('input', function() {
-                if (isAnimating && globalDatafeed) {
-                    console.log('🔄 Updating chart with new final market cap:', this.value);
-                    globalDatafeed.clearData();
-                    const config = getConfig();
-                    startAnimationData(config);
+                // Only update if animation is not running
+                if (!isAnimating) {
+                    console.log('📝 Final market cap updated:', this.value);
                 }
             });
         }
         
         if (configMinMC) {
             configMinMC.addEventListener('input', function() {
-                if (isAnimating && globalDatafeed) {
-                    console.log('🔄 Updating chart with new min market cap:', this.value);
-                    globalDatafeed.clearData();
-                    const config = getConfig();
-                    startAnimationData(config);
+                // Only update if animation is not running
+                if (!isAnimating) {
+                    console.log('📝 Min market cap updated:', this.value);
                 }
             });
         }
@@ -3204,7 +3200,9 @@
                 }
             }
             
+            // Reset animation state
             isAnimating = true;
+            animationComplete = false;
             const config = getConfig();
             console.log('🎬 Starting TradingView Advanced Chart animation with config:', config);
             
