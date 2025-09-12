@@ -1375,7 +1375,8 @@
             
             // Generate historical data immediately
             const rng = new SeededRandom(config.seed);
-            const animationStartTime = Math.floor(Date.now() / 1000); // Current time in seconds
+            const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+            const animationStartTime = currentTime; // Animation will start at current time
             const historicalStartTime = animationStartTime - preAnimationSeconds;
             
             // historicalBars already declared above
@@ -1455,7 +1456,7 @@
               historicalPrice = close;
             }
             
-            // Ensure last historical candle ends very close to initial market cap
+            // Ensure last historical candle ends very close to initial market cap and at the right time
             if (historicalBars.length > 0) {
               const lastBar = historicalBars[historicalBars.length - 1];
               const currentPrice = lastBar.close;
@@ -1469,6 +1470,10 @@
               lastBar.close = currentPrice + adjustment;
               lastBar.high = Math.max(lastBar.high, lastBar.open, lastBar.close);
               lastBar.low = Math.min(lastBar.low, lastBar.open, lastBar.close);
+              
+              // Ensure the last historical bar ends exactly at the animation start time
+              lastBar.time = animationStartTime - 60; // 1 minute before animation starts
+              console.log(`📈 Last historical bar ends at: ${lastBar.time}, Animation starts at: ${animationStartTime}`);
             }
             
             console.log(`📈 Generated ${historicalBars.length} historical bars`);
@@ -1513,7 +1518,16 @@
       const rng = new SeededRandom(config.seed);
       
       // Use current time as base for animation (in seconds)
-      const animationStartTime = Math.floor(Date.now() / 1000);
+      // If historical data exists, start animation right after the last historical bar
+      let animationStartTime;
+      if (config.enableHistoricalData && globalDatafeed.currentData.length > 0) {
+        const lastHistoricalBar = globalDatafeed.currentData[globalDatafeed.currentData.length - 1];
+        animationStartTime = lastHistoricalBar.time + 60; // Start 1 minute after last historical bar
+        console.log(`📈 Animation starting after historical data at time: ${animationStartTime}`);
+      } else {
+        animationStartTime = Math.floor(Date.now() / 1000);
+        console.log(`📈 Animation starting at current time: ${animationStartTime}`);
+      }
       
       console.log(`Generating ${totalBars} bars for animation...`);
       console.log(`📈 Historical data: ${config.enableHistoricalData ? 'enabled' : 'disabled'}`);
