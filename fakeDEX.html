@@ -81,6 +81,8 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            justify-content: space-between;
+            width: 100%;
         }
 
         .sidebar-close-btn {
@@ -320,6 +322,149 @@
             gap: 16px;
         }
 
+        .config-toggle-btn {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #ccc;
+            padding: 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: none;
+            z-index: 1001;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .config-toggle-btn:hover {
+            background: #222;
+            color: #26a69a;
+            border-color: #26a69a;
+            transform: none;
+        }
+
+        .config-toggle-btn.open {
+            background: #26a69a;
+            color: #000;
+            border-color: #26a69a;
+        }
+
+        .config-toggle-btn.open:hover {
+            background: #2bbbad;
+            color: #000;
+        }
+
+        /* Mobile: Move config button to header */
+        @media (max-width: 768px) {
+            .sidebar-logo .config-toggle-btn {
+                display: none;
+            }
+            
+            .sidebar-logo {
+                justify-content: flex-start;
+            }
+            
+            .sidebar-header {
+                justify-content: flex-start;
+                position: relative;
+            }
+            
+            .sidebar-close-btn {
+                position: absolute;
+                right: 0;
+                top: 50%;
+                transform: translateY(-50%);
+            }
+            
+            /* Mobile header logo */
+            .mobile-header-logo {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 18px;
+                font-weight: bold;
+                color: #ffffff;
+                margin-right: 15px;
+            }
+            
+            .mobile-logo-icon {
+                width: 24px;
+                height: 24px;
+                background: linear-gradient(45deg, #00d4aa, #ff6b6b);
+                border-radius: 6px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 14px;
+                font-weight: bold;
+                color: #000;
+                position: relative;
+            }
+            
+            .mobile-logo-icon::before {
+                content: "💎";
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 12px;
+            }
+        }
+        
+        /* Hide mobile header logo on desktop */
+        .mobile-header-logo {
+            display: none;
+        }
+        
+        /* Mobile: Show header logo and move config button */
+        @media (max-width: 768px) {
+            .mobile-header-logo {
+                display: flex;
+            }
+            
+            .header-right .config-toggle-btn {
+                display: flex !important;
+                background: #1a1a1a;
+                border: 1px solid #333;
+                color: #ccc;
+                padding: 6px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+                width: 28px;
+                height: 28px;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.3s;
+                z-index: 999;
+                position: relative;
+                flex-shrink: 0;
+            }
+            
+            .header-right .config-toggle-btn:hover {
+                background: #222;
+                color: #26a69a;
+                border-color: #26a69a;
+            }
+            
+            .header-right .config-toggle-btn.open {
+                background: #26a69a;
+                color: #000;
+                border-color: #26a69a;
+            }
+            
+            .header-right .config-toggle-btn.open:hover {
+                background: #2bbbad;
+                color: #000;
+            }
+        }
+
         .user-profile {
             display: flex;
             align-items: center;
@@ -415,23 +560,61 @@
             border-color: #00d4aa;
         }
 
-        .chart-tools {
-            display: flex;
-            gap: 8px;
-        }
-
-        .chart-tool {
-            width: 32px;
-            height: 32px;
-            background: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 4px;
+        .timeframe-dropdown {
             display: flex;
             align-items: center;
-            justify-content: center;
+        }
+
+        .timeframe-select {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #ccc;
+            padding: 6px 12px;
+            border-radius: 4px;
             cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+            min-width: 60px;
+        }
+
+        .timeframe-select:hover {
+            background: #222;
+            border-color: #00d4aa;
+        }
+
+        .timeframe-select:focus {
+            outline: none;
+            border-color: #00d4aa;
+            box-shadow: 0 0 0 2px rgba(0, 212, 170, 0.2);
+        }
+
+        .timeframe-select option {
+            background: #1a1a1a;
             color: #ccc;
         }
+
+        .token-price-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .token-price-label {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .token-price-value {
+            color: #00d4aa;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
 
         .chart-info {
             display: flex;
@@ -520,10 +703,40 @@
             left: 0;
         }
 
+        .config-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 20px 0 20px;
+            border-bottom: 1px solid #333;
+            margin-bottom: 15px;
+        }
+
+        .config-close-btn {
+            background: #ef5350;
+            border: none;
+            color: white;
+            padding: 6px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .config-close-btn:hover {
+            background: #d32f2f;
+            transform: scale(1.1);
+        }
+
         .config-content {
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
+            padding: 0 20px 20px 20px;
         }
 
         .config-button-container {
@@ -785,37 +998,6 @@
             min-height: 400px;
         }
 
-        /* Config Toggle Button */
-        .config-toggle-btn {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 2001;
-            background: #26a69a;
-            color: white;
-            border: none;
-            padding: 12px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            transition: all 0.3s;
-        }
-
-        .config-toggle-btn:hover {
-            background: #2bbbad;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-        }
-
-        .config-toggle-btn.open {
-            background: #ef5350;
-        }
-
-        .config-toggle-btn.open:hover {
-            background: #d32f2f;
-        }
 
         /* Transactions Section */
         .transactions-section {
@@ -1424,16 +1606,21 @@
                 font-size: 10px;
             }
             
-            .chart-tools {
-                flex-wrap: wrap;
-                gap: 4px;
+            .timeframe-select {
+                padding: 4px 8px;
+                font-size: 10px;
+                min-width: 50px;
             }
             
-            .chart-tool {
-                width: 28px;
-                height: 28px;
-                font-size: 12px;
+            .token-price-display {
+                padding: 4px 8px;
+                font-size: 10px;
             }
+            
+            .token-price-label, .token-price-value {
+                font-size: 10px;
+            }
+            
             
             .trading-buttons {
                 flex-direction: column;
@@ -1472,13 +1659,13 @@
     </style>
 </head>
 <body>
-    <!-- Config Toggle Button -->
-    <button class="config-toggle-btn" id="configToggleBtn">⚙️ Config</button>
-
     <!-- Config Panel -->
     <div id="config-panel">
-        <div class="config-content">
+        <div class="config-header">
             <h3>Chart Configuration</h3>
+            <button class="config-close-btn" id="configCloseBtn" title="Close Configuration">✕</button>
+        </div>
+        <div class="config-content">
             
             <div class="config-group">
                 <h4>Token Information</h4>
@@ -1690,6 +1877,7 @@
                 <div class="sidebar-logo">
                     <div class="logo-icon"></div>
                     DexFools
+                    <button class="config-toggle-btn" id="configToggleBtn" title="Chart Configuration">⚙️</button>
                 </div>
                 <button class="sidebar-close-btn" id="sidebarCloseBtn" style="display: none;">✕</button>
             </div>
@@ -1803,6 +1991,10 @@
             <div class="header">
                 <div class="header-left">
                     <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+                    <div class="mobile-header-logo">
+                        <div class="mobile-logo-icon"></div>
+                        DexFools
+                    </div>
                     <div class="ad-container">
                         <div class="ad-box">
                             <div class="ad-token">PEPE2.0</div>
@@ -1855,8 +2047,8 @@
                     </div>
                 </div>
                 <div class="header-right">
+                    <button class="config-toggle-btn" id="configToggleBtnMobile" title="Chart Configuration" style="display: none;">⚙️</button>
                     <div class="header-icons">
-                        <div class="header-icon">⚙️</div>
                         <div class="header-icon">⋯</div>
                     </div>
                 </div>
@@ -1870,20 +2062,20 @@
                         <span class="mobile-token-pair">/SOL</span>
                     </div>
                     <div class="chart-controls">
-                        <div class="timeframe-buttons">
-                            <button class="timeframe-btn">1s</button>
-                            <button class="timeframe-btn">1m</button>
-                            <button class="timeframe-btn">5m</button>
-                            <button class="timeframe-btn active">15m</button>
-                            <button class="timeframe-btn">1h</button>
-                            <button class="timeframe-btn">4h</button>
-                            <button class="timeframe-btn">D</button>
+                        <div class="timeframe-dropdown">
+                            <select id="timeframeSelect" class="timeframe-select">
+                                <option value="1s" selected>1s</option>
+                                <option value="1m">1m</option>
+                                <option value="5m">5m</option>
+                                <option value="15m">15m</option>
+                                <option value="1h">1h</option>
+                                <option value="4h">4h</option>
+                                <option value="D">D</option>
+                            </select>
                         </div>
-                        <div class="chart-tools">
-                            <div class="chart-tool">📈</div>
-                            <div class="chart-tool">📊</div>
-                            <div class="chart-tool">✏️</div>
-                            <div class="chart-tool">📐</div>
+                        <div class="token-price-display">
+                            <span class="token-price-label">Price:</span>
+                            <span class="token-price-value" id="chartTokenPrice">0.0006690 SOL</span>
                         </div>
                         <button style="background: #1a1a1a; border: 1px solid #333; color: #ccc; padding: 6px 12px; border-radius: 4px; font-size: 12px;">Price / MCap</button>
                     </div>
@@ -2150,13 +2342,14 @@
     </div>
 
     <script>
-        // Timeframe button functionality
-        document.querySelectorAll('.timeframe-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.timeframe-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
+        // Timeframe dropdown functionality
+        const timeframeSelect = document.getElementById('timeframeSelect');
+        if (timeframeSelect) {
+            timeframeSelect.addEventListener('change', function() {
+                console.log('Timeframe changed to:', this.value);
+                // You can add additional functionality here if needed
             });
-        });
+        }
 
         // Tab functionality
         document.querySelectorAll('.tab').forEach(tab => {
@@ -2306,6 +2499,13 @@
             const solPrice = pricePerToken / 100; // Convert USD to SOL
             priceSol.textContent = `${solPrice.toFixed(7)} SOL`;
         }
+        
+        // Update chart token price display
+        const chartTokenPrice = document.getElementById('chartTokenPrice');
+        if (chartTokenPrice) {
+            const solPrice = pricePerToken / 100; // Convert USD to SOL
+            chartTokenPrice.textContent = `${solPrice.toFixed(7)} SOL`;
+        }
             
             // Update FDV to match market cap
             const fdv = document.querySelectorAll('.metric-value')[1];
@@ -2413,6 +2613,14 @@
                 const currentUsdPrice = parseFloat(priceUsd.textContent.replace('$', ''));
                 const solPrice = currentUsdPrice / 100; // Convert USD to SOL
                 priceSol.textContent = `${solPrice.toFixed(7)} SOL`;
+            }
+            
+            // Update chart token price display
+            const chartTokenPrice = document.getElementById('chartTokenPrice');
+            if (chartTokenPrice) {
+                const currentUsdPrice = parseFloat(priceUsd.textContent.replace('$', ''));
+                const solPrice = currentUsdPrice / 100; // Convert USD to SOL
+                chartTokenPrice.textContent = `${solPrice.toFixed(7)} SOL`;
             }
 
             // Liquidity animation
@@ -2572,14 +2780,28 @@
         function toggleConfigPanel() {
             const configPanel = document.getElementById('config-panel');
             const toggleBtn = document.getElementById('configToggleBtn');
+            const toggleBtnMobile = document.getElementById('configToggleBtnMobile');
             
             configPanel.classList.toggle('open');
             toggleBtn.classList.toggle('open');
+            if (toggleBtnMobile) {
+                toggleBtnMobile.classList.toggle('open');
+            }
             
             if (configPanel.classList.contains('open')) {
-                toggleBtn.textContent = '✕ Close';
+                toggleBtn.textContent = '✕';
+                toggleBtn.title = 'Close Configuration';
+                if (toggleBtnMobile) {
+                    toggleBtnMobile.textContent = '✕';
+                    toggleBtnMobile.title = 'Close Configuration';
+                }
             } else {
-                toggleBtn.textContent = '⚙️ Config';
+                toggleBtn.textContent = '⚙️';
+                toggleBtn.title = 'Chart Configuration';
+                if (toggleBtnMobile) {
+                    toggleBtnMobile.textContent = '⚙️';
+                    toggleBtnMobile.title = 'Chart Configuration';
+                }
             }
         }
 
@@ -2595,6 +2817,18 @@
             const configToggleBtn = document.getElementById('configToggleBtn');
             if (configToggleBtn) {
                 configToggleBtn.addEventListener('click', toggleConfigPanel);
+            }
+
+            // Config panel toggle (mobile)
+            const configToggleBtnMobile = document.getElementById('configToggleBtnMobile');
+            if (configToggleBtnMobile) {
+                configToggleBtnMobile.addEventListener('click', toggleConfigPanel);
+            }
+
+            // Config panel close button
+            const configCloseBtn = document.getElementById('configCloseBtn');
+            if (configCloseBtn) {
+                configCloseBtn.addEventListener('click', toggleConfigPanel);
             }
 
             // Apply config button
