@@ -1769,6 +1769,16 @@
             </div>
             
             <div class="config-group">
+                <h4>Chart Theme</h4>
+                <div class="config-item">
+                    <label>
+                        <input type="checkbox" id="blackTheme" style="margin-right: 8px;">
+                        🎨 Black Theme (Dark background, visible candles)
+                    </label>
+                </div>
+            </div>
+            
+            <div class="config-group">
                 <h4>Historical Data</h4>
                 <div class="config-item">
                     <label>Enable:</label>
@@ -1917,8 +1927,8 @@
         </div>
         
         <div class="config-button-container">
-            <button id="apply-config">Apply & Start Animation</button>
-            <div id="animation-status">Chart ready - click "Apply & Start" to begin</div>
+            <button id="apply-config">Apply Styling & Start Animation</button>
+            <div id="animation-status">Chart ready - click "Apply Styling & Start" to begin</div>
         </div>
     </div>
 
@@ -3486,6 +3496,9 @@
                         toggleConfigPanel();
                     }
                     
+                    // Apply custom chart overrides first
+                    applyChartOverrides();
+                    
                     // Update button text to show delay
                     applyConfigBtn.textContent = 'Starting in 2 seconds...';
                     applyConfigBtn.disabled = true;
@@ -3493,7 +3506,7 @@
                     // Update animation status
                     const animationStatus = document.getElementById('animation-status');
                     if (animationStatus) {
-                        animationStatus.textContent = 'Config applied - starting animation in 2 seconds...';
+                        animationStatus.textContent = 'Chart styled & config applied - starting animation in 2 seconds...';
                         animationStatus.style.color = '#26a69a';
                     }
                     
@@ -3501,7 +3514,7 @@
                     setTimeout(() => {
                         startAnimation();
                         // Reset button after animation starts
-                        applyConfigBtn.textContent = 'Apply & Start Animation';
+                        applyConfigBtn.textContent = 'Apply Styling & Start Animation';
                         applyConfigBtn.disabled = false;
                     }, 2000);
                 });
@@ -3593,6 +3606,67 @@
                 field.setAttribute('placeholder', 'e.g., 10K, 1.5M, 2B');
             }
         });
+
+        // Black Theme Toggle
+        const blackThemeCheckbox = document.getElementById('blackTheme');
+        
+        if (blackThemeCheckbox) {
+            blackThemeCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    console.log('🎨 Black theme enabled - applying settings');
+                    applyBlackTheme();
+                } else {
+                    console.log('🎨 Normal theme enabled - applying settings');
+                    applyNormalTheme();
+                }
+            });
+        }
+
+        // Apply black theme settings (background: solid black, gridlines: none, crosshairs: black)
+        function applyBlackTheme() {
+            if (tvWidget) {
+                try {
+                    tvWidget.chart().executeActionById('setChartStyle', {
+                        'paneProperties.background': '#000000',
+                        'paneProperties.backgroundType': 'solid',
+                        'paneProperties.gridProperties.color': '#000000',
+                        'paneProperties.gridProperties.style': 0, // 0 = none
+                        'paneProperties.vertGridProperties.color': '#000000',
+                        'paneProperties.vertGridProperties.style': 0, // 0 = none
+                        'paneProperties.horzGridProperties.color': '#000000',
+                        'paneProperties.horzGridProperties.style': 0, // 0 = none
+                        'scalesProperties.textColor': '#000000',
+                        'scalesProperties.lineColor': '#000000'
+                    });
+                    console.log('✅ Black theme applied');
+                } catch (error) {
+                    console.log('❌ Could not apply black theme:', error);
+                }
+            }
+        }
+
+        // Apply normal theme settings
+        function applyNormalTheme() {
+            if (tvWidget) {
+                try {
+                    tvWidget.chart().executeActionById('setChartStyle', {
+                        'paneProperties.background': '#1e1e1e',
+                        'paneProperties.backgroundType': 'solid',
+                        'paneProperties.gridProperties.color': '#2a2a2a',
+                        'paneProperties.gridProperties.style': 1, // 1 = solid
+                        'paneProperties.vertGridProperties.color': '#2a2a2a',
+                        'paneProperties.vertGridProperties.style': 1, // 1 = solid
+                        'paneProperties.horzGridProperties.color': '#2a2a2a',
+                        'paneProperties.horzGridProperties.style': 1, // 1 = solid
+                        'scalesProperties.textColor': '#d1d4dc',
+                        'scalesProperties.lineColor': '#2a2a2a'
+                    });
+                    console.log('✅ Normal theme applied');
+                } catch (error) {
+                    console.log('❌ Could not apply normal theme:', error);
+                }
+            }
+        }
             
             if (marketCapInput) {
                 // Set up event listeners
@@ -4203,6 +4277,85 @@
             }
         }
 
+        // Global flag to track if custom styling should be applied
+        let shouldApplyCustomStyling = false;
+
+        // Function to apply custom chart overrides
+        function applyChartOverrides() {
+            if (!tvWidget) {
+                console.warn('⚠️ TradingView widget not available for overrides');
+                return;
+            }
+
+            console.log('🎨 Applying custom chart overrides...');
+            
+            const customOverrides = {
+                // Pane Properties - Chart Background
+                'paneProperties.background': '#000000',
+                'paneProperties.backgroundType': 'solid',
+                
+                // Grid Lines
+                'paneProperties.vertGridProperties.color': '#333333',
+                'paneProperties.vertGridProperties.style': 1,
+                'paneProperties.horzGridProperties.color': '#333333',
+                'paneProperties.horzGridProperties.style': 1,
+                'paneProperties.gridLinesMode': 1,
+                
+                // Pane Separator
+                'paneProperties.separatorColor': '#333333',
+                
+                // Legend Properties
+                'paneProperties.legendProperties.showLastDayChange': true,
+                'paneProperties.legendProperties.showSeriesTitle': true,
+                'paneProperties.legendProperties.showSeriesOHLC': true,
+                'paneProperties.legendProperties.showBarChange': true,
+                'paneProperties.legendProperties.showVolume': true,
+                'paneProperties.legendProperties.showBackground': true,
+                'paneProperties.legendProperties.backgroundTransparency': 80,
+                
+                // Price Scale Properties
+                'scalesProperties.textColor': '#d1d4dc',
+                'scalesProperties.lineColor': '#333333',
+                'scalesProperties.showSeriesLastValue': true,
+                'scalesProperties.showStudyLastValue': true,
+                'scalesProperties.showBidAsk': true,
+                
+                // Main Series Properties - Candle Style
+                'mainSeriesProperties.candleStyle.upColor': '#00d4aa',
+                'mainSeriesProperties.candleStyle.downColor': '#ff6b6b',
+                'mainSeriesProperties.candleStyle.borderUpColor': '#00d4aa',
+                'mainSeriesProperties.candleStyle.borderDownColor': '#ff6b6b',
+                'mainSeriesProperties.candleStyle.wickUpColor': '#00d4aa',
+                'mainSeriesProperties.candleStyle.wickDownColor': '#ff6b6b',
+                'mainSeriesProperties.candleStyle.drawWick': true,
+                'mainSeriesProperties.candleStyle.drawBorder': true,
+                'mainSeriesProperties.candleStyle.drawBody': true,
+                
+                // Price Line
+                'mainSeriesProperties.showPriceLine': true,
+                'mainSeriesProperties.priceLineWidth': 1,
+                'mainSeriesProperties.priceLineColor': '#00d4aa',
+                
+                // Volume
+                'mainSeriesProperties.showVolume': true,
+                'mainSeriesProperties.volumeStyle.upColor': '#00d4aa',
+                'mainSeriesProperties.volumeStyle.downColor': '#ff6b6b',
+                'mainSeriesProperties.volumeStyle.borderUpColor': '#00d4aa',
+                'mainSeriesProperties.volumeStyle.borderDownColor': '#ff6b6b',
+                
+                // Series Visibility
+                'mainSeriesProperties.visible': true
+            };
+
+            try {
+                tvWidget.applyOverrides(customOverrides);
+                shouldApplyCustomStyling = true; // Set flag to maintain styling
+                console.log('✅ Chart overrides applied successfully');
+            } catch (error) {
+                console.error('❌ Error applying chart overrides:', error);
+            }
+        }
+
         function initTradingView() {
             if (tvWidget) {
                 tvWidget.remove();
@@ -4243,6 +4396,11 @@
                 datafeed: globalDatafeed,
                 library_path: '',
                 locale: 'en',
+                theme: 'dark',
+                custom_css_url: '',
+                overrides: {
+                    // Default minimal overrides - custom styling applied via button
+                },
                 disabled_features: [
                     'save_chart_properties_to_local_storage',
                     'use_localstorage_for_settings',
@@ -4292,12 +4450,6 @@
                 ],
                 fullscreen: false,
                 autosize: true,
-                theme: 'dark',
-                overrides: {
-                    'paneProperties.background': '#000000',
-                    'paneProperties.vertGridProperties.color': '#333333',
-                    'paneProperties.horzGridProperties.color': '#333333'
-                },
                 studies_overrides: {},
                 custom_css_url: null
             });
@@ -4309,6 +4461,14 @@
                 const loadingMessage = document.querySelector('#tv_chart_container > div');
                 if (loadingMessage) {
                     loadingMessage.style.display = 'none';
+                }
+                
+                // Apply custom styling if flag is set (after chart recreation during animation)
+                if (shouldApplyCustomStyling) {
+                    console.log('🎨 Re-applying custom styling after chart recreation...');
+                    setTimeout(() => {
+                        applyChartOverrides();
+                    }, 500); // Small delay to ensure chart is fully ready
                 }
                 
                 // Debug chart container after ready
@@ -4338,6 +4498,14 @@
                                 tvWidget.chart().executeActionById('chartReset');
                                 tvWidget.chart().executeActionById('dataReset');
                                 console.log('✅ Chart refresh commands sent');
+                                
+                                // Re-apply custom styling after symbol change if needed
+                                if (shouldApplyCustomStyling) {
+                                    console.log('🎨 Re-applying custom styling after symbol change...');
+                                    setTimeout(() => {
+                                        applyChartOverrides();
+                                    }, 200);
+                                }
                             } catch (e) {
                                 console.log('❌ Chart refresh failed:', e.message);
                             }
@@ -4345,7 +4513,7 @@
                     });
                 }, 1000);
                 
-                document.getElementById('animation-status').textContent = 'Chart ready - Position as needed, then click "Apply & Start"';
+                document.getElementById('animation-status').textContent = 'Chart ready - Position as needed, then click "Apply Styling & Start"';
                 document.getElementById('animation-status').style.color = '#26a69a';
                 
                 window.chartWidget = tvWidget;
