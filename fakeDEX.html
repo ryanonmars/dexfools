@@ -615,6 +615,12 @@
             font-size: 12px;
         }
 
+        .price-container {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
 
         .chart-info {
             display: flex;
@@ -1621,6 +1627,10 @@
                 font-size: 10px;
             }
             
+            .price-container {
+                gap: 2px;
+            }
+            
             
             .trading-buttons {
                 flex-direction: column;
@@ -2074,8 +2084,16 @@
                             </select>
                         </div>
                         <div class="token-price-display">
-                            <span class="token-price-label">Price:</span>
-                            <span class="token-price-value" id="chartTokenPrice">0.00000002 SOL</span>
+                            <div class="price-container">
+                                <span class="token-price-label">USD:</span>
+                                <span class="token-price-value" id="chartTokenPriceUSD">$0.00000002</span>
+                            </div>
+                        </div>
+                        <div class="token-price-display">
+                            <div class="price-container">
+                                <span class="token-price-label">SOL:</span>
+                                <span class="token-price-value" id="chartTokenPrice">0.00000002 SOL</span>
+                            </div>
                         </div>
                         <button style="background: #1a1a1a; border: 1px solid #333; color: #ccc; padding: 6px 12px; border-radius: 4px; font-size: 12px;">Price / MCap</button>
                     </div>
@@ -2204,7 +2222,7 @@
             <div class="metrics-section">
                 <div class="metric-item">
                     <div class="metric-label">LIQUIDITY</div>
-                    <div class="metric-value">$3K</div>
+                    <div class="metric-value">$600</div>
                 </div>
                 <div class="metric-item">
                     <div class="metric-label">FDV</div>
@@ -2505,6 +2523,30 @@
             return `$${value.toFixed(2)}`;
         }
 
+        function formatScientificNotation(value) {
+            if (value === 0) return '0';
+            
+            const str = value.toExponential(6);
+            const match = str.match(/^(\d)\.(\d+)e([+-]\d+)$/);
+            
+            if (!match) return value.toFixed(7);
+            
+            const [, leadingDigit, decimals, exponent] = match;
+            const exp = parseInt(exponent);
+            
+            if (exp >= 0) {
+                // For positive exponents, use normal notation
+                return value.toFixed(7);
+            } else {
+                // For negative exponents, use scientific notation with subscript
+                const absExp = Math.abs(exp);
+                const subscript = absExp.toString().split('').map(d => 
+                    ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉'][parseInt(d)]
+                ).join('');
+                return `0.0${subscript}${leadingDigit}${decimals}`;
+            }
+        }
+
         function calculatePriceFromMarketCap(marketCap) {
             return marketCap / TOKEN_SUPPLY;
         }
@@ -2523,20 +2565,31 @@
         const priceSol = document.querySelectorAll('.price-value')[1];
         if (priceSol) {
             const solPrice = pricePerToken / 239; // Convert USD to SOL
-            priceSol.textContent = `${solPrice.toFixed(7)} SOL`;
+            priceSol.textContent = `${formatScientificNotation(solPrice)} SOL`;
         }
         
         // Update chart token price display
         const chartTokenPrice = document.getElementById('chartTokenPrice');
+        const chartTokenPriceUSD = document.getElementById('chartTokenPriceUSD');
         if (chartTokenPrice) {
             const solPrice = pricePerToken / 239; // Convert USD to SOL
-            chartTokenPrice.textContent = `${solPrice.toFixed(7)} SOL`;
+            chartTokenPrice.textContent = `${formatScientificNotation(solPrice)} SOL`;
+        }
+        if (chartTokenPriceUSD) {
+            chartTokenPriceUSD.textContent = `$${pricePerToken.toFixed(7)}`;
         }
             
             // Update FDV to match market cap
             const fdv = document.querySelectorAll('.metric-value')[1];
             if (fdv) {
                 fdv.textContent = formatMarketCap(marketCapValue);
+            }
+            
+            // Update liquidity (typically 15-25% of market cap for PumpFun tokens)
+            const liquidity = document.querySelectorAll('.metric-value')[0];
+            if (liquidity) {
+                const liquidityAmount = marketCapValue * 0.2; // 20% of market cap
+                liquidity.textContent = formatMarketCap(liquidityAmount);
             }
         }
 
@@ -2638,15 +2691,20 @@
             if (priceSol) {
                 const currentUsdPrice = parseFloat(priceUsd.textContent.replace('$', ''));
                 const solPrice = currentUsdPrice / 239; // Convert USD to SOL
-                priceSol.textContent = `${solPrice.toFixed(7)} SOL`;
+                priceSol.textContent = `${formatScientificNotation(solPrice)} SOL`;
             }
             
             // Update chart token price display
             const chartTokenPrice = document.getElementById('chartTokenPrice');
+            const chartTokenPriceUSD = document.getElementById('chartTokenPriceUSD');
             if (chartTokenPrice) {
                 const currentUsdPrice = parseFloat(priceUsd.textContent.replace('$', ''));
                 const solPrice = currentUsdPrice / 239; // Convert USD to SOL
-                chartTokenPrice.textContent = `${solPrice.toFixed(7)} SOL`;
+                chartTokenPrice.textContent = `${formatScientificNotation(solPrice)} SOL`;
+            }
+            if (chartTokenPriceUSD) {
+                const currentUsdPrice = parseFloat(priceUsd.textContent.replace('$', ''));
+                chartTokenPriceUSD.textContent = `$${currentUsdPrice.toFixed(7)}`;
             }
 
             // Liquidity animation
@@ -2798,7 +2856,7 @@
             
             // Update market cap display
             if (marketCapInput) {
-                marketCapInput.value = `$${(marketCap / 1000).toFixed(2)}K`;
+                marketCapInput.value = formatMarketCap(marketCap);
                 marketCapInput.setAttribute('data-base-value', marketCap);
             }
             
@@ -2810,19 +2868,30 @@
             
             const priceSol = document.querySelectorAll('.price-value')[1];
             if (priceSol) {
-                priceSol.textContent = `${solPrice.toFixed(7)} SOL`;
+                priceSol.textContent = `${formatScientificNotation(solPrice)} SOL`;
             }
             
             // Update chart token price display
             const chartTokenPrice = document.getElementById('chartTokenPrice');
+            const chartTokenPriceUSD = document.getElementById('chartTokenPriceUSD');
             if (chartTokenPrice) {
-                chartTokenPrice.textContent = `${solPrice.toFixed(7)} SOL`;
+                chartTokenPrice.textContent = `${formatScientificNotation(solPrice)} SOL`;
+            }
+            if (chartTokenPriceUSD) {
+                chartTokenPriceUSD.textContent = `$${tokenPrice.toFixed(7)}`;
             }
             
             // Update FDV to match market cap
             const fdv = document.querySelectorAll('.metric-value')[1];
             if (fdv) {
                 fdv.textContent = formatMarketCap(marketCap);
+            }
+            
+            // Update liquidity (typically 15-25% of market cap for PumpFun tokens)
+            const liquidity = document.querySelectorAll('.metric-value')[0];
+            if (liquidity) {
+                const liquidityAmount = marketCap * 0.2; // 20% of market cap
+                liquidity.textContent = formatMarketCap(liquidityAmount);
             }
             
             console.log('📊 Updated fakeDEX data from chart - Market Cap:', marketCap, 'Token Price:', tokenPrice, 'SOL Price:', solPrice);
@@ -2841,7 +2910,7 @@
             
             // Update market cap display
             if (marketCapInput) {
-                marketCapInput.value = `$${(finalActionMC / 1000).toFixed(2)}K`;
+                marketCapInput.value = formatMarketCap(finalActionMC);
                 marketCapInput.setAttribute('data-base-value', finalActionMC);
             }
             
@@ -2853,19 +2922,30 @@
             
             const priceSol = document.querySelectorAll('.price-value')[1];
             if (priceSol) {
-                priceSol.textContent = `${solPrice.toFixed(7)} SOL`;
+                priceSol.textContent = `${formatScientificNotation(solPrice)} SOL`;
             }
             
             // Update chart token price display
             const chartTokenPrice = document.getElementById('chartTokenPrice');
+            const chartTokenPriceUSD = document.getElementById('chartTokenPriceUSD');
             if (chartTokenPrice) {
-                chartTokenPrice.textContent = `${solPrice.toFixed(7)} SOL`;
+                chartTokenPrice.textContent = `${formatScientificNotation(solPrice)} SOL`;
+            }
+            if (chartTokenPriceUSD) {
+                chartTokenPriceUSD.textContent = `$${tokenPrice.toFixed(7)}`;
             }
             
             // Update FDV to match market cap
             const fdv = document.querySelectorAll('.metric-value')[1];
             if (fdv) {
                 fdv.textContent = formatMarketCap(finalActionMC);
+            }
+            
+            // Update liquidity (typically 15-25% of market cap for PumpFun tokens)
+            const liquidity = document.querySelectorAll('.metric-value')[0];
+            if (liquidity) {
+                const liquidityAmount = finalActionMC * 0.2; // 20% of market cap
+                liquidity.textContent = formatMarketCap(liquidityAmount);
             }
             
             console.log('🎯 Set final data - Final Action MC:', finalActionMC, 'Token Price:', tokenPrice, 'SOL Price:', solPrice);
@@ -2923,7 +3003,7 @@
             if (closeBtn) {
                 closeBtn.style.display = 'none';
             }
-
+            
             // Config panel toggle
             const configToggleBtn = document.getElementById('configToggleBtn');
             if (configToggleBtn) {
@@ -2976,7 +3056,7 @@
                 if (!isNaN(value)) {
                     // Only update if animation is not running
                     if (!isAnimating) {
-                        marketCapInput.value = `$${(value / 1000).toFixed(2)}K`;
+                        marketCapInput.value = formatMarketCap(value);
                         marketCapInput.setAttribute('data-base-value', value);
                         updatePricesFromMarketCap();
                     }
@@ -2986,7 +3066,7 @@
             // Initialize site market cap with config value
             const initialValue = parseInt(configInitialMC.value);
             if (!isNaN(initialValue)) {
-                marketCapInput.value = `$${(initialValue / 1000).toFixed(2)}K`;
+                marketCapInput.value = formatMarketCap(initialValue);
                 marketCapInput.setAttribute('data-base-value', initialValue);
             }
         }
