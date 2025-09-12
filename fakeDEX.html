@@ -63,14 +63,40 @@
             background: #00d4aa;
         }
 
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
         .sidebar-logo {
             font-size: 20px;
             font-weight: bold;
             color: #ffffff;
-            margin-bottom: 20px;
             display: flex;
             align-items: center;
             gap: 8px;
+        }
+
+        .sidebar-close-btn {
+            display: none !important;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #ccc;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 32px;
+            height: 32px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-close-btn:hover {
+            background: #222;
+            color: #fff;
         }
 
         .logo-icon {
@@ -337,6 +363,13 @@
             padding: 0 24px;
         }
 
+        @media (max-width: 768px) {
+            .chart-section {
+                padding: 0 16px 0 16px;
+                margin-right: 16px;
+            }
+        }
+
         .chart-header {
             padding: 16px 0;
             border-bottom: 1px solid #1a1a1a;
@@ -348,6 +381,7 @@
         .chart-controls {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 16px;
         }
 
@@ -471,6 +505,21 @@
             border-bottom: 1px solid #1a1a1a;
         }
 
+        @media (max-width: 768px) {
+            .transactions-tabs {
+                margin-right: 16px;
+                padding-right: 16px;
+                overflow-x: auto;
+            }
+            
+            .tab {
+                padding: 12px 16px;
+                font-size: 12px;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+        }
+
         .tab {
             padding: 12px 24px;
             background: none;
@@ -512,6 +561,118 @@
 
         .table tr:hover {
             background: #1a1a1a;
+        }
+
+        /* Transaction animations */
+        .table tr {
+            animation: slideInUp 0.5s ease-out;
+            transition: all 0.3s ease;
+        }
+
+        .table tr.new-transaction {
+            animation: highlightNew 2s ease-out;
+            background: rgba(0, 212, 170, 0.1);
+        }
+
+        .table tr.new-transaction.txn-sell-row {
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes highlightNew {
+            0% {
+                background: rgba(0, 212, 170, 0.3);
+                transform: scale(1.02);
+            }
+            50% {
+                background: rgba(0, 212, 170, 0.2);
+                transform: scale(1.01);
+            }
+            100% {
+                background: rgba(0, 212, 170, 0.1);
+                transform: scale(1);
+            }
+        }
+
+        .txn-type {
+            animation: pulse 0.6s ease-out;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Metrics animation effects */
+        .price-value, .metric-value {
+            transition: all 0.3s ease;
+        }
+
+        .price-value.updating, .metric-value.updating {
+            animation: metricUpdate 0.5s ease-out;
+        }
+
+        @keyframes metricUpdate {
+            0% {
+                background: rgba(0, 212, 170, 0.1);
+                transform: scale(1);
+            }
+            50% {
+                background: rgba(0, 212, 170, 0.2);
+                transform: scale(1.02);
+            }
+            100% {
+                background: transparent;
+                transform: scale(1);
+            }
+        }
+
+        .progress-fill {
+            transition: width 0.5s ease-out;
+        }
+
+        .editable-metric {
+            background: transparent;
+            border: 1px solid transparent;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 2px 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 60px;
+            text-align: right;
+            width: 100%;
+        }
+
+        .editable-metric:hover {
+            background: #1a1a1a;
+            border-color: #333;
+        }
+
+        .editable-metric:focus {
+            outline: none;
+            background: #1a1a1a;
+            border-color: #00d4aa;
+            cursor: text;
         }
 
         .txn-type {
@@ -798,6 +959,18 @@
             color: #fff;
         }
 
+        /* Mobile Menu Button */
+        .mobile-menu-btn {
+            display: none;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #ccc;
+            padding: 8px;
+            border-radius: 4px;
+            margin-right: 12px;
+            cursor: pointer;
+        }
+
         /* Responsive Design */
         @media (max-width: 1200px) {
             .right-panel {
@@ -805,10 +978,41 @@
             }
         }
 
+        .mobile-token-display {
+            display: none;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+
+        .mobile-token-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .mobile-token-pair {
+            font-size: 16px;
+            color: #00d4aa;
+        }
+
         @media (max-width: 1024px) {
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .sidebar.open .sidebar-close-btn {
+                display: flex !important;
+            }
+            
+            .mobile-token-display {
+                display: flex;
+            }
+            
             .sidebar {
                 transform: translateX(-100%);
                 transition: transform 0.3s;
+                z-index: 1000;
             }
             
             .sidebar.open {
@@ -818,23 +1022,31 @@
             .main-content {
                 margin-left: 0;
                 margin-right: 0;
+                max-width: 100vw;
             }
             
             .right-panel {
                 width: 100%;
                 position: static;
                 height: auto;
+                border-left: none;
+                border-top: 1px solid #1a1a1a;
             }
             
             .container {
                 flex-direction: column;
             }
             
+            .chart-container {
+                height: 300px;
+                padding-bottom: 0;
+            }
         }
 
         @media (max-width: 768px) {
             .header {
                 padding: 12px 16px;
+                flex-wrap: wrap;
             }
             
             .ad-container {
@@ -847,30 +1059,91 @@
                 gap: 12px;
             }
             
+            .chart-controls {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            
             .transactions-table {
-                padding: 12px 16px;
+                padding: 12px 16px 12px 16px;
+                overflow-x: auto;
+                margin-right: 16px;
             }
             
             .table {
                 font-size: 10px;
+                min-width: 600px;
             }
             
             .right-panel {
-                padding: 16px;
+                padding: 16px 16px 16px 16px;
+                margin-right: 16px;
+            }
+            
+            .sidebar {
+                width: 100%;
+                max-width: 100%;
+            }
+            
+            .editable-token-name {
+                display: none;
             }
         }
 
         @media (max-width: 480px) {
             .timeframe-buttons {
                 flex-wrap: wrap;
+                gap: 2px;
+            }
+            
+            .timeframe-btn {
+                padding: 4px 8px;
+                font-size: 10px;
             }
             
             .chart-tools {
                 flex-wrap: wrap;
+                gap: 4px;
+            }
+            
+            .chart-tool {
+                width: 28px;
+                height: 28px;
+                font-size: 12px;
             }
             
             .trading-buttons {
                 flex-direction: column;
+                gap: 8px;
+            }
+            
+            .trade-btn {
+                padding: 10px;
+                font-size: 12px;
+            }
+            
+            .header-left {
+                gap: 8px;
+            }
+            
+            .user-profile {
+                font-size: 12px;
+            }
+            
+            .user-avatar {
+                width: 24px;
+                height: 24px;
+                font-size: 10px;
+            }
+            
+            .chart-container {
+                height: 250px;
+            }
+            
+            .table th,
+            .table td {
+                padding: 4px 2px;
+                font-size: 9px;
             }
         }
     </style>
@@ -880,9 +1153,12 @@
         <!-- Left Sidebar -->
         <div class="sidebar" id="leftSidebar">
             <div class="sidebar-resize-handle" id="leftResizeHandle"></div>
-            <div class="sidebar-logo">
-                <div class="logo-icon"></div>
-                DexFools
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <div class="logo-icon"></div>
+                    DexFools
+                </div>
+                <button class="sidebar-close-btn" id="sidebarCloseBtn" style="display: none;">✕</button>
             </div>
             
             <div class="search-container">
@@ -993,6 +1269,7 @@
             <!-- Header -->
             <div class="header">
                 <div class="header-left">
+                    <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
                     <div class="ad-container">
                         <div class="ad-box">
                             <div class="ad-token">PEPE2.0</div>
@@ -1045,14 +1322,9 @@
                     </div>
                 </div>
                 <div class="header-right">
-                    <div class="user-profile">
-                        <div class="user-avatar">SV</div>
-                        <span>Skye Valadez</span>
-                    </div>
                     <div class="header-icons">
                         <div class="header-icon">⚙️</div>
                         <div class="header-icon">⋯</div>
-                        <div class="header-icon">✕</div>
                     </div>
                 </div>
             </div>
@@ -1060,6 +1332,10 @@
             <!-- Chart Section -->
             <div class="chart-section">
                 <div class="chart-header">
+                    <div class="mobile-token-display">
+                        <span class="mobile-token-name" id="mobileTokenName">token</span>
+                        <span class="mobile-token-pair">/SOL</span>
+                    </div>
                     <div class="chart-controls">
                         <div class="timeframe-buttons">
                             <button class="timeframe-btn">1s</button>
@@ -1076,11 +1352,7 @@
                             <div class="chart-tool">✏️</div>
                             <div class="chart-tool">📐</div>
                         </div>
-                        <div style="display: flex; gap: 8px;">
-                            <button style="background: #1a1a1a; border: 1px solid #333; color: #ccc; padding: 6px 12px; border-radius: 4px; font-size: 12px;">Price / MCap</button>
-                            <button style="background: #1a1a1a; border: 1px solid #333; color: #ccc; padding: 6px 12px; border-radius: 4px; font-size: 12px;">USD / SOL</button>
-                        </div>
-                        <button style="background: #1a1a1a; border: 1px solid #333; color: #ccc; padding: 6px 12px; border-radius: 4px; font-size: 12px;">Full</button>
+                        <button style="background: #1a1a1a; border: 1px solid #333; color: #ccc; padding: 6px 12px; border-radius: 4px; font-size: 12px;">Price / MCap</button>
                     </div>
                 </div>
                 <div class="chart-container" id="chartContainer">
@@ -1105,7 +1377,7 @@
                                 <th>DATE</th>
                                 <th>TYPE</th>
                                 <th>USD</th>
-                                <th>SKYE</th>
+                                <th id="tokenHeader">TOKEN</th>
                                 <th>SOL</th>
                                 <th>PRICE</th>
                                 <th>MAKER</th>
@@ -1192,11 +1464,11 @@
             <div class="price-section">
                 <div class="price-item">
                     <div class="price-label">PRICE USD</div>
-                    <div class="price-value">$0.0006831</div>
+                    <div class="price-value">$0.0006690</div>
                 </div>
                 <div class="price-item">
                     <div class="price-label">PRICE</div>
-                    <div class="price-value">0.052937 SOL</div>
+                    <div class="price-value">0.0006690 SOL</div>
                 </div>
             </div>
 
@@ -1211,7 +1483,7 @@
                 </div>
                 <div class="metric-item">
                     <div class="metric-label">MKT CAP</div>
-                    <div class="metric-value">$669K</div>
+                        <input type="text" class="metric-value editable-metric" id="marketCapInput" value="$669.00K" data-base-value="669000">
                 </div>
             </div>
 
@@ -1359,21 +1631,58 @@
 
         // Mobile sidebar toggle (for responsive design)
         function toggleSidebar() {
-            document.querySelector('.sidebar').classList.toggle('open');
+            const sidebar = document.querySelector('.sidebar');
+            const closeBtn = document.getElementById('sidebarCloseBtn');
+            sidebar.classList.toggle('open');
+            
+            // Show/hide close button based on sidebar state
+            if (sidebar.classList.contains('open')) {
+                closeBtn.style.display = 'flex';
+            } else {
+                closeBtn.style.display = 'none';
+            }
         }
 
-        // Add mobile menu button if needed
-        if (window.innerWidth <= 1024) {
-            const header = document.querySelector('.header');
-            const menuBtn = document.createElement('button');
-            menuBtn.innerHTML = '☰';
-            menuBtn.style.cssText = 'background: #1a1a1a; border: 1px solid #333; color: #ccc; padding: 8px; border-radius: 4px; margin-right: 12px;';
-            menuBtn.onclick = toggleSidebar;
-            header.querySelector('.header-left').insertBefore(menuBtn, header.querySelector('.header-left').firstChild);
+        function closeSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const closeBtn = document.getElementById('sidebarCloseBtn');
+            sidebar.classList.remove('open');
+            closeBtn.style.display = 'none';
         }
+
+        // Mobile menu button functionality
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', toggleSidebar);
+        }
+
+        // Sidebar close button functionality
+        const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
+        if (sidebarCloseBtn) {
+            sidebarCloseBtn.addEventListener('click', closeSidebar);
+        }
+
+        // Close sidebar when pressing escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeSidebar();
+            }
+        });
 
         // Token name editing functionality
         const tokenNameInput = document.getElementById('tokenNameInput');
+        const mobileTokenName = document.getElementById('mobileTokenName');
+        const tokenHeader = document.getElementById('tokenHeader');
+
+        // Sync mobile token display and table header with editable token name
+        function updateTokenDisplay() {
+            if (mobileTokenName) {
+                mobileTokenName.textContent = tokenNameInput.value;
+            }
+            if (tokenHeader) {
+                tokenHeader.textContent = tokenNameInput.value.toUpperCase();
+            }
+        }
 
         // Handle Enter key to finish editing
         function handleEnterKey(event) {
@@ -1382,7 +1691,16 @@
             }
         }
 
-        tokenNameInput.addEventListener('keydown', handleEnterKey);
+        // Handle input changes
+        function handleTokenNameChange() {
+            updateTokenDisplay();
+        }
+
+        if (tokenNameInput) {
+            tokenNameInput.addEventListener('keydown', handleEnterKey);
+            tokenNameInput.addEventListener('input', handleTokenNameChange);
+            tokenNameInput.addEventListener('blur', handleTokenNameChange);
+        }
 
         // Add click-to-edit functionality
         function makeEditable(element) {
@@ -1392,7 +1710,329 @@
             });
         }
 
-        makeEditable(tokenNameInput);
+        if (tokenNameInput) {
+            makeEditable(tokenNameInput);
+        }
+
+        // Initialize token displays
+        updateTokenDisplay();
+
+        // Market cap editing functionality
+        const TOKEN_SUPPLY = 1000000000; // 1B tokens
+        let marketCapInput;
+
+        function parseMarketCap(value) {
+            const cleanValue = value.replace(/[$,]/g, '').trim();
+            if (cleanValue.includes('K')) {
+                return parseFloat(cleanValue.replace('K', '')) * 1000;
+            } else if (cleanValue.includes('M')) {
+                return parseFloat(cleanValue.replace('M', '')) * 1000000;
+            } else if (cleanValue.includes('B')) {
+                return parseFloat(cleanValue.replace('B', '')) * 1000000000;
+            }
+            const parsed = parseFloat(cleanValue);
+            // If it's a small number (less than 1000), assume it's in thousands
+            if (!isNaN(parsed) && parsed < 1000) {
+                return parsed * 1000;
+            }
+            return isNaN(parsed) ? 669000 : parsed; // Default to 669K if invalid
+        }
+
+        function formatMarketCap(value) {
+            if (value >= 1000000000) {
+                return `$${(value / 1000000000).toFixed(2)}B`;
+            } else if (value >= 1000000) {
+                return `$${(value / 1000000).toFixed(2)}M`;
+            } else if (value >= 1000) {
+                return `$${(value / 1000).toFixed(2)}K`;
+            }
+            return `$${value.toFixed(2)}`;
+        }
+
+        function calculatePriceFromMarketCap(marketCap) {
+            return marketCap / TOKEN_SUPPLY;
+        }
+
+        function updatePricesFromMarketCap() {
+            const marketCapValue = parseMarketCap(marketCapInput.value);
+            const pricePerToken = calculatePriceFromMarketCap(marketCapValue);
+            
+            // Update USD price
+            const priceUsd = document.querySelector('.price-value');
+            if (priceUsd) {
+                priceUsd.textContent = `$${pricePerToken.toFixed(6)}`;
+            }
+            
+            // Update SOL price (assuming 1 SOL = $100 for simplicity)
+        const priceSol = document.querySelectorAll('.price-value')[1];
+        if (priceSol) {
+            const solPrice = pricePerToken / 100; // Convert USD to SOL
+            priceSol.textContent = `${solPrice.toFixed(7)} SOL`;
+        }
+            
+            // Update FDV to match market cap
+            const fdv = document.querySelectorAll('.metric-value')[1];
+            if (fdv) {
+                fdv.textContent = formatMarketCap(marketCapValue);
+            }
+        }
+
+        function handleMarketCapChange() {
+            updatePricesFromMarketCap();
+            
+            // Update the base value for animations
+            const marketCapValue = parseMarketCap(marketCapInput.value);
+            marketCapInput.setAttribute('data-base-value', marketCapValue);
+        }
+
+
+        // Transaction animations
+        function addNewTransaction() {
+            const tbody = document.querySelector('.table tbody');
+            if (!tbody) return;
+
+            // Create new transaction row
+            const newRow = document.createElement('tr');
+            const isBuy = Math.random() > 0.5;
+            const txnType = isBuy ? 'Buy' : 'Sell';
+            const txnClass = isBuy ? 'txn-buy' : 'txn-sell';
+            const amount = Math.floor(Math.random() * 2000) + 100;
+            const price = (Math.random() * 0.0001).toFixed(6);
+            const time = new Date().toLocaleTimeString('en-US', { 
+                hour12: false, 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            });
+            const makerId = Math.random().toString(36).substr(2, 6).toUpperCase();
+
+            const tokenName = tokenNameInput ? tokenNameInput.value : 'token';
+            newRow.innerHTML = `
+                <td>${time}</td>
+                <td><span class="txn-type ${txnClass}">${txnType}</span></td>
+                <td>$${amount.toLocaleString()}</td>
+                <td>${(amount * 1000).toLocaleString()}</td>
+                <td>${(amount * 0.05).toFixed(6)}</td>
+                <td>$${price}</td>
+                <td>${makerId}...${Math.random().toString(36).substr(2, 4)}</td>
+                <td>🔗</td>
+            `;
+
+            // Add animation classes
+            newRow.classList.add('new-transaction');
+            if (!isBuy) {
+                newRow.classList.add('txn-sell-row');
+            }
+
+            // Insert at the top
+            tbody.insertBefore(newRow, tbody.firstChild);
+
+            // Remove old transactions if too many
+            const rows = tbody.querySelectorAll('tr');
+            if (rows.length > 10) {
+                tbody.removeChild(rows[rows.length - 1]);
+            }
+
+            // Remove animation class after animation completes
+            setTimeout(() => {
+                newRow.classList.remove('new-transaction', 'txn-sell-row');
+            }, 2000);
+        }
+
+        // Add new transaction every 0.5-2 seconds
+        function startTransactionAnimation() {
+            const interval = Math.random() * 1500 + 500; // 0.5-2 seconds
+            setTimeout(() => {
+                addNewTransaction();
+                startTransactionAnimation(); // Schedule next one
+            }, interval);
+        }
+
+        // Start the animation after page loads
+        setTimeout(startTransactionAnimation, 1000);
+
+        // Metrics animation
+        function animateMetrics() {
+            // Get base market cap value
+            const baseMarketCap = marketCapInput ? parseFloat(marketCapInput.getAttribute('data-base-value')) || 669000 : 669000;
+            const basePrice = calculatePriceFromMarketCap(baseMarketCap);
+            
+            // Price animation based on market cap fluctuations
+            const priceUsd = document.querySelector('.price-value');
+            if (priceUsd) {
+                // Market cap fluctuates ±10% around base value for more visible changes
+                const marketCapChange = (Math.random() - 0.5) * 0.2; // ±10%
+                const newMarketCap = baseMarketCap * (1 + marketCapChange);
+                const newPrice = calculatePriceFromMarketCap(newMarketCap);
+                
+                priceUsd.textContent = `$${newPrice.toFixed(7)}`;
+                priceUsd.classList.add('updating');
+                setTimeout(() => priceUsd.classList.remove('updating'), 500);
+            }
+
+            // Price in SOL animation (based on USD price)
+            const priceSol = document.querySelectorAll('.price-value')[1];
+            if (priceSol) {
+                const currentUsdPrice = parseFloat(priceUsd.textContent.replace('$', ''));
+                const solPrice = currentUsdPrice / 100; // Convert USD to SOL
+                priceSol.textContent = `${solPrice.toFixed(7)} SOL`;
+            }
+
+            // Liquidity animation
+            const liquidity = document.querySelector('.metric-value');
+            if (liquidity && liquidity.textContent.includes('K')) {
+                const currentValue = parseFloat(liquidity.textContent.replace('$', '').replace('K', ''));
+                const change = (Math.random() - 0.5) * 5; // 0-5K changes
+                const newValue = Math.max(50, currentValue + change);
+                liquidity.textContent = `$${Math.round(newValue)}K`;
+                liquidity.classList.add('updating');
+                setTimeout(() => liquidity.classList.remove('updating'), 500);
+            }
+
+            // Market Cap animation (fluctuate around base value)
+            if (marketCapInput) {
+                const marketCapChange = (Math.random() - 0.5) * 0.2; // ±10% for more visible changes
+                const newMarketCap = baseMarketCap * (1 + marketCapChange);
+                marketCapInput.value = formatMarketCap(newMarketCap);
+                marketCapInput.classList.add('updating');
+                setTimeout(() => marketCapInput.classList.remove('updating'), 500);
+            }
+
+            // Transaction count animation
+            const txns = document.querySelectorAll('.metric-value')[3];
+            if (txns && !txns.textContent.includes('%')) {
+                const currentValue = parseInt(txns.textContent.replace(/,/g, ''));
+                const change = Math.floor(Math.random() * 5) + 1; // 1-5 new txns
+                const newValue = currentValue + change;
+                txns.textContent = newValue.toLocaleString();
+            }
+
+            // Buy count animation
+            const buys = document.querySelectorAll('.metric-value')[4];
+            if (buys && !buys.textContent.includes('%')) {
+                const currentValue = parseInt(buys.textContent.replace(/,/g, ''));
+                const change = Math.floor(Math.random() * 3) + 1; // 1-3 new buys
+                const newValue = currentValue + change;
+                buys.textContent = newValue.toLocaleString();
+            }
+
+            // Sell count animation
+            const sells = document.querySelectorAll('.metric-value')[5];
+            if (sells && !sells.textContent.includes('%')) {
+                const currentValue = parseInt(sells.textContent.replace(/,/g, ''));
+                const change = Math.floor(Math.random() * 2) + 1; // 1-2 new sells
+                const newValue = currentValue + change;
+                sells.textContent = newValue.toLocaleString();
+            }
+
+            // Volume animation
+            const volume = document.querySelectorAll('.metric-value')[6];
+            if (volume && volume.textContent.includes('M')) {
+                const currentValue = parseFloat(volume.textContent.replace('$', '').replace('M', ''));
+                const change = (Math.random() - 0.5) * 0.5; // 0-0.5M changes
+                const newValue = Math.max(1.0, currentValue + change);
+                volume.textContent = `$${newValue.toFixed(1)}M`;
+            }
+
+            // Buy volume animation
+            const buyVol = document.querySelectorAll('.metric-value')[7];
+            if (buyVol && buyVol.textContent.includes('M')) {
+                const currentValue = parseFloat(buyVol.textContent.replace('$', '').replace('M', ''));
+                const change = (Math.random() - 0.5) * 0.3; // 0-0.3M changes
+                const newValue = Math.max(0.5, currentValue + change);
+                buyVol.textContent = `$${newValue.toFixed(1)}M`;
+            }
+
+            // Sell volume animation
+            const sellVol = document.querySelectorAll('.metric-value')[8];
+            if (sellVol && sellVol.textContent.includes('M')) {
+                const currentValue = parseFloat(sellVol.textContent.replace('$', '').replace('M', ''));
+                const change = (Math.random() - 0.5) * 0.3; // 0-0.3M changes
+                const newValue = Math.max(0.5, currentValue + change);
+                sellVol.textContent = `$${newValue.toFixed(1)}M`;
+            }
+
+            // Makers animation
+            const makers = document.querySelectorAll('.metric-value')[9];
+            if (makers && !makers.textContent.includes('%')) {
+                const currentValue = parseInt(makers.textContent.replace(/,/g, ''));
+                const change = Math.floor(Math.random() * 2) + 1; // 1-2 new makers
+                const newValue = currentValue + change;
+                makers.textContent = newValue.toLocaleString();
+            }
+
+            // Buyers animation
+            const buyers = document.querySelectorAll('.metric-value')[10];
+            if (buyers && !buyers.textContent.includes('%')) {
+                const currentValue = parseInt(buyers.textContent.replace(/,/g, ''));
+                const change = Math.floor(Math.random() * 2) + 1; // 1-2 new buyers
+                const newValue = currentValue + change;
+                buyers.textContent = newValue.toLocaleString();
+            }
+
+            // Sellers animation
+            const sellers = document.querySelectorAll('.metric-value')[11];
+            if (sellers && !sellers.textContent.includes('%')) {
+                const currentValue = parseInt(sellers.textContent.replace(/,/g, ''));
+                const change = Math.floor(Math.random() * 2) + 1; // 1-2 new sellers
+                const newValue = currentValue + change;
+                sellers.textContent = newValue.toLocaleString();
+            }
+
+            // Update progress bars based on new values
+            updateProgressBars();
+        }
+
+        function updateProgressBars() {
+            const buyProgress = document.querySelector('.progress-green');
+            const sellProgress = document.querySelector('.progress-red');
+            
+            if (buyProgress && sellProgress) {
+                // Random progress between 45-65% for buys
+                const buyPercentage = 45 + Math.random() * 20;
+                const sellPercentage = 100 - buyPercentage;
+                
+                buyProgress.style.width = `${buyPercentage}%`;
+                sellProgress.style.width = `${sellPercentage}%`;
+            }
+        }
+
+        // Start metrics animation every 2-4 seconds
+        function startMetricsAnimation() {
+            const interval = Math.random() * 2000 + 2000; // 2-4 seconds
+            setTimeout(() => {
+                animateMetrics();
+                startMetricsAnimation(); // Schedule next update
+            }, interval);
+        }
+
+        // Start metrics animation after page loads
+        setTimeout(startMetricsAnimation, 3000);
+
+        // Initialize everything on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hide close button
+            const closeBtn = document.getElementById('sidebarCloseBtn');
+            if (closeBtn) {
+                closeBtn.style.display = 'none';
+            }
+            
+            // Initialize market cap input
+            marketCapInput = document.getElementById('marketCapInput');
+            if (marketCapInput) {
+                // Set up event listeners
+                marketCapInput.addEventListener('input', handleMarketCapChange);
+                marketCapInput.addEventListener('blur', handleMarketCapChange);
+                marketCapInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.target.blur();
+                    }
+                });
+                
+                // Initialize with current value
+                handleMarketCapChange();
+            }
+        });
 
         // Chart resizing functionality
         const chartContainer = document.getElementById('chartContainer');
