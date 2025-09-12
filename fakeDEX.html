@@ -621,6 +621,48 @@
             gap: 4px;
         }
 
+        .volume-comparison, .txns-comparison, .makers-comparison {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+        }
+
+        .volume-item, .txns-item, .makers-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .combined-progress-bar {
+            display: flex;
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .combined-progress-bar .progress-fill {
+            transition: width 0.3s ease;
+        }
+
+        .combined-progress-bar .progress-green {
+            background: linear-gradient(90deg, #00d4aa, #00b894);
+        }
+
+        .combined-progress-bar .progress-red {
+            background: linear-gradient(90deg, #ff6b6b, #e74c3c);
+        }
+
+        .combined-progress-bar .progress-blue {
+            background: linear-gradient(90deg, #3498db, #2980b9);
+        }
+
+        .combined-progress-bar .progress-orange {
+            background: linear-gradient(90deg, #f39c12, #e67e22);
+        }
+
 
         .chart-info {
             display: flex;
@@ -2238,25 +2280,25 @@
                 <div class="metric-item">
                     <div class="metric-label">5M</div>
                     <div class="metric-value">
-                        <span class="positive">6.84%</span>
+                        <span class="positive" id="performance5M">0%</span>
                     </div>
                 </div>
                 <div class="metric-item">
                     <div class="metric-label">1H</div>
                     <div class="metric-value">
-                        <span class="negative">-13.62%</span>
+                        <span class="negative" id="performance1H">0%</span>
                     </div>
                 </div>
                 <div class="metric-item">
                     <div class="metric-label">6H</div>
                     <div class="metric-value">
-                        <span class="positive">617%</span>
+                        <span class="positive" id="performance6H">0%</span>
                     </div>
                 </div>
                 <div class="metric-item">
                     <div class="metric-label">24H</div>
                     <div class="metric-value">
-                        <span class="positive">617%</span>
+                        <span class="positive" id="performance24H">0%</span>
                     </div>
                 </div>
             </div>
@@ -2264,63 +2306,59 @@
             <div class="metrics-section">
                 <div class="metric-item">
                     <div class="metric-label">TXNS</div>
-                    <div class="metric-value">28,002</div>
+                    <div class="metric-value">0</div>
                 </div>
-                <div class="metric-item">
+                <div class="txns-comparison">
+                    <div class="txns-item">
                     <div class="metric-label">BUYS</div>
-                    <div class="metric-value">16,937</div>
+                        <div class="metric-value" id="buyTxnsValue">0</div>
                 </div>
-                <div class="progress-bar">
-                    <div class="progress-fill progress-green" style="width: 60%;"></div>
-                </div>
-                <div class="metric-item">
+                    <div class="txns-item">
                     <div class="metric-label">SELLS</div>
-                    <div class="metric-value">11,065</div>
+                        <div class="metric-value" id="sellTxnsValue">0</div>
                 </div>
-                <div class="progress-bar">
-                    <div class="progress-fill progress-red" style="width: 40%;"></div>
+                </div>
+                <div class="combined-progress-bar">
+                    <div class="progress-fill progress-green" id="buyTxnsBar" style="width: 50%;"></div>
+                    <div class="progress-fill progress-red" id="sellTxnsBar" style="width: 50%;"></div>
                 </div>
             </div>
 
             <div class="metrics-section">
                 <div class="metric-item">
                     <div class="metric-label">VOLUME</div>
-                    <div class="metric-value">$3.0M</div>
+                    <div class="metric-value">$0</div>
                 </div>
-                <div class="metric-item">
+                <div class="volume-comparison">
+                    <div class="volume-item">
                     <div class="metric-label">BUY VOL</div>
-                    <div class="metric-value">$1.5M</div>
+                        <div class="metric-value" id="buyVolValue">$0</div>
                 </div>
-                <div class="progress-bar">
-                    <div class="progress-fill progress-green" style="width: 50%;"></div>
-                </div>
-                <div class="metric-item">
+                    <div class="volume-item">
                     <div class="metric-label">SELL VOL</div>
-                    <div class="metric-value">$1.5M</div>
+                        <div class="metric-value" id="sellVolValue">$0</div>
                 </div>
-                <div class="progress-bar">
-                    <div class="progress-fill progress-red" style="width: 50%;"></div>
+                </div>
+                <div class="combined-progress-bar">
+                    <div class="progress-fill progress-green" id="buyVolBar" style="width: 50%;"></div>
+                    <div class="progress-fill progress-red" id="sellVolBar" style="width: 50%;"></div>
                 </div>
             </div>
 
             <div class="metrics-section">
-                <div class="metric-item">
+                <div class="makers-comparison">
+                    <div class="makers-item">
                     <div class="metric-label">MAKERS</div>
-                    <div class="metric-value">4,660</div>
+                        <div class="metric-value" id="makersValue">0</div>
                 </div>
-                <div class="metric-item">
-                    <div class="metric-label">BUYERS</div>
-                    <div class="metric-value">4,431</div>
+                    <div class="makers-item">
+                        <div class="metric-label">TRADERS</div>
+                        <div class="metric-value" id="tradersValue">0</div>
                 </div>
-                <div class="progress-bar">
-                    <div class="progress-fill progress-green" style="width: 55%;"></div>
                 </div>
-                <div class="metric-item">
-                    <div class="metric-label">SELLERS</div>
-                    <div class="metric-value">3,500</div>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill progress-red" style="width: 45%;"></div>
+                <div class="combined-progress-bar">
+                    <div class="progress-fill progress-blue" id="makersBar" style="width: 50%;"></div>
+                    <div class="progress-fill progress-orange" id="tradersBar" style="width: 50%;"></div>
                 </div>
             </div>
 
@@ -2736,48 +2774,53 @@
                 txns.textContent = newValue.toLocaleString();
             }
 
-            // Buy count animation
-            const buys = document.querySelectorAll('.metric-value')[4];
+            // Buy count animation - more realistic based on price movement
+            const buys = document.querySelectorAll('.metric-value')[3];
             if (buys && !buys.textContent.includes('%')) {
                 const currentValue = parseInt(buys.textContent.replace(/,/g, ''));
-                const change = Math.floor(Math.random() * 3) + 1; // 1-3 new buys
+                // More realistic: 0-2 buys per update, with slight bias toward buys
+                const change = Math.random() > 0.3 ? Math.floor(Math.random() * 2) : 0;
                 const newValue = currentValue + change;
                 buys.textContent = newValue.toLocaleString();
             }
 
-            // Sell count animation
-            const sells = document.querySelectorAll('.metric-value')[5];
+            // Sell count animation - more realistic based on price movement
+            const sells = document.querySelectorAll('.metric-value')[4];
             if (sells && !sells.textContent.includes('%')) {
                 const currentValue = parseInt(sells.textContent.replace(/,/g, ''));
-                const change = Math.floor(Math.random() * 2) + 1; // 1-2 new sells
+                // More realistic: 0-1 sells per update, with slight bias toward sells
+                const change = Math.random() > 0.4 ? 1 : 0;
                 const newValue = currentValue + change;
                 sells.textContent = newValue.toLocaleString();
             }
 
-            // Volume animation
-            const volume = document.querySelectorAll('.metric-value')[6];
+            // Volume animation - more realistic based on market activity
+            const volume = document.querySelectorAll('.metric-value')[5];
             if (volume && volume.textContent.includes('M')) {
                 const currentValue = parseFloat(volume.textContent.replace('$', '').replace('M', ''));
-                const change = (Math.random() - 0.5) * 0.5; // 0-0.5M changes
-                const newValue = Math.max(1.0, currentValue + change);
+                // More realistic: smaller, more frequent changes
+                const change = (Math.random() - 0.5) * 0.2; // ±0.1M changes
+                const newValue = Math.max(0.5, currentValue + change);
                 volume.textContent = `$${newValue.toFixed(1)}M`;
             }
 
-            // Buy volume animation
-            const buyVol = document.querySelectorAll('.metric-value')[7];
+            // Buy volume animation - correlate with buy count
+            const buyVol = document.querySelectorAll('.metric-value')[6];
             if (buyVol && buyVol.textContent.includes('M')) {
                 const currentValue = parseFloat(buyVol.textContent.replace('$', '').replace('M', ''));
-                const change = (Math.random() - 0.5) * 0.3; // 0-0.3M changes
-                const newValue = Math.max(0.5, currentValue + change);
+                // Smaller changes, more realistic
+                const change = (Math.random() - 0.3) * 0.15; // Slight bias toward increasing
+                const newValue = Math.max(0.1, currentValue + change);
                 buyVol.textContent = `$${newValue.toFixed(1)}M`;
             }
 
-            // Sell volume animation
-            const sellVol = document.querySelectorAll('.metric-value')[8];
+            // Sell volume animation - correlate with sell count
+            const sellVol = document.querySelectorAll('.metric-value')[7];
             if (sellVol && sellVol.textContent.includes('M')) {
                 const currentValue = parseFloat(sellVol.textContent.replace('$', '').replace('M', ''));
-                const change = (Math.random() - 0.5) * 0.3; // 0-0.3M changes
-                const newValue = Math.max(0.5, currentValue + change);
+                // Smaller changes, more realistic
+                const change = (Math.random() - 0.7) * 0.15; // Slight bias toward increasing
+                const newValue = Math.max(0.1, currentValue + change);
                 sellVol.textContent = `$${newValue.toFixed(1)}M`;
             }
 
@@ -2817,13 +2860,199 @@
             const sellProgress = document.querySelector('.progress-red');
             
             if (buyProgress && sellProgress) {
-                // Random progress between 45-65% for buys
-                const buyPercentage = 45 + Math.random() * 20;
+                // Get current buy/sell counts to calculate realistic ratios
+                const buys = document.querySelectorAll('.metric-value')[3];
+                const sells = document.querySelectorAll('.metric-value')[4];
+                
+                if (buys && sells) {
+                    const buyCount = parseInt(buys.textContent.replace(/,/g, '')) || 0;
+                    const sellCount = parseInt(sells.textContent.replace(/,/g, '')) || 0;
+                    const total = buyCount + sellCount;
+                    
+                    if (total > 0) {
+                        const buyPercentage = (buyCount / total) * 100;
                 const sellPercentage = 100 - buyPercentage;
                 
-                buyProgress.style.width = `${buyPercentage}%`;
-                sellProgress.style.width = `${sellPercentage}%`;
+                        // Ensure minimum 5% and maximum 95% for visibility
+                        buyProgress.style.width = `${Math.max(5, Math.min(95, buyPercentage))}%`;
+                        sellProgress.style.width = `${Math.max(5, Math.min(95, sellPercentage))}%`;
+                        
+                        console.log('📊 Progress bars updated:', { buyCount, sellCount, buyPercentage: buyPercentage.toFixed(1), sellPercentage: sellPercentage.toFixed(1) });
+                    } else {
+                        // When no transactions, show equal bars (50/50)
+                        buyProgress.style.width = '50%';
+                        sellProgress.style.width = '50%';
+                        console.log('📊 Progress bars reset to 50/50 (no transactions)');
+                    }
+                }
             }
+        }
+
+        function updateVolumeProgressBar() {
+            const buyVolBar = document.getElementById('buyVolBar');
+            const sellVolBar = document.getElementById('sellVolBar');
+            const buyVolValue = document.getElementById('buyVolValue');
+            const sellVolValue = document.getElementById('sellVolValue');
+            
+            if (buyVolBar && sellVolBar && buyVolValue && sellVolValue) {
+                // Parse the volume values
+                const buyVolText = buyVolValue.textContent.replace('$', '').replace('K', '000').replace('M', '000000').replace('B', '000000000');
+                const sellVolText = sellVolValue.textContent.replace('$', '').replace('K', '000').replace('M', '000000').replace('B', '000000000');
+                
+                const buyVolAmount = parseFloat(buyVolText) || 0;
+                const sellVolAmount = parseFloat(sellVolText) || 0;
+                const totalVol = buyVolAmount + sellVolAmount;
+                
+                if (totalVol > 0) {
+                    const buyPercentage = (buyVolAmount / totalVol) * 100;
+                    const sellPercentage = 100 - buyPercentage;
+                    
+                    // Ensure minimum 5% and maximum 95% for visibility
+                    buyVolBar.style.width = `${Math.max(5, Math.min(95, buyPercentage))}%`;
+                    sellVolBar.style.width = `${Math.max(5, Math.min(95, sellPercentage))}%`;
+                    
+                    console.log('📊 Volume progress bar updated:', { buyVolAmount, sellVolAmount, buyPercentage: buyPercentage.toFixed(1), sellPercentage: sellPercentage.toFixed(1) });
+                } else {
+                    // When no volume, show equal bars (50/50)
+                    buyVolBar.style.width = '50%';
+                    sellVolBar.style.width = '50%';
+                    console.log('📊 Volume progress bar reset to 50/50 (no volume)');
+                }
+            }
+        }
+
+        function updateTxnsProgressBar() {
+            const buyTxnsBar = document.getElementById('buyTxnsBar');
+            const sellTxnsBar = document.getElementById('sellTxnsBar');
+            const buyTxnsValue = document.getElementById('buyTxnsValue');
+            const sellTxnsValue = document.getElementById('sellTxnsValue');
+            
+            if (buyTxnsBar && sellTxnsBar && buyTxnsValue && sellTxnsValue) {
+                const buyCount = parseInt(buyTxnsValue.textContent.replace(/,/g, '')) || 0;
+                const sellCount = parseInt(sellTxnsValue.textContent.replace(/,/g, '')) || 0;
+                const totalTxns = buyCount + sellCount;
+                
+                if (totalTxns > 0) {
+                    const buyPercentage = (buyCount / totalTxns) * 100;
+                    const sellPercentage = 100 - buyPercentage;
+                    
+                    // Ensure minimum 5% and maximum 95% for visibility
+                    buyTxnsBar.style.width = `${Math.max(5, Math.min(95, buyPercentage))}%`;
+                    sellTxnsBar.style.width = `${Math.max(5, Math.min(95, sellPercentage))}%`;
+                    
+                    console.log('📊 TXNS progress bar updated:', { buyCount, sellCount, buyPercentage: buyPercentage.toFixed(1), sellPercentage: sellPercentage.toFixed(1) });
+                } else {
+                    // When no transactions, show equal bars (50/50)
+                    buyTxnsBar.style.width = '50%';
+                    sellTxnsBar.style.width = '50%';
+                    console.log('📊 TXNS progress bar reset to 50/50 (no transactions)');
+                }
+            }
+        }
+
+        function updateMakersProgressBar() {
+            const makersBar = document.getElementById('makersBar');
+            const tradersBar = document.getElementById('tradersBar');
+            const makersValue = document.getElementById('makersValue');
+            const tradersValue = document.getElementById('tradersValue');
+            
+            if (makersBar && tradersBar && makersValue && tradersValue) {
+                const makersCount = parseInt(makersValue.textContent.replace(/,/g, '')) || 0;
+                const tradersCount = parseInt(tradersValue.textContent.replace(/,/g, '')) || 0;
+                const total = makersCount + tradersCount;
+                
+                if (total > 0) {
+                    const makersPercentage = (makersCount / total) * 100;
+                    const tradersPercentage = 100 - makersPercentage;
+                    
+                    // Ensure minimum 5% and maximum 95% for visibility
+                    makersBar.style.width = `${Math.max(5, Math.min(95, makersPercentage))}%`;
+                    tradersBar.style.width = `${Math.max(5, Math.min(95, tradersPercentage))}%`;
+                    
+                    console.log('📊 Makers progress bar updated:', { makersCount, tradersCount, makersPercentage: makersPercentage.toFixed(1), tradersPercentage: tradersPercentage.toFixed(1) });
+                } else {
+                    // When no activity, show equal bars (50/50)
+                    makersBar.style.width = '50%';
+                    tradersBar.style.width = '50%';
+                    console.log('📊 Makers progress bar reset to 50/50 (no activity)');
+                }
+            }
+        }
+
+        function updatePerformanceMetrics(marketCap, tokenPrice) {
+            // Calculate realistic performance percentages based on market cap and price movement
+            const basePrice = 0.000003; // Base price for comparison
+            const priceChange = ((tokenPrice - basePrice) / basePrice) * 100;
+            
+            // Special case: if final action MC is 0 (complete dump), show -100% for all intervals
+            if (marketCap === 0 || tokenPrice === 0) {
+                const performance5M = document.getElementById('performance5M');
+                const performance1H = document.getElementById('performance1H');
+                const performance6H = document.getElementById('performance6H');
+                const performance24H = document.getElementById('performance24H');
+                
+                if (performance5M) {
+                    performance5M.textContent = '-100.00%';
+                    performance5M.className = 'negative';
+                }
+                if (performance1H) {
+                    performance1H.textContent = '-100.00%';
+                    performance1H.className = 'negative';
+                }
+                if (performance6H) {
+                    performance6H.textContent = '-100.00%';
+                    performance6H.className = 'negative';
+                }
+                if (performance24H) {
+                    performance24H.textContent = '-100.00%';
+                    performance24H.className = 'negative';
+                }
+                
+                console.log('📊 Performance metrics updated (DUMP): All intervals show -100%');
+                return;
+            }
+            
+            // 5M performance - more volatile, smaller changes
+            const performance5M = document.getElementById('performance5M');
+            if (performance5M) {
+                const change5M = priceChange * (0.1 + Math.random() * 0.3); // 10-40% of price change
+                const value5M = Math.abs(change5M) < 0.1 ? 0 : change5M;
+                performance5M.textContent = `${value5M >= 0 ? '+' : ''}${value5M.toFixed(2)}%`;
+                performance5M.className = value5M >= 0 ? 'positive' : 'negative';
+            }
+            
+            // 1H performance - moderate volatility
+            const performance1H = document.getElementById('performance1H');
+            if (performance1H) {
+                const change1H = priceChange * (0.3 + Math.random() * 0.4); // 30-70% of price change
+                const value1H = Math.abs(change1H) < 0.1 ? 0 : change1H;
+                performance1H.textContent = `${value1H >= 0 ? '+' : ''}${value1H.toFixed(2)}%`;
+                performance1H.className = value1H >= 0 ? 'positive' : 'negative';
+            }
+            
+            // 6H performance - larger changes, more realistic for pump tokens
+            const performance6H = document.getElementById('performance6H');
+            if (performance6H) {
+                const change6H = priceChange * (0.5 + Math.random() * 0.8); // 50-130% of price change
+                const value6H = Math.abs(change6H) < 0.1 ? 0 : change6H;
+                performance6H.textContent = `${value6H >= 0 ? '+' : ''}${value6H.toFixed(2)}%`;
+                performance6H.className = value6H >= 0 ? 'positive' : 'negative';
+            }
+            
+            // 24H performance - largest changes, typical for new tokens
+            const performance24H = document.getElementById('performance24H');
+            if (performance24H) {
+                const change24H = priceChange * (0.8 + Math.random() * 1.2); // 80-200% of price change
+                const value24H = Math.abs(change24H) < 0.1 ? 0 : change24H;
+                performance24H.textContent = `${value24H >= 0 ? '+' : ''}${value24H.toFixed(2)}%`;
+                performance24H.className = value24H >= 0 ? 'positive' : 'negative';
+            }
+            
+            console.log('📊 Performance metrics updated:', { 
+                priceChange: priceChange.toFixed(2), 
+                marketCap, 
+                tokenPrice: tokenPrice.toFixed(8) 
+            });
         }
 
         // Start metrics animation every 2-4 seconds
@@ -2894,9 +3123,181 @@
                 liquidity.textContent = formatMarketCap(liquidityAmount);
             }
             
+            // Update buy/sell metrics based on price movement
+            updateBuySellMetrics(marketCap, tokenPrice);
+            
             console.log('📊 Updated fakeDEX data from chart - Market Cap:', marketCap, 'Token Price:', tokenPrice, 'SOL Price:', solPrice);
         }
         
+        // Function to reset all metrics to zero
+        function resetMetricsToZero() {
+            // Reset TXNS
+            const txns = document.querySelectorAll('.metric-value')[2];
+            if (txns) txns.textContent = '0';
+            
+            // Reset buy/sell counts
+            const buyTxnsValue = document.getElementById('buyTxnsValue');
+            const sellTxnsValue = document.getElementById('sellTxnsValue');
+            if (buyTxnsValue) buyTxnsValue.textContent = '0';
+            if (sellTxnsValue) sellTxnsValue.textContent = '0';
+            
+            // Reset volumes
+            const volume = document.querySelectorAll('.metric-value')[5];
+            const buyVolValue = document.getElementById('buyVolValue');
+            const sellVolValue = document.getElementById('sellVolValue');
+            if (volume) volume.textContent = '$0';
+            if (buyVolValue) buyVolValue.textContent = '$0';
+            if (sellVolValue) sellVolValue.textContent = '$0';
+            
+            // Reset MAKERS and TRADERS
+            const makersValue = document.getElementById('makersValue');
+            const tradersValue = document.getElementById('tradersValue');
+            if (makersValue) makersValue.textContent = '0';
+            if (tradersValue) tradersValue.textContent = '0';
+            
+            // Reset performance metrics
+            const performance5M = document.getElementById('performance5M');
+            const performance1H = document.getElementById('performance1H');
+            const performance6H = document.getElementById('performance6H');
+            const performance24H = document.getElementById('performance24H');
+            if (performance5M) {
+                performance5M.textContent = '0%';
+                performance5M.className = 'positive';
+            }
+            if (performance1H) {
+                performance1H.textContent = '0%';
+                performance1H.className = 'negative';
+            }
+            if (performance6H) {
+                performance6H.textContent = '0%';
+                performance6H.className = 'positive';
+            }
+            if (performance24H) {
+                performance24H.textContent = '0%';
+                performance24H.className = 'positive';
+            }
+            
+            // Reset progress bars to 50/50
+            const buyProgress = document.querySelector('.progress-green');
+            const sellProgress = document.querySelector('.progress-red');
+            if (buyProgress) buyProgress.style.width = '50%';
+            if (sellProgress) sellProgress.style.width = '50%';
+            
+            // Reset TXNS progress bars to 50/50
+            const buyTxnsBar = document.getElementById('buyTxnsBar');
+            const sellTxnsBar = document.getElementById('sellTxnsBar');
+            if (buyTxnsBar) buyTxnsBar.style.width = '50%';
+            if (sellTxnsBar) sellTxnsBar.style.width = '50%';
+            
+            // Reset volume progress bars to 50/50
+            const buyVolBar = document.getElementById('buyVolBar');
+            const sellVolBar = document.getElementById('sellVolBar');
+            if (buyVolBar) buyVolBar.style.width = '50%';
+            if (sellVolBar) sellVolBar.style.width = '50%';
+            
+            // Reset makers progress bars to 50/50
+            const makersBar = document.getElementById('makersBar');
+            const tradersBar = document.getElementById('tradersBar');
+            if (makersBar) makersBar.style.width = '50%';
+            if (tradersBar) tradersBar.style.width = '50%';
+            
+            console.log('🔄 Reset all metrics to zero');
+        }
+
+        // Function to update buy/sell metrics based on chart data
+        function updateBuySellMetrics(marketCap, tokenPrice) {
+            console.log('🔄 updateBuySellMetrics called with:', { marketCap, tokenPrice });
+            
+            // Calculate realistic buy/sell activity based on market cap and price
+            const baseActivity = Math.min(marketCap / 1000, 100); // Scale with market cap
+            const priceVolatility = Math.abs(tokenPrice - 0.000003) / 0.000003; // Compare to base price
+            
+            console.log('📊 Calculated activity:', { baseActivity, priceVolatility });
+            
+            // Buy count - more buys when price is rising or stable
+            const buyTxnsValue = document.getElementById('buyTxnsValue');
+            if (buyTxnsValue) {
+                const currentValue = parseInt(buyTxnsValue.textContent.replace(/,/g, '')) || 0;
+                const buyActivity = Math.floor(baseActivity * (0.5 + Math.random() * 0.5));
+                const newValue = currentValue + buyActivity;
+                buyTxnsValue.textContent = newValue.toLocaleString();
+                console.log('📈 Updated buys:', { currentValue, buyActivity, newValue });
+            }
+            
+            // Sell count - more sells when price is volatile
+            const sellTxnsValue = document.getElementById('sellTxnsValue');
+            if (sellTxnsValue) {
+                const currentValue = parseInt(sellTxnsValue.textContent.replace(/,/g, '')) || 0;
+                const sellActivity = Math.floor(baseActivity * priceVolatility * (0.3 + Math.random() * 0.4));
+                const newValue = currentValue + sellActivity;
+                sellTxnsValue.textContent = newValue.toLocaleString();
+                console.log('📉 Updated sells:', { currentValue, sellActivity, newValue });
+            }
+            
+            // Volume - correlate with market cap
+            const volume = document.querySelectorAll('.metric-value')[5];
+            if (volume && volume.textContent.includes('M')) {
+                const volumeAmount = marketCap * 0.15; // 15% of market cap
+                volume.textContent = formatMarketCap(volumeAmount);
+            }
+            
+            // Buy volume - 60-70% of total volume
+            const buyVolValue = document.getElementById('buyVolValue');
+            if (buyVolValue) {
+                const buyVolumeAmount = marketCap * 0.1; // 10% of market cap
+                buyVolValue.textContent = formatMarketCap(buyVolumeAmount);
+            }
+            
+            // Sell volume - 30-40% of total volume
+            const sellVolValue = document.getElementById('sellVolValue');
+            if (sellVolValue) {
+                const sellVolumeAmount = marketCap * 0.05; // 5% of market cap
+                sellVolValue.textContent = formatMarketCap(sellVolumeAmount);
+            }
+            
+            // Update combined volume progress bar
+            updateVolumeProgressBar();
+            
+            // Update TXNS (total transactions) - sum of buys and sells
+            const txns = document.querySelectorAll('.metric-value')[2];
+            if (txns && !txns.textContent.includes('%')) {
+                const buyCount = parseInt(buyTxnsValue ? buyTxnsValue.textContent.replace(/,/g, '') : '0') || 0;
+                const sellCount = parseInt(sellTxnsValue ? sellTxnsValue.textContent.replace(/,/g, '') : '0') || 0;
+                const totalTxns = buyCount + sellCount;
+                txns.textContent = totalTxns.toLocaleString();
+            }
+            
+            // Update TXNS progress bar
+            updateTxnsProgressBar();
+            
+            // Update MAKERS - correlate with total activity
+            const makersValue = document.getElementById('makersValue');
+            if (makersValue) {
+                const currentValue = parseInt(makersValue.textContent.replace(/,/g, '')) || 0;
+                const makerActivity = Math.floor(baseActivity * 0.3); // 30% of base activity
+                const newValue = currentValue + makerActivity;
+                makersValue.textContent = newValue.toLocaleString();
+            }
+            
+            // Update TRADERS - sum of buyers and sellers
+            const tradersValue = document.getElementById('tradersValue');
+            if (tradersValue) {
+                const buyCount = parseInt(buyTxnsValue ? buyTxnsValue.textContent.replace(/,/g, '') : '0') || 0;
+                const sellCount = parseInt(sellTxnsValue ? sellTxnsValue.textContent.replace(/,/g, '') : '0') || 0;
+                const totalTraders = buyCount + sellCount;
+                tradersValue.textContent = totalTraders.toLocaleString();
+            }
+            
+            // Update makers progress bar
+            updateMakersProgressBar();
+            
+            // Update performance metrics
+            updatePerformanceMetrics(marketCap, tokenPrice);
+            
+            // Update progress bars based on new ratios
+            updateProgressBars();
+        }
+
         // Function to set final data after animation completes
         function setFinalData() {
             const config = getConfig();
@@ -2947,6 +3348,9 @@
                 const liquidityAmount = finalActionMC * 0.2; // 20% of market cap
                 liquidity.textContent = formatMarketCap(liquidityAmount);
             }
+            
+            // Update buy/sell metrics for final data
+            updateBuySellMetrics(finalActionMC, tokenPrice);
             
             console.log('🎯 Set final data - Final Action MC:', finalActionMC, 'Token Price:', tokenPrice, 'SOL Price:', solPrice);
         }
@@ -3283,6 +3687,10 @@
             // Reset animation state
             isAnimating = true;
             animationComplete = false;
+            
+            // Reset all metrics to 0
+            resetMetricsToZero();
+            
             const config = getConfig();
             console.log('🎬 Starting TradingView Advanced Chart animation with config:', config);
             
