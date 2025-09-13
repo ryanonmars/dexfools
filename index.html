@@ -2414,15 +2414,15 @@
             <div class="metrics-section" style="margin-top: 30px;">
                 <div class="metric-item">
                     <div class="metric-label">Pair created</div>
-                    <div class="metric-value">5h 12m ago</div>
+                    <div class="metric-value">3m ago</div>
                 </div>
                 <div class="metric-item">
-                    <div class="metric-label">Pooled skye</div>
-                    <div class="metric-value">82,431,198 $56K</div>
+                    <div class="metric-label">Pooled <span id="pooledTokenName">token</span></div>
+                    <div class="metric-value" id="pooledTokenAmount">900,000,000</div>
                 </div>
                 <div class="metric-item">
                     <div class="metric-label">Pooled SOL</div>
-                    <div class="metric-value">244.72 $56K</div>
+                    <div class="metric-value" id="pooledSOLAmount">3.00 SOL</div>
                 </div>
                 <div class="metric-item">
                     <div class="metric-label">Pair</div>
@@ -2511,6 +2511,12 @@
             // Update transactions table header with just the token name (no /SOL)
             if (tokenHeader) {
                 tokenHeader.textContent = displayName.toUpperCase();
+            }
+            
+            // Update pooled token name in the bottom metrics
+            const pooledTokenName = document.getElementById('pooledTokenName');
+            if (pooledTokenName) {
+                pooledTokenName.textContent = displayName;
             }
         }
 
@@ -3159,6 +3165,14 @@
         let currentAnimation = null;
         let animationComplete = false;
         
+        // Pool Animation Variables
+        let poolAnimationInterval = null;
+        let isPoolAnimating = false;
+        let baseTokenAmount = 900000000; // Start with close to a billion
+        let baseSOLAmount = 3.0; // Start with realistic SOL amount (low MC)
+        let baseTokenValue = 1; // Start much lower
+        let baseSOLValue = 1; // Start much lower
+        
         // Function to update fakeDEX data based on chart price
         function updateFakeDEXDataFromChart(currentPrice) {
             if (!currentPrice || !isAnimating || animationComplete) return;
@@ -3394,6 +3408,9 @@
             animationComplete = true;
             isAnimating = false;
             
+            // Stop pool animation
+            stopPoolAnimation();
+            
             // Update market cap display
             if (marketCapInput) {
                 marketCapInput.value = formatMarketCap(finalActionMC);
@@ -3436,6 +3453,9 @@
             
             // Update buy/sell metrics for final data
             updateBuySellMetrics(finalActionMC, tokenPrice);
+            
+            // Update pool amounts to final target MC values
+            updatePoolAmounts();
             
             console.log('🎯 Set final data - Final Action MC:', finalActionMC, 'Token Price:', tokenPrice, 'SOL Price:', solPrice);
         }
@@ -3919,6 +3939,9 @@
             // Start transaction animation when chart starts
             startTransactionAnimation();
             
+            // Start pool animation
+            startPoolAnimation();
+            
             document.getElementById('animation-status').textContent = 'Resetting chart and generating animation data...';
             document.getElementById('animation-status').style.color = '#26a69a';
             
@@ -4047,6 +4070,111 @@
                 console.log('🚀 Fresh chart ready, starting animation');
                 startAnimationData(config);
             }, 1000);
+        }
+
+        // Pool Animation Functions
+        function startPoolAnimation() {
+            if (isPoolAnimating) return;
+            
+            isPoolAnimating = true;
+            console.log('🏊 Starting pool animation...');
+            
+            poolAnimationInterval = setInterval(() => {
+                updatePoolAmounts();
+            }, 2000 + Math.random() * 3000); // 2-5 seconds between updates
+        }
+
+        function stopPoolAnimation() {
+            if (poolAnimationInterval) {
+                clearInterval(poolAnimationInterval);
+                poolAnimationInterval = null;
+            }
+            isPoolAnimating = false;
+            console.log('🏊 Pool animation stopped');
+        }
+
+        function updatePoolAmounts() {
+            // Use current animation MC during animation, final target MC when complete
+            let targetMC;
+            if (animationComplete) {
+                // Animation finished - use final target MC
+                const config = getConfig();
+                targetMC = config.finalActionMarketCap || 3000;
+            } else {
+                // Animation running - use current MC
+                targetMC = marketCapInput ? parseFloat(marketCapInput.getAttribute('data-base-value')) || 3000 : 3000;
+            }
+            
+            // Calculate token price from target market cap
+            const tokenPrice = targetMC / 1000000000; // Market cap / 1B tokens
+            const solPrice = 239; // SOL = $239
+            
+            // Start with close to a billion tokens and calculate SOL based on price
+            // Higher MC = higher price = fewer tokens needed for same value
+            let baseTokenAmount;
+            
+            if (targetMC < 10000) {
+                // Low MC: ~900M tokens, ~3 SOL (based on real ratios)
+                baseTokenAmount = 900000000;
+                baseSOLAmount = 3;
+            } else if (targetMC < 100000) {
+                // Medium MC: ~800M tokens, ~30 SOL
+                baseTokenAmount = 800000000;
+                baseSOLAmount = 30;
+            } else if (targetMC < 1000000) {
+                // High MC: ~600M tokens, ~300 SOL (your reference point!)
+                baseTokenAmount = 600000000;
+                baseSOLAmount = 300;
+            } else {
+                // Very high MC: ~400M tokens, ~1000 SOL
+                baseTokenAmount = 400000000;
+                baseSOLAmount = 1000;
+            }
+            
+            // Calculate actual amounts based on target market cap
+            // Higher target MC = more SOL, fewer tokens (people bought tokens)
+            const priceRatio = targetMC / 3000; // Ratio from starting MC (3K)
+            const tokenAmount = baseTokenAmount / Math.sqrt(priceRatio);
+            // Use logarithmic scaling for SOL - much more realistic growth
+            const solAmount = baseSOLAmount * (1 + Math.log10(priceRatio) * 0.3);
+            
+            // Add some realistic trading activity (small fluctuations)
+            const tradingActivity = Math.random();
+            let fluctuation = 1.0;
+            
+            if (tradingActivity < 0.2) {
+                // 20% chance: Small decrease (liquidity removal)
+                fluctuation = 0.98 + Math.random() * 0.02; // 0-2% decrease
+            } else if (tradingActivity < 0.6) {
+                // 40% chance: Small increase (liquidity addition)
+                fluctuation = 1.00 + Math.random() * 0.03; // 0-3% increase
+            } else {
+                // 40% chance: Larger change (big trade)
+                const bigChange = (Math.random() - 0.5) * 0.1; // ±5% change
+                fluctuation = 1 + bigChange;
+            }
+            
+            // Apply fluctuations
+            baseTokenAmount = Math.max(1000, tokenAmount * fluctuation);
+            const finalSOLAmount = Math.max(0.1, solAmount * fluctuation);
+            
+            // Calculate USD values (raw numbers, no K conversion)
+            const tokenValueUSD = baseTokenAmount * tokenPrice;
+            const solValueUSD = finalSOLAmount * solPrice;
+            
+            // Update token amount display
+            const tokenAmountElement = document.getElementById('pooledTokenAmount');
+            if (tokenAmountElement) {
+                const formattedAmount = Math.round(baseTokenAmount).toLocaleString();
+                tokenAmountElement.textContent = formattedAmount;
+            }
+            
+            // Update SOL amount display
+            const solAmountElement = document.getElementById('pooledSOLAmount');
+            if (solAmountElement) {
+                const formattedSOL = finalSOLAmount.toFixed(2);
+                solAmountElement.innerHTML = `${formattedSOL} SOL`;
+            }
         }
 
         function getConfig() {
