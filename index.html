@@ -323,6 +323,13 @@
             gap: 16px;
         }
 
+        .mobile-header-token {
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            margin-right: 8px;
+        }
+
         .config-toggle-btn {
             background: #1a1a1a;
             border: 1px solid #333;
@@ -1532,23 +1539,6 @@
             }
         }
 
-        .mobile-token-display {
-            display: none;
-            align-items: center;
-            gap: 4px;
-            margin-bottom: 12px;
-        }
-
-        .mobile-token-name {
-            font-size: 18px;
-            font-weight: bold;
-            color: #fff;
-        }
-
-        .mobile-token-pair {
-            font-size: 16px;
-            color: #00d4aa;
-        }
 
         @media (max-width: 1024px) {
             .mobile-menu-btn {
@@ -1559,9 +1549,6 @@
                 display: flex !important;
             }
             
-            .mobile-token-display {
-                display: flex;
-            }
             
             .sidebar {
                 transform: translateX(-100%);
@@ -1607,10 +1594,126 @@
                 display: none;
             }
             
+            .ad-box {
+                min-width: 80px;
+                padding: 6px 8px;
+                font-size: 10px;
+                flex-shrink: 0;
+            }
+            
+            .ad-token {
+                font-size: 10px;
+                margin-bottom: 2px;
+            }
+            
+            .ad-value {
+                font-size: 9px;
+                margin-bottom: 2px;
+            }
+            
+            .ad-change {
+                font-size: 8px;
+                margin-bottom: 2px;
+            }
+            
+            .ad-time {
+                font-size: 8px;
+            }
+            
+            .mobile-header-token {
+                display: block !important;
+            }
+            
             .chart-header {
                 padding: 12px 16px;
                 flex-wrap: wrap;
                 gap: 12px;
+            }
+            
+            .chart-header .chart-controls {
+                display: none;
+            }
+            
+            .chart-header .mobile-price-section {
+                display: block !important;
+            }
+            
+            .mobile-price-section {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                width: 100%;
+            }
+            
+            .mobile-trending-tokens {
+                display: flex;
+                gap: 4px;
+                overflow-x: auto;
+                padding: 4px 0;
+            }
+            
+            .mobile-trending-tokens .ad-box {
+                min-width: 60px;
+                padding: 4px 6px;
+                font-size: 8px;
+                flex-shrink: 0;
+            }
+            
+            .mobile-trending-tokens .ad-token {
+                font-size: 8px;
+                margin-bottom: 1px;
+            }
+            
+            .mobile-trending-tokens .ad-value {
+                font-size: 7px;
+                margin-bottom: 1px;
+            }
+            
+            .mobile-trending-tokens .ad-change {
+                font-size: 6px;
+                margin-bottom: 1px;
+            }
+            
+            .mobile-trending-tokens .ad-time {
+                font-size: 6px;
+            }
+            
+            .price-row {
+                display: flex;
+                gap: 4px;
+                align-items: center;
+                flex-wrap: nowrap;
+                justify-content: flex-start;
+            }
+            
+            .price-row .timeframe-dropdown {
+                margin-right: 8px;
+            }
+            
+            .price-row .timeframe-select {
+                font-size: 10px;
+                padding: 4px 6px;
+                height: 24px;
+            }
+            
+            .price-row .price-container {
+                background: #1a1a1a;
+                border: 1px solid #333;
+                border-radius: 4px;
+                padding: 4px 8px;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+            }
+            
+            .token-price-label {
+                font-size: 10px;
+                white-space: nowrap;
+            }
+            
+            .token-price-value {
+                font-size: 10px;
+                white-space: nowrap;
             }
             
             .chart-controls {
@@ -2083,7 +2186,6 @@
                 <div style="display: flex; gap: 8px; justify-content: center;">
                     <div style="width: 32px; height: 32px; background: #1a1a1a; border: 1px solid #333; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer;">X</div>
                     <div style="width: 32px; height: 32px; background: #1a1a1a; border: 1px solid #333; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer;">💬</div>
-                    <div style="width: 32px; height: 32px; background: #1a1a1a; border: 1px solid #333; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer;">⚙️</div>
                 </div>
             </div>
         </div>
@@ -2150,6 +2252,7 @@
                     </div>
                 </div>
                 <div class="header-right">
+                    <div class="mobile-header-token" id="mobileHeaderToken" style="display: none;">token/SOL</div>
                     <button class="config-toggle-btn" id="configToggleBtnMobile" title="Chart Configuration" style="display: none;">⚙️</button>
                     <div class="header-icons">
                         <div class="header-icon">⋯</div>
@@ -2160,9 +2263,6 @@
             <!-- Chart Section -->
             <div class="chart-section">
                 <div class="chart-header">
-                    <div class="mobile-token-display">
-                        <span class="mobile-token-name" id="mobileTokenName">token/SOL</span>
-                    </div>
                     <div class="chart-controls">
                         <div class="timeframe-dropdown">
                             <select id="timeframeSelect" class="timeframe-select">
@@ -2188,6 +2288,35 @@
                             </div>
                         </div>
                         <button style="background: #1a1a1a; border: 1px solid #333; color: #ccc; padding: 6px 12px; border-radius: 4px; font-size: 12px;">Price / MCap</button>
+                    </div>
+                    
+                    <!-- Mobile-only price section -->
+                    <div class="mobile-price-section" style="display: none;">
+                        <div class="mobile-trending-tokens" id="mobileTrendingTokens">
+                            <!-- Trending tokens will be populated here -->
+                        </div>
+                        <div class="price-row">
+                            <div class="timeframe-dropdown">
+                                <select id="timeframeSelectMobile" class="timeframe-select">
+                                    <option value="1s" selected>1s</option>
+                                    <option value="1m">1m</option>
+                                    <option value="5m">5m</option>
+                                    <option value="15m">15m</option>
+                                    <option value="1h">1h</option>
+                                    <option value="4h">4h</option>
+                                    <option value="D">D</option>
+                                </select>
+                            </div>
+                            <div class="price-container">
+                                <span class="token-price-label">USD:</span>
+                                <span class="token-price-value" id="chartTokenPriceUSDMobile">$0.00000002</span>
+                            </div>
+                            <div class="price-container">
+                                <span class="token-price-label">SOL:</span>
+                                <span class="token-price-value" id="chartTokenPriceMobile">0.00000002 SOL</span>
+                            </div>
+                            <button style="background: #1a1a1a; border: 1px solid #333; color: #ccc; padding: 4px 8px; border-radius: 4px; font-size: 10px;">Price/MCap</button>
+                        </div>
                     </div>
                 </div>
                 <div class="chart-container" id="chartContainer">
@@ -2521,6 +2650,12 @@
             
             if (mobileTokenName) {
                 mobileTokenName.textContent = displayName + '/SOL';
+            }
+            
+            // Update mobile header token
+            const mobileHeaderToken = document.getElementById('mobileHeaderToken');
+            if (mobileHeaderToken) {
+                mobileHeaderToken.textContent = displayName + '/SOL';
             }
             
             // Update transactions table header with just the token name (no /SOL)
@@ -3624,8 +3759,60 @@
             }
         }
 
+        // Function to randomize trending token names
+        function randomizeTrendingTokens() {
+            const tokenNames = [
+                'PEPE2.0', 'DOGEKILLER', 'MOONSHOT', 'DIAMONDHANDS', 'SHIBAROCKET', 'MEMECOIN', 'LAMBO',
+                'DOGE', 'SHIB', 'PEPE', 'FLOKI', 'BONK', 'WIF', 'BOME', 'POPCAT', 'MEW', 'MYRO', 'JUP',
+                'MOON', 'ROCKET', 'DIAMOND', 'HODL', 'PUMP', 'DUMP', 'RUG', 'SAFE', 'MOONBOY', 'LAMBO',
+                'TOKEN', 'COIN', 'DOGE', 'SHIB', 'PEPE', 'FLOKI', 'BONK', 'WIF', 'BOME', 'POPCAT', 'MEW',
+                'MYRO', 'JUP', 'MOON', 'ROCKET', 'DIAMOND', 'HODL', 'PUMP', 'DUMP', 'RUG', 'SAFE',
+                'MOONBOY', 'LAMBO', 'TOKEN', 'COIN', 'DOGE', 'SHIB', 'PEPE', 'FLOKI', 'BONK', 'WIF',
+                'BOME', 'POPCAT', 'MEW', 'MYRO', 'JUP', 'MOON', 'ROCKET', 'DIAMOND', 'HODL', 'PUMP',
+                'DUMP', 'RUG', 'SAFE', 'MOONBOY', 'LAMBO', 'TOKEN', 'COIN', 'DOGE', 'SHIB', 'PEPE',
+                'FLOKI', 'BONK', 'WIF', 'BOME', 'POPCAT', 'MEW', 'MYRO', 'JUP', 'MOON', 'ROCKET',
+                'DIAMOND', 'HODL', 'PUMP', 'DUMP', 'RUG', 'SAFE', 'MOONBOY', 'LAMBO', 'TOKEN', 'COIN'
+            ];
+            
+            // Get all ad-token elements
+            const adTokens = document.querySelectorAll('.ad-token');
+            
+            // Randomize each token name
+            adTokens.forEach((tokenElement, index) => {
+                const randomIndex = Math.floor(Math.random() * tokenNames.length);
+                tokenElement.textContent = tokenNames[randomIndex];
+            });
+            
+            // Also populate mobile trending tokens
+            const mobileTrendingTokens = document.getElementById('mobileTrendingTokens');
+            if (mobileTrendingTokens) {
+                // Clear existing content
+                mobileTrendingTokens.innerHTML = '';
+                
+                // Create 5-7 random trending tokens for mobile
+                const numTokens = 5 + Math.floor(Math.random() * 3); // 5-7 tokens
+                for (let i = 0; i < numTokens; i++) {
+                    const randomIndex = Math.floor(Math.random() * tokenNames.length);
+                    const tokenName = tokenNames[randomIndex];
+                    
+                    const adBox = document.createElement('div');
+                    adBox.className = 'ad-box';
+                    adBox.innerHTML = `
+                        <div class="ad-token">${tokenName}</div>
+                        <div class="ad-value">${(Math.random() * 0.01).toFixed(6)}</div>
+                        <div class="ad-change ${Math.random() > 0.5 ? 'positive' : 'negative'}">${Math.random() > 0.5 ? '+' : '-'}${Math.floor(Math.random() * 1000)}%</div>
+                        <div class="ad-time">${Math.floor(Math.random() * 12) + 1}h</div>
+                    `;
+                    mobileTrendingTokens.appendChild(adBox);
+                }
+            }
+        }
+
         // Initialize everything on page load
         document.addEventListener('DOMContentLoaded', function() {
+            // Randomize trending token names on page load
+            randomizeTrendingTokens();
+            
             // Hide close button
             const closeBtn = document.getElementById('sidebarCloseBtn');
             if (closeBtn) {
