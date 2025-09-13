@@ -1741,11 +1741,11 @@
                 </div>
                 <div class="config-item">
                     <label>Min MC:</label>
-                    <input type="text" id="minMarketCap" value="1.5K" placeholder="e.g., 10K, 1.5M, 2B">
+                    <input type="text" id="minMarketCap" value="500" placeholder="e.g., 10K, 1.5M, 2B">
                 </div>
                 <div class="config-item">
                     <label>Range MC:</label>
-                    <input type="text" id="rangeMarketCap" value="2K" placeholder="e.g., 10K, 1.5M, 2B">
+                    <input type="text" id="rangeMarketCap" value="8K" placeholder="e.g., 10K, 1.5M, 2B">
                 </div>
             </div>
             
@@ -3979,18 +3979,27 @@
                         const open = historicalPrice;
                         
                         const progressRatio = i / (historicalMinutes - 1);
-                        const trendStrength = 0.005 + (progressRatio * 0.01);
-                        const randomStrength = 0.3;
+                        const trendStrength = 0.01 + (progressRatio * 0.02); // Increased trend strength
+                        const randomStrength = 0.6; // Increased random strength
                         
-                        const targetPrice = config.initialMarketCap * (0.98 + progressRatio * 0.04);
+                        // More varied target price with consolidation periods
+                        let targetPrice;
+                        if (progressRatio < 0.3 || progressRatio > 0.7) {
+                            // Consolidation periods - stay near initial price
+                            targetPrice = config.initialMarketCap + (rng.next() - 0.5) * config.rangeMarketCap * 0.2;
+                        } else {
+                            // Trend periods - gradual movement
+                            targetPrice = config.initialMarketCap * (0.95 + progressRatio * 0.1);
+                        }
+                        
                         const trendComponent = (targetPrice - open) * trendStrength;
                         const randomComponent = (rng.next() - 0.5) * config.rangeMarketCap * randomStrength;
                         
-                        const randomDirectionChance = 0.2;
+                        const randomDirectionChance = 0.4; // More direction changes
                         const trendDirection = rng.next() < randomDirectionChance ? (rng.next() - 0.5) * 2 : 1;
                         
-                        const volatility = 0.2 + rng.next() * 0.3;
-                        const momentum = rng.next() < 0.1 ? (rng.next() - 0.5) * 0.1 : 0;
+                        const volatility = 0.4 + rng.next() * 0.6; // Higher volatility
+                        const momentum = rng.next() < 0.2 ? (rng.next() - 0.5) * 0.3 : 0; // More momentum
                         
                         let change = (trendComponent * trendDirection) + (randomComponent + momentum) * volatility;
                         
@@ -4216,8 +4225,8 @@
                 return {
                     initialMarketCap: 10000,
                     finalMarketCap: 50000,
-                    minMarketCap: 5000,
-                    rangeMarketCap: 2000,
+                    minMarketCap: 500,
+                    rangeMarketCap: 8000,
                     totalSeconds: 10,
                     speedMultiplier: 1.0,
                     seed: 1,
@@ -4866,28 +4875,61 @@
             let lastClose = config.initialMarketCap;
             
             const totalChange = config.finalMarketCap - config.initialMarketCap;
-            const progressPerBar = totalChange / (totalBars - 1);
+            
+            // Add phases for more realistic movement
+            const phases = [
+                { start: 0, end: 0.2, type: 'consolidation', strength: 0.1 },
+                { start: 0.2, end: 0.4, type: 'trend', strength: 0.3 },
+                { start: 0.4, end: 0.6, type: 'volatile', strength: 0.8 },
+                { start: 0.6, end: 0.8, type: 'consolidation', strength: 0.2 },
+                { start: 0.8, end: 1.0, type: 'trend', strength: 0.4 }
+            ];
             
             for (let i = 0; i < totalBars - 2; i++) {
                 const time = animationStartTime + (i * 60);
                 const open = lastClose;
                 
-                const targetPrice = config.initialMarketCap + (progressPerBar * i);
-                
                 const progressRatio = i / (totalBars - 1);
-                const trendStrength = 0.03 + (progressRatio * 0.12);
-                const randomStrength = 0.7;
+                
+                // Determine current phase
+                const currentPhase = phases.find(p => progressRatio >= p.start && progressRatio < p.end) || phases[phases.length - 1];
+                
+                // Calculate target price with more variation
+                let targetPrice;
+                if (currentPhase.type === 'consolidation') {
+                    // Horizontal trading - stay near current level
+                    targetPrice = lastClose + (rng.next() - 0.5) * config.rangeMarketCap * 0.1;
+                } else if (currentPhase.type === 'volatile') {
+                    // High volatility - large random movements
+                    targetPrice = config.initialMarketCap + (totalChange * progressRatio) + (rng.next() - 0.5) * config.rangeMarketCap * 2;
+                } else {
+                    // Normal trend - gradual movement with some randomness
+                    targetPrice = config.initialMarketCap + (totalChange * progressRatio) + (rng.next() - 0.5) * config.rangeMarketCap * 0.5;
+                }
+                
+                const trendStrength = currentPhase.strength;
+                const randomStrength = currentPhase.type === 'volatile' ? 1.5 : 0.8;
                 
                 const trendComponent = (targetPrice - open) * trendStrength;
                 const randomComponent = (rng.next() - 0.5) * config.rangeMarketCap * randomStrength;
                 
-                const randomDirectionChance = 0.3;
+                // More frequent direction changes
+                const randomDirectionChance = currentPhase.type === 'volatile' ? 0.6 : 0.4;
                 const trendDirection = rng.next() < randomDirectionChance ? (rng.next() - 0.5) * 2 : 1;
                 
-                const volatility = 0.8 + rng.next() * 0.4;
-                const momentum = rng.next() < 0.25 ? (rng.next() - 0.5) * 0.3 : 0;
+                // More varied volatility based on phase
+                const baseVolatility = currentPhase.type === 'volatile' ? 1.2 : 0.6;
+                const volatility = baseVolatility + rng.next() * 0.8;
                 
-                let change = (trendComponent * trendDirection) + (randomComponent + momentum) * volatility;
+                // More frequent momentum changes
+                const momentumChance = currentPhase.type === 'volatile' ? 0.4 : 0.2;
+                const momentum = rng.next() < momentumChance ? (rng.next() - 0.5) * 0.6 : 0;
+                
+                // Add pullback chances
+                const pullbackChance = currentPhase.type === 'consolidation' ? 0.3 : 0.1;
+                const pullback = rng.next() < pullbackChance ? (rng.next() - 0.5) * config.rangeMarketCap * 0.3 : 0;
+                
+                let change = (trendComponent * trendDirection) + (randomComponent + momentum + pullback) * volatility;
                 
                 if (i === 0) {
                     change = Math.abs(change);
@@ -4905,8 +4947,9 @@
                 const expectedProgress = i / (totalBars - 1);
                 const progressDeviation = Math.abs(currentProgress - expectedProgress);
                 
-                if (progressDeviation > 0.4) {
-                    const correctionStrength = 0.01 + (progressRatio * 0.03);
+                // More lenient correction - allow more deviation
+                if (progressDeviation > 0.7) {
+                    const correctionStrength = 0.005 + (progressRatio * 0.01); // Reduced correction
                     const correction = (targetPrice - close) * correctionStrength;
                     close = close + correction;
                 }
