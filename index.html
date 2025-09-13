@@ -1731,6 +1731,22 @@
             <div class="config-group">
                 <h4>Market Cap Settings</h4>
                 <p style="font-size: 12px; color: #888; margin: 5px 0;">Use K/M/B notation: 10K = 10,000, 1.5M = 1,500,000, 2B = 2,000,000,000</p>
+                <div style="margin: 10px 0;">
+                    <button id="randomizeMC" style="
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        border: none;
+                        padding: 8px 16px;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        font-size: 14px;
+                        font-weight: 500;
+                        transition: all 0.2s;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    " onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'">
+                        🎲 Randomize Market Cap
+                    </button>
+                </div>
                 <div class="config-item">
                     <label>Initial MC:</label>
                     <input type="text" id="initialMarketCap" value="3K" placeholder="e.g., 10K, 1.5M, 2B">
@@ -1753,7 +1769,7 @@
                 <h4>Animation Timing</h4>
                 <div class="config-item">
                     <label>Duration (s):</label>
-                    <input type="number" id="totalSeconds" value="10">
+                    <input type="number" id="totalSeconds" value="30">
                 </div>
                 <div class="config-item">
                     <label>Speed Multiplier:</label>
@@ -2620,7 +2636,8 @@
         // Function to parse K/M/B notation to numbers
         function parseMarketCapNotation(value) {
             if (typeof value === 'string') {
-                const cleanValue = value.trim().toUpperCase();
+                // Remove $ prefix and trim
+                const cleanValue = value.trim().replace(/^\$/, '').toUpperCase();
                 const lastChar = cleanValue.slice(-1);
                 const numValue = parseFloat(cleanValue.slice(0, -1));
                 
@@ -2670,6 +2687,109 @@
                 ).join('');
                 return `0.0${subscript}${leadingDigit}${decimals}`;
             }
+        }
+
+        // Function to randomize market cap settings
+        function randomizeMarketCap() {
+            console.log('🎲 Randomizing market cap settings...');
+            
+            // Define more conservative, realistic ranges
+            const initialMCRanges = [
+                { min: 1, max: 5, suffix: 'K' },
+                { min: 5, max: 15, suffix: 'K' },
+                { min: 15, max: 30, suffix: 'K' }
+            ];
+            
+            const finalMCRanges = [
+                { min: 10, max: 30, suffix: 'K' },
+                { min: 30, max: 100, suffix: 'K' },
+                { min: 100, max: 300, suffix: 'K' },
+                { min: 0.3, max: 1, suffix: 'M' }
+            ];
+            
+            const minMCRanges = [
+                { min: 0.5, max: 2, suffix: 'K' },
+                { min: 2, max: 8, suffix: 'K' }
+            ];
+            
+            const rangeMCRanges = [
+                { min: 1, max: 3, suffix: 'K' },
+                { min: 3, max: 8, suffix: 'K' },
+                { min: 8, max: 15, suffix: 'K' }
+            ];
+            
+            const targetMCRanges = [
+                { min: 5, max: 20, suffix: 'K' },
+                { min: 20, max: 80, suffix: 'K' },
+                { min: 80, max: 200, suffix: 'K' },
+                { min: 0.3, max: 2, suffix: 'M' }
+            ];
+            
+            // Helper function to pick random value from ranges
+            function pickRandomValue(ranges) {
+                const range = ranges[Math.floor(Math.random() * ranges.length)];
+                const value = range.min + Math.random() * (range.max - range.min);
+                return Math.round(value) + range.suffix;
+            }
+            
+            // Randomize each field
+            const initialMC = pickRandomValue(initialMCRanges);
+            const finalMC = pickRandomValue(finalMCRanges);
+            const minMC = pickRandomValue(minMCRanges);
+            const rangeMC = pickRandomValue(rangeMCRanges);
+            let targetMC = pickRandomValue(targetMCRanges);
+            
+            
+            // Parse values for validation
+            const initialValue = parseMarketCapNotation(initialMC);
+            const finalValue = parseMarketCapNotation(finalMC);
+            const minValue = parseMarketCapNotation(minMC);
+            let targetValue = parseMarketCapNotation(targetMC);
+            
+            // Make sure min is significantly less than initial (at least 50% lower)
+            const adjustedMin = Math.min(minValue, initialValue * 0.5);
+            // Make sure final is at least 2x higher than initial
+            const adjustedFinal = Math.max(finalValue, initialValue * 2);
+            
+            // Ensure min is at least 1K to prevent going to zero
+            const finalMin = Math.max(adjustedMin, 1000);
+            
+            // Randomize pump/dump selection FIRST, then adjust target MC accordingly
+            const actionTypes = ['dump', 'pump'];
+            const randomActionType = actionTypes[Math.floor(Math.random() * actionTypes.length)];
+            
+            // Adjust target MC based on action type for logical consistency
+            if (randomActionType === 'dump') {
+                // For dump: target should be 20-80% of final MC
+                const dumpMultiplier = 0.2 + Math.random() * 0.6; // 0.2 to 0.8
+                targetValue = Math.max(adjustedFinal * dumpMultiplier, finalMin);
+            } else {
+                // For pump: target should be 1.5-5x higher than final MC
+                const pumpMultiplier = 1.5 + Math.random() * 3.5; // 1.5 to 5.0
+                targetValue = adjustedFinal * pumpMultiplier;
+            }
+            
+            // Ensure target is at least 1K
+            targetValue = Math.max(targetValue, 1000);
+            
+            // Convert back to formatted string
+            targetMC = formatMarketCap(targetValue);
+            
+            // Update the input fields
+            document.getElementById('initialMarketCap').value = formatMarketCap(initialValue);
+            document.getElementById('finalMarketCap').value = formatMarketCap(adjustedFinal);
+            document.getElementById('minMarketCap').value = formatMarketCap(finalMin);
+            document.getElementById('rangeMarketCap').value = rangeMC;
+            document.getElementById('finalActionMarketCap').value = targetMC;
+            
+            
+            // Also randomize the seed for more variation
+            const newSeed = Math.floor(Math.random() * 10000) + 1;
+            document.getElementById('seed').value = newSeed;
+            
+            // Set the action type we determined above
+            document.getElementById('finalActionType').value = randomActionType;
+            
         }
 
         function calculatePriceFromMarketCap(marketCap) {
@@ -3596,6 +3716,14 @@
                         exportBlankChart();
                     });
                 }
+                
+                // Initialize randomize MC button
+                const randomizeBtn = document.getElementById('randomizeMC');
+                if (randomizeBtn) {
+                    randomizeBtn.addEventListener('click', function() {
+                        randomizeMarketCap();
+                    });
+                }
             }, 2000);
             
         // Initialize prices on page load
@@ -4012,12 +4140,14 @@
                         if (close > config.initialMarketCap + maxDeviation) {
                             close = config.initialMarketCap + maxDeviation;
                         } else if (close < config.initialMarketCap - maxDeviation) {
-                            close = config.initialMarketCap - maxDeviation;
+                            // Ensure we don't go below min MC even with max deviation
+                            const minAllowed = Math.max(config.initialMarketCap - maxDeviation, config.minMarketCap);
+                            close = minAllowed;
                         }
                         
-                        const effectiveMin = Math.min(config.minMarketCap, config.finalMarketCap);
-                        if (close < effectiveMin) {
-                            close = effectiveMin;
+                        // Use minMarketCap as the absolute floor
+                        if (close < config.minMarketCap) {
+                            close = config.minMarketCap;
                         }
                         
                         let high = Math.max(open, close);
@@ -4053,7 +4183,7 @@
                         const maxAdjustment = config.initialMarketCap * 0.02;
                         const adjustment = Math.max(-maxAdjustment, Math.min(maxAdjustment, priceDifference));
                         
-                        lastBar.close = currentPrice + adjustment;
+                        lastBar.close = Math.max(currentPrice + adjustment, config.minMarketCap);
                         lastBar.high = Math.max(lastBar.high, lastBar.open, lastBar.close);
                         lastBar.low = Math.min(lastBar.low, lastBar.open, lastBar.close);
                         
@@ -4191,12 +4321,13 @@
                 const speedMultiplierValue = document.getElementById('speedMultiplier').value;
                 const parsedSpeedMultiplier = parseFloat(speedMultiplierValue);
                 
-                return {
+                const config = {
                     tokenName: document.getElementById('tokenName').value || 'Custom animated token',
                     initialMarketCap: parseMarketCapNotation(document.getElementById('initialMarketCap').value),
                     finalMarketCap: parseMarketCapNotation(document.getElementById('finalMarketCap').value),
                     minMarketCap: parseMarketCapNotation(document.getElementById('minMarketCap').value),
                     finalActionMarketCap: parseMarketCapNotation(document.getElementById('finalActionMarketCap').value),
+                    finalActionType: document.getElementById('finalActionType').value || 'dump',
                     rangeMarketCap: parseMarketCapNotation(document.getElementById('rangeMarketCap').value),
                     totalSeconds: parseInt(document.getElementById('totalSeconds').value),
                     speedMultiplier: parsedSpeedMultiplier || 1.0,
@@ -4220,6 +4351,9 @@
                         }
                     }
                 };
+                
+                
+                return config;
             } catch (error) {
                 console.error('❌ Error in getConfig():', error);
                 return {
@@ -4227,7 +4361,7 @@
                     finalMarketCap: 50000,
                     minMarketCap: 500,
                     rangeMarketCap: 8000,
-                    totalSeconds: 10,
+                    totalSeconds: 30,
                     speedMultiplier: 1.0,
                     seed: 1,
                     enableHistoricalData: false,
@@ -4854,7 +4988,6 @@
         }
 
         function startAnimationData(config) {
-            console.log('🔍 Config passed to startAnimationData:', config);
             
             const totalBars = config.totalSeconds;
             const rng = new SeededRandom(config.seed);
@@ -4937,9 +5070,9 @@
                 
                 let close = open + change;
                 
-                const effectiveMin = Math.min(config.minMarketCap, config.finalMarketCap);
-                if (close < effectiveMin) {
-                    close = effectiveMin;
+                // Use minMarketCap as the absolute floor
+                if (close < config.minMarketCap) {
+                    close = config.minMarketCap;
                 }
                 
                 const totalDistance = Math.abs(config.finalMarketCap - config.initialMarketCap);
@@ -4952,6 +5085,11 @@
                     const correctionStrength = 0.005 + (progressRatio * 0.01); // Reduced correction
                     const correction = (targetPrice - close) * correctionStrength;
                     close = close + correction;
+                }
+                
+                // Re-enforce min MC floor after correction
+                if (close < config.minMarketCap) {
+                    close = config.minMarketCap;
                 }
                 
                 let high = Math.max(open, close);
@@ -4994,7 +5132,17 @@
 
             const actionTime = animationStartTime + ((totalBars - 1) * 60);
             const actionOpen = config.finalMarketCap;
-            const actionClose = config.finalActionMarketCap;
+            
+            // Apply pump/dump logic based on action type
+            let actionClose;
+            if (config.finalActionType === 'dump') {
+                // For dump: action close should be lower than final MC (can go below min MC)
+                actionClose = Math.min(config.finalActionMarketCap, config.finalMarketCap * 0.5);
+            } else {
+                // For pump: action close should be higher than final MC
+                actionClose = Math.max(config.finalActionMarketCap, config.finalMarketCap * 1.5);
+            }
+            
             const actionHigh = Math.max(actionOpen, actionClose);
             const actionLow = Math.min(actionOpen, actionClose);
 
